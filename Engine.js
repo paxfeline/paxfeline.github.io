@@ -7,6 +7,13 @@ function Engine ( collider, solverHit, solver1, solver2 )
 }
 
 Engine.prototype = {
+	targetFrameDelay: 30,
+	sumTime: 0,
+	sumN: 0,
+	avgFrameDelay: 0,
+	frameIndex: 0,
+	frameN: 3,
+	lastFrame: null,
 	remove:
 		function ( el, collisions )
 		{
@@ -20,8 +27,42 @@ Engine.prototype = {
 			if ( i >= 0 ) collisions.splice( i, 1 );
 		},
 	step:
-		function()
+		function(t)
 		{
+			// perpetually query average frame delay and adjust frameN
+			if ( ! this.lastFrame )
+			{
+				this.lastFrame = t;
+				requestAnimationFrame( this.step.bind( this ) );
+				return;
+			}
+			else if ( this.sumN < 50 ) // average over a 50-frame window
+			{
+				this.sumTime += ( t - this.lastFrame );
+				this.sumN++;
+			}
+			else
+			{
+				this.avgFrameDelay = this.sumTime / this.sumN;
+				var d = this.targetFrameDelay / this.avgFrameDelay;
+				//alert( d );
+				this.frameN = Math.min( Math.max( 1, Math.round( d ) ), 10 );
+				//console.log( this.frameN );
+				this.sumTime = 0;
+				this.sumN = 0;
+			}
+			this.lastFrame = t;
+			
+			/********/
+			
+			this.frameIndex++;
+			if ( this.frameIndex < this.frameN )
+			{
+				requestAnimationFrame( this.step.bind( this ) );
+				return;
+			}
+			this.frameIndex = 0;
+			
 			// move entities
 			
 			var elapsed = 1;
@@ -153,5 +194,7 @@ Engine.prototype = {
 			}
 			
 			ctx.restore();
+			
+			requestAnimationFrame( this.step.bind( this ) );
 		}
 	};

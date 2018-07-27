@@ -182,7 +182,8 @@ var eng = new Engine( collider, solveHit, solverY, solverX );
 
 // this is the main game "loop"
 
-setInterval( eng.step.bind( eng ), 50 );
+//setInterval( eng.step.bind( eng ), 50 );
+requestAnimationFrame( eng.step.bind( eng ) );
 
 // this makes the buttons function
 // this is a bit messy: it fakes a 'key' event and calls the keyDown function
