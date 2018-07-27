@@ -1,1 +1,237 @@
-Hello World
+<html>
+<head>
+<meta name="viewport" content="user-scalable=no, height=device-height">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style type="text/css">
+
+*
+{
+    box-sizing: border-box;
+    -webkit-user-select: none; /* disable selection/Copy of UIWebView */
+}
+
+body
+{
+    margin: 0;
+    overflow-y: hidden;
+}
+
+#base
+{
+    height: 100vh;
+    text-align: center;
+}
+
+.gameBtn
+{
+    font-size: 3em;
+    background-color: black;
+    color: white;
+    border: 0.1em outset black;
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+    vertical-align: text-bottom;
+    text-align: center;
+    border-radius: 50%;
+    margin: 0.1em;
+}
+
+/* while pressed the button's border style will change from outset to inset */
+
+.gameBtn:active
+{
+    border-style: inset;
+}
+
+/* the canvas will fit to the screen */
+
+canvas
+{
+    height: 100vmin;
+    width: 100vmin;
+    border: 1px solid black;
+}
+
+</style>
+
+<script type="text/javascript" src="EngineConstants.js"></script>
+
+<script type="text/javascript">
+
+// This method actually gets called by all input methods (see below)
+// But it was first designed for keyboard input
+
+function keyDown( e )
+{
+	// e.key will be " ", "ArrowRight", or "ArrowLeft"
+	if ( e.key == " " )
+		eng.player.vy = -15; // jump = set vertical velocity to -15 (gravity will make you fall back)
+	if ( e.key.includes( "Left" ) )
+		eng.player.vx = -8; // Sets horizontal velocity to -8 (until key is let up)
+	if ( e.key.includes( "Right" ) )
+		eng.player.vx = 8; // See above
+}
+
+function keyUp( e )
+{
+	// when the left or right arrow keys is raised, stop horizontal motion
+	if ( e.key.includes( "Left" ) || e.key.includes( "Right" ) )
+		eng.player.vx = 0;
+}
+
+addEventListener( "keydown", keyDown );
+addEventListener( "keyup", keyUp );
+
+/**************/
+
+// this is fun: design your level via ASCII.
+// the meanings of these characters is determined in SceneBuilder_Inline.js (included below).
+
+// note: the "chunks" below are laid out horizontally, sequentially.
+// while the chunks can be whatever size you want, they should be a uniform size.
+
+// (the # character hasn't been defined yet, so it is ignored (like space))
+
+var level =
+    [
+        [
+            "XXXXXXXXXX",
+            "0         ",
+            "0    S * *",
+            "0         ",
+            "0   P     ",
+            "0  SZS9900",
+            "0         ",
+            "0         ",
+            "0         ",
+            "XXXXXXXXXX"
+        ],
+        [
+            "XXXXXXXXXX",
+            "          ",
+            " * * * * *",
+            "          ",
+            "          ",
+            "S00       ",
+            "          ",
+            "          ",
+            "          ",
+            "X#########"
+        ],
+        [
+            "XXXXXXXXXX",
+            "          ",
+            " * * * * *",
+            "          ",
+            "          ",
+            "          ",
+            "         X",
+            "         X",
+            "         X",
+            "####99XXXX"
+        ]
+    ];
+
+// these variables are used elsewhere
+var levelblocksize = level[0][0].length;
+var levelXchunk = levelblocksize * BOXSIZE;
+var levelX = level.length * levelXchunk;
+var levelY = level[0].length * BOXSIZE;
+
+</script>
+
+<script type="text/javascript" src="PXSprite.js"></script>
+<script type="text/javascript" src="PhysicsEntity.js"></script>
+<script type="text/javascript" src="CollisionDetector.js"></script>
+<script type="text/javascript" src="Resolver.js"></script>
+<script type="text/javascript" src="Engine.js"></script>
+
+</head>
+<body>
+
+<div id="base">
+
+<div class="gameBtn" id="jumpBtn">^</div>
+
+<canvas width="500" height="500" id="board"></canvas>
+
+<div class="gameBtn" id="leftBtn">&lt;</div>
+
+<div class="gameBtn" id="rightBtn">&gt;</div>
+
+</div>
+
+<script type="text/javascript">
+
+// these variables are pointless, but I find them somewhat prettier than the alternative
+
+var collider = CollisionDetector_checkAll;
+var solveHit = resolveAllHit;
+var solverY = resolveAllY;
+var solverX = resolveAllX;
+
+// create the game engine
+var eng = new Engine( collider, solveHit, solverY, solverX );
+
+// next invoke scene builder (which adds sprites to the engine)
+
+</script>
+<script type="text/javascript" src="SceneBuilder_Inline.js"></script>
+<script type="text/javascript">
+
+// this is the main game "loop"
+
+setInterval( eng.step.bind( eng ), 50 );
+
+// this makes the buttons function
+// this is a bit messy: it fakes a 'key' event and calls the keyDown function
+
+var leftBtn = document.querySelector( "#leftBtn" );
+var leftDown = function ( e ) { e.key = "ArrowLeft"; keyDown( e ); };
+var leftUp = function ( e ) { e.key = "ArrowLeft"; keyUp( e ); };
+leftBtn.addEventListener( "touchstart", leftDown, false );
+leftBtn.addEventListener( "touchend", leftUp, false );
+leftBtn.addEventListener( "touchcancel", leftUp, false );
+leftBtn.addEventListener( "mousedown", leftDown, false );
+leftBtn.addEventListener( "mouseup", leftUp, false );
+
+var rightBtn = document.querySelector( "#rightBtn" );
+var rightDown = function ( e ) { e.key = "ArrowRight"; keyDown( e ); };
+var rightUp = function ( e ) { e.key = "ArrowRight"; keyUp( e ); };
+rightBtn.addEventListener( "touchstart", rightDown, false );
+rightBtn.addEventListener( "touchend", rightUp, false );
+rightBtn.addEventListener( "touchcancel", rightUp, false );
+rightBtn.addEventListener( "mousedown", rightDown, false );
+rightBtn.addEventListener( "mouseup", rightUp, false );
+
+var jumpBtn = document.querySelector( "#jumpBtn" );
+var jumpDown = function ( e ) { e.key = " "; keyDown( e ); };
+var jumpUp = function ( e ) { e.key = " "; keyUp( e ); };
+jumpBtn.addEventListener( "touchstart", jumpDown, false );
+jumpBtn.addEventListener( "touchend", jumpUp, false );
+jumpBtn.addEventListener( "touchcancel", jumpUp, false );
+jumpBtn.addEventListener( "mousedown", jumpDown, false );
+jumpBtn.addEventListener( "mouseup", jumpUp, false );
+
+// tapping or clicking the canvas will also jump
+
+jumpBtn = document.querySelector( "canvas" );
+jumpBtn.addEventListener( "touchstart", jumpDown, false );
+jumpBtn.addEventListener( "touchend", jumpUp, false );
+jumpBtn.addEventListener( "touchcancel", jumpUp, false );
+jumpBtn.addEventListener( "mousedown", jumpDown, false );
+jumpBtn.addEventListener( "mouseup", jumpUp, false );
+
+// also messy...
+// this presents an alert with the keyboard controls, if there is no touch screen
+// it determines this hackily by checking whether window.orientation exists
+// just due to weird behavior on my phone, I added the timeout
+
+if ( typeof window.orientation == 'undefined' )
+    setTimeout( alert.bind( null, "Use the left and right arrow keys to move, spacebar to jump." ), 10 );
+
+</script>
+
+</body>
+</html>
