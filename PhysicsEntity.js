@@ -38,10 +38,15 @@ var PhysicsEntity = function( collisionName, type, x, y, sprite ) {
     // another object will receive upon colliding
     this.collision = collisionName || PhysicsEntity.ELASTIC;
  
- 	var w = sprite.targetWidth;
- 	var h = sprite.targetHeight;
+ 	this.states =
+ 		{
+ 			"default": sprite
+ 		};
+ 		
+ 	this.updateState( "default" );
  
- 	this.sprite = sprite;
+ 	var w = sprite.width;
+ 	var h = sprite.height;
  
     // Take in a width and height
     this.width  = w;
@@ -51,7 +56,7 @@ var PhysicsEntity = function( collisionName, type, x, y, sprite ) {
     this.halfWidth = this.width * .5;
     this.halfHeight = this.height * .5;
  
-    var collision = Collision[this.collision];
+    var collision = Collision[ this.collision ];
     collision.call(this);
  
     // Setup the positional data in 2D
@@ -75,13 +80,30 @@ var PhysicsEntity = function( collisionName, type, x, y, sprite ) {
  
 // Physics entity calculations
 PhysicsEntity.prototype = {
+
+	addState:
+		function ( name, state )
+		{
+			this.states[ name ] = state;
+		},
+
+	updateState:
+		function ( state )
+		{
+			this.curState = this.states[ state ];
+			this.updateBounds();
+		},
  
     // Update bounds includes the rect's
     // boundary updates
-    updateBounds: function() {
-        this.halfWidth = this.width * .5;
-        this.halfHeight = this.height * .5;
-    },
+    updateBounds:
+    	function() {
+			this.width = this.curState.width;
+			this.height = this.curState.height;
+		
+			this.halfWidth = this.width * .5;
+			this.halfHeight = this.height * .5;
+		},
  
     // Getters for the mid point of the rect
     getMidX: function() {

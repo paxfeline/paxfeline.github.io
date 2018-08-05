@@ -64,22 +64,81 @@ canvas
 // This method actually gets called by all input methods (see below)
 // But it was first designed for keyboard input
 
+var keysDown = {};
+
 function keyDown( e )
 {
+	if ( keysDown[ e.key ] ) return;
+	
 	// e.key will be " ", "ArrowRight", or "ArrowLeft"
 	if ( e.key == " " )
-		eng.player.vy = -15; // jump = set vertical velocity to -15 (gravity will make you fall back)
-	if ( e.key.includes( "Left" ) )
+	{
+		function revert()
+		{
+			if ( keysDown[ "ArrowLeft" ] )
+			{
+				eng.player.flipX = true;
+				eng.player.updateState( "walk" );
+			}
+			else if ( keysDown[ "ArrowRight" ] )
+			{
+				eng.player.flipX = false;
+				eng.player.updateState( "walk" );
+			}
+			else
+				eng.player.updateState( "default" );
+		}	
+		
+		function jump()
+		{
+			eng.player.vy = -15; // jump = set vertical velocity to -15 (gravity will make you fall back)
+			eng.player.updateState( "fly" );
+			
+			if ( eng.player.jumpRet )
+				clearTimeout( eng.player.jumpRet )
+			
+			eng.player.jumpRet = setTimeout( revert, 500 );
+		}
+		
+		jump();
+	
+		eng.player.jumperval = setInterval( jump, 300 );
+	}
+	else if ( e.key.includes( "Left" ) )
+	{
 		eng.player.vx = -8; // Sets horizontal velocity to -8 (until key is let up)
-	if ( e.key.includes( "Right" ) )
-		eng.player.vx = 8; // See above
+		eng.player.updateState( "walk" );
+		eng.player.flipX = true;
+	}
+	else if ( e.key.includes( "Right" ) )
+	{
+		eng.player.vx = 8; // Sets horizontal velocity to 8 (until key is let up)
+		eng.player.updateState( "walk" );
+		eng.player.flipX = false;
+	}
+	
+	keysDown[ e.key ] = true;
+	
+	if ( e.preventDefault ) e.preventDefault();
 }
 
 function keyUp( e )
 {
 	// when the left or right arrow keys is raised, stop horizontal motion
 	if ( e.key.includes( "Left" ) || e.key.includes( "Right" ) )
+	{
 		eng.player.vx = 0;
+		eng.player.updateState( "default" );
+	}
+	else if ( e.key = " " )
+	{
+		clearInterval( eng.player.jumperval );
+		eng.player.jumping = false;
+	}
+	
+	keysDown[ e.key ] = false;
+	
+	if ( e.preventDefault ) e.preventDefault();
 }
 
 addEventListener( "keydown", keyDown );
@@ -209,8 +268,8 @@ rightBtn.addEventListener( "mousedown", rightDown, false );
 rightBtn.addEventListener( "mouseup", rightUp, false );
 
 var jumpBtn = document.querySelector( "#jumpBtn" );
-var jumpDown = function ( e ) { e.key = " "; keyDown( e ); };
-var jumpUp = function ( e ) { e.key = " "; keyUp( e ); };
+var jumpDown = function ( e ) { e.preventDefault(); e.stopPropagation(); e.key = " "; keyDown( e ); };
+var jumpUp = function ( e ) { e.preventDefault(); e.stopPropagation(); e.key = " "; keyUp( e ); };
 jumpBtn.addEventListener( "touchstart", jumpDown, false );
 jumpBtn.addEventListener( "touchend", jumpUp, false );
 jumpBtn.addEventListener( "touchcancel", jumpUp, false );
@@ -225,6 +284,28 @@ jumpBtn.addEventListener( "touchend", jumpUp, false );
 jumpBtn.addEventListener( "touchcancel", jumpUp, false );
 jumpBtn.addEventListener( "mousedown", jumpDown, false );
 jumpBtn.addEventListener( "mouseup", jumpUp, false );
+
+// deregister mouse events if a touch event is registered
+addEventListener( "touchstart",
+	function tscheck ()
+	{
+		removeEventListener( "touchstart", tscheck );
+		
+		var leftBtn = document.querySelector( "#leftBtn" );
+		var rightBtn = document.querySelector( "#rightBtn" );
+		var jumpBtn = document.querySelector( "#jumpBtn" );
+
+		leftBtn.removeEventListener( "mousedown", leftDown, false );
+		leftBtn.removeEventListener( "mouseup", leftUp, false );
+		rightBtn.removeEventListener( "mousedown", rightDown, false );
+		rightBtn.removeEventListener( "mouseup", rightUp, false );
+		jumpBtn.removeEventListener( "mousedown", jumpDown, false );
+		jumpBtn.removeEventListener( "mouseup", jumpUp, false );
+		
+		jumpBtn = document.querySelector( "canvas" );
+		jumpBtn.removeEventListener( "mousedown", jumpDown, false );
+		jumpBtn.removeEventListener( "mouseup", jumpUp, false );
+	} );
 
 // also messy...
 // this presents an alert with the keyboard controls, if there is no touch screen

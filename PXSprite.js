@@ -1,12 +1,29 @@
 // http://sfcstech.x10.mx/images/sprites/walker32x32.png
 
-function PAXSprite ( w, h, imgUrl, tw, th )
+function PXSprite ( w, h, imgUrl, tw, th )
 {
-	this.width = w;
-	this.height = h;
-
-	this.targetWidth = tw ? tw : w;
-	this.targetHeight = th ? th : h;
+	this.innerWidth = w;
+	this.innerHeight = h;
+	
+	if ( tw && !th )
+	{
+		th = h * (tw / w);
+		
+		if ( th > tw )
+		{
+			th = tw;
+			tw = w * (tw / h);
+		}
+	}
+	else // !tw
+		tw = w;
+	
+	this.width = tw;
+	this.height = th;
+	
+	this.setTargetFPS( 20 );
+	
+	this.flipX = false;
 	
 	this.rawImg = new Image();   // Create new img element
 	this.rawImg.addEventListener( 'load', () => { this.length = this.rawImg.width / w; }, false );
@@ -15,31 +32,54 @@ function PAXSprite ( w, h, imgUrl, tw, th )
 	this.index = 0;
 }
 
-PAXSprite.prototype.draw =
-	function ( ctx )
+PXSprite.prototype.setTargetFPS =
+	function ( fps )
 	{
-		ctx.drawImage( this.rawImg, this.index * this.width, 0, this.width, this.height, 0, 0, this.targetWidth, this.targetWidth );
-		this.inc();
+		this.targetFrameDelay = 1000 / fps;
 	};
 
-PAXSprite.prototype.inc =
+PXSprite.prototype.draw =
+	function ( ctx, owner )
+	{
+		this.frame();
+		
+		//ctx.strokeStyle = this.color;
+		//ctx.strokeRect( 0, 0, this.width, this.height );
+		
+		if ( owner.flipX )
+		{
+			ctx.translate( this.width, 0 );
+			ctx.scale( -1, 1 );
+		}
+		
+		ctx.drawImage( this.rawImg, this.index * this.innerWidth, 0, this.innerWidth, this.innerHeight, 0, 0, this.width, this.height );
+	};
+
+PXSprite.prototype.frame =
 	function ()
 	{
-		this.index = ++this.index % (this.length || 1);
+		var t = performance.now();
+		if ( this.lastFrame )
+		{
+			if ( t - this.lastFrame >= this.targetFrameDelay )
+			{
+				this.index = ++this.index % (this.length || 1);
+				this.lastFrame = t;
+			}
+		}
+		else
+			this.lastFrame = t;
 	};
 
-function PAXColorSprite ( w, h, c )
+function PXColorSprite ( w, h, c )
 {
 	this.width = w;
 	this.height = h;
 
-	this.targetWidth = w;
-	this.targetHeight = h;
-
 	this.color = c;
 }
 
-PAXColorSprite.prototype.draw =
+PXColorSprite.prototype.draw =
 	function ( ctx )
 	{
 		ctx.save();
