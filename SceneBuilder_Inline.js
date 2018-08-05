@@ -98,10 +98,12 @@ for ( var blocki = 0; blocki < level.length; blocki++ )
                 
                 	//var s = new PXColorSprite( BOXSIZE, BOXSIZE, "purple" );
                 	var s = new PXSprite( 20, 25, 'images/sprites/stander20x25.png', BOXSIZE );
+                	s.setTargetFPS( 7 );
                     eng.player = new PhysicsEntity( PhysicsEntity.DISPLACE, PhysicsEntity.DYNAMIC, x, y, s );
                     var s = new PXSprite( 20, 30, 'images/sprites/walker20x30.png', BOXSIZE );
                     eng.player.addState( "walk", s );
                     var s = new PXSprite( 20, 25, 'images/sprites/flyer20x25.png', BOXSIZE );
+                	s.setTargetFPS( 7 );
                     eng.player.addState( "fly", s );
                     eng.entities.push( eng.player );
                     
