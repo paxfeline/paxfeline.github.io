@@ -188,7 +188,7 @@ Engine.prototype = {
 			{
 				ctx.save();
 				ctx.translate( el.x, el.y );
-				el.sprite.draw( ctx );
+				el.curState.draw( ctx, el );
 				//ctx.fillRect( el.x, el.y, el.width, el.height );
 				ctx.restore();
 			}
