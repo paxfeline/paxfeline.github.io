@@ -65,7 +65,7 @@ for ( var blocki = 0; blocki < level.length; blocki++ )
                 	var s = new PXColorSprite( BOXSIZE, BOXSIZE, "darkgrey" );
                 	s.subDraw = breakBoxDraw;
                     var plat = new PhysicsEntity( PhysicsEntity.ESLASTIC, PhysicsEntity.KINEMATIC, x, y, s );
-                    plat.yHit = function (d) { /*console.log( "hitS", this );*/ if ( d < 0 ) return true; };
+                    plat.yHit = function (d,v) { /*console.log( "hitS", this );*/ if ( d < 0 && v < 0 ) return true; };
                     plat.restitution = 0; // no bounce
                     eng.entities.push( plat );
                     curColBlock.push( plat );
@@ -76,7 +76,7 @@ for ( var blocki = 0; blocki < level.length; blocki++ )
                 	var s = new PXColorSprite( BOXSIZE, BOXSIZE, "darkgrey" );
                 	s.subDraw = specialBoxDraw;
                     var plat = new PhysicsEntity( PhysicsEntity.ESLASTIC, PhysicsEntity.KINEMATIC, x, y, s );
-                    plat.yHit = function (d) { /*console.log( "hitZ", this );*/ if ( d < 0 ) this.curState.color = cGen.next().value; };
+                    plat.yHit = function (d,v) { /*console.log( "hitZ", this );*/ if ( d < 0 && v < 0 ) this.curState.color = cGen.next().value; };
                     plat.restitution = 0; // no bounce
                     eng.entities.push( plat );
                     curColBlock.push( plat );
@@ -97,6 +97,7 @@ for ( var blocki = 0; blocki < level.length; blocki++ )
                 case 'P':
                 
                 	//var s = new PXColorSprite( BOXSIZE, BOXSIZE, "purple" );
+                	//var s = new PXSprite( 10, 29, 'images/sprites/hatman10x29.png', BOXSIZE );
                 	var s = new PXSprite( 20, 25, 'images/sprites/stander20x25.png', BOXSIZE );
                 	s.setTargetFPS( 7 );
                     eng.player = new PhysicsEntity( PhysicsEntity.DISPLACE, PhysicsEntity.DYNAMIC, x, y, s );

@@ -2,6 +2,8 @@
 // test whether the objects are overlapping the other
 var CollisionDetector_collideRect = 
     function(collider, collidee) {
+    
+    if ( !collider || !collidee ) { console.log( "collision error", collider, collidee ); return false; }
  
     // Store the collider and collidee edges
     var l1 = collider.getLeft();

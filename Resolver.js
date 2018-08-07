@@ -29,7 +29,7 @@ var resolveY = function(player, entity) {
     {
 		//console.log( `v hit @ ${player.vy}` );
 		
-		if ( entity.yHit && entity.yHit( dy ) ) eng.toRemove.push( entity );
+		if ( entity.yHit && entity.yHit( dy, player.vy ) ) eng.toRemove.push( entity );
 		
         // If the player is approaching from positive Y
         if (dy < 0) {

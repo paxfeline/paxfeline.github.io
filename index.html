@@ -91,7 +91,7 @@ function keyDown( e )
 		
 		function jump()
 		{
-			eng.player.vy = -15; // jump = set vertical velocity to -15 (gravity will make you fall back)
+			eng.player.vy = -20; // jump = set vertical velocity to -15 (gravity will make you fall back)
 			eng.player.updateState( "fly" );
 			
 			if ( eng.player.jumpRet )

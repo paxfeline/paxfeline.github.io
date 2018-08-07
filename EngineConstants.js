@@ -10,7 +10,7 @@ const hboardY = boardY * .5;
 var STICKY_THRESHOLD = .0004;
 
 const GRAVITY_X = 0;
-const GRAVITY_Y = 1;
+const GRAVITY_Y = 1.5;
 
 // pixels per side of squares on the board
 const BOXSIZE = 50;
