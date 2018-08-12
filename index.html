@@ -71,7 +71,7 @@ function keyDown( e )
 	if ( keysDown[ e.key ] ) return;
 	
 	// e.key will be " ", "ArrowRight", or "ArrowLeft"
-	if ( e.key == " " )
+	if ( e.key == " " || e.key == "ArrowUp" )
 	{
 		function revert()
 		{
@@ -91,29 +91,35 @@ function keyDown( e )
 		
 		function jump()
 		{
-			eng.player.vy = -20; // jump = set vertical velocity to -15 (gravity will make you fall back)
+			eng.player.vy = -15; // jump = set vertical velocity to -15 (gravity will make you fall back)
 			eng.player.updateState( "fly" );
 			
 			if ( eng.player.jumpRet )
 				clearTimeout( eng.player.jumpRet )
 			
-			eng.player.jumpRet = setTimeout( revert, 500 );
+			eng.player.jumpRet = setTimeout( revert, 600 );
 		}
 		
 		jump();
 	
-		eng.player.jumperval = setInterval( jump, 300 );
+		eng.player.jumperval = setInterval( jump, 200 );
 	}
 	else if ( e.key.includes( "Left" ) )
 	{
-		eng.player.vx = -8; // Sets horizontal velocity to -8 (until key is let up)
-		eng.player.updateState( "walk" );
+		eng.player.vx = -10; // Sets horizontal velocity to -8 (until key is let up)
+		if ( keysDown[ " " ] || keysDown[ "ArrowUp" ] )
+			eng.player.updateState( "fly" );
+		else
+			eng.player.updateState( "walk" );
 		eng.player.flipX = true;
 	}
 	else if ( e.key.includes( "Right" ) )
 	{
-		eng.player.vx = 8; // Sets horizontal velocity to 8 (until key is let up)
-		eng.player.updateState( "walk" );
+		eng.player.vx = 10; // Sets horizontal velocity to 8 (until key is let up)
+		if ( keysDown[ " " ] || keysDown[ "ArrowUp" ] )
+			eng.player.updateState( "fly" );
+		else
+			eng.player.updateState( "walk" );
 		eng.player.flipX = false;
 	}
 	
@@ -171,7 +177,7 @@ var level =
         [
             "XXXXXXXXXX",
             "          ",
-            " * * * * *",
+            " * * * *0*",
             "          ",
             "          ",
             "S00       ",
@@ -183,7 +189,7 @@ var level =
         [
             "XXXXXXXXXX",
             "          ",
-            " * * * * *",
+            "0* * * * *",
             "          ",
             "          ",
             "          ",
@@ -212,6 +218,13 @@ var levelY = level[0].length * BOXSIZE;
 <body>
 
 <div id="base">
+
+<div style="float: left">
+	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'default' );">default</div>
+	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'hatman' );">hatman</div>
+	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'robot' );">robot</div>
+	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'dino' );">dino</div>
+</div>
 
 <div class="gameBtn" id="jumpBtn">^</div>
 
@@ -314,6 +327,49 @@ addEventListener( "touchstart",
 
 if ( typeof window.orientation == 'undefined' )
     setTimeout( alert.bind( null, "Use the left and right arrow keys to move, spacebar to jump." ), 10 );
+
+var spriteSet =
+	{
+		"default":
+			{
+				"default": new PXSprite( 20, 25, 'images/sprites/stander20x25.png', BOXSIZE ),
+				walk: new PXSprite( 20, 30, 'images/sprites/walker20x30.png', BOXSIZE ),
+				fly: new PXSprite( 20, 25, 'images/sprites/flyer20x25.png', BOXSIZE )
+			},
+		robot:
+			{
+				"default": new PXSprite( 18, 29, 'images/sprites/robotstand18x29.png', BOXSIZE ),
+				walk: new PXSprite( 18, 29, 'images/sprites/robotstand18x29.png', BOXSIZE ),
+				fly: new PXSprite( 30, 14, 'images/sprites/robotjet30x14.png', BOXSIZE )
+			},
+		hatman:
+			{
+				"default": new PXSprite( 10, 29, 'images/sprites/hatman10x29.png', BOXSIZE ),
+				walk: new PXSprite( 32, 25, 'images/sprites/hatwalk32x25.png', BOXSIZE ),
+				fly: new PXSprite( 24, 22, 'images/sprites/hatfly24x22.png', BOXSIZE )
+			},
+		dino:
+			{
+				"default": new PXSprite( 32, 32, 'images/sprites/dino32x32.png', BOXSIZE ),
+				walk: new PXSprite( 32, 32, 'images/sprites/dino32x32.png', BOXSIZE ),
+				fly: new PXSprite( 32, 32, 'images/sprites/dino32x32.png', BOXSIZE )
+			}
+		};
+
+spriteSet[ "default" ][ "default" ].setTargetFPS( 7 );
+spriteSet[ "default" ].fly.setTargetFPS( 7 );
+spriteSet.hatman.fly.setTargetFPS( 10 );
+spriteSet.robot["default"].setTargetFPS( 10 );
+
+function setCharacter( name )
+{
+	if ( ! spriteSet[ name ] ) return;
+	
+	for ( var e in spriteSet[ name ] )
+		eng.player.states[ e ] = spriteSet[ name ][ e ];
+	
+	eng.player.updateStateInPlace();
+}
 
 </script>
 

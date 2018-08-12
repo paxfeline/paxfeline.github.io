@@ -23,8 +23,6 @@ function PXSprite ( w, h, imgUrl, tw, th )
 	
 	this.setTargetFPS( 20 );
 	
-	this.flipX = false;
-	
 	this.rawImg = new Image();   // Create new img element
 	this.rawImg.addEventListener( 'load', () => { this.length = this.rawImg.width / w; }, false );
 	this.rawImg.src = imgUrl; // Set source path
@@ -41,11 +39,6 @@ PXSprite.prototype.setTargetFPS =
 PXSprite.prototype.draw =
 	function ( ctx, owner )
 	{
-		this.frame();
-		
-		//ctx.strokeStyle = this.color;
-		//ctx.strokeRect( 0, 0, this.width, this.height );
-		
 		if ( owner.flipX )
 		{
 			ctx.translate( this.width, 0 );
@@ -53,22 +46,6 @@ PXSprite.prototype.draw =
 		}
 		
 		ctx.drawImage( this.rawImg, this.index * this.innerWidth, 0, this.innerWidth, this.innerHeight, 0, 0, this.width, this.height );
-	};
-
-PXSprite.prototype.frame =
-	function ()
-	{
-		var t = performance.now();
-		if ( this.lastFrame )
-		{
-			if ( t - this.lastFrame >= this.targetFrameDelay )
-			{
-				this.index = ++this.index % (this.length || 1);
-				this.lastFrame = t;
-			}
-		}
-		else
-			this.lastFrame = t;
 	};
 
 function PXColorSprite ( w, h, c )

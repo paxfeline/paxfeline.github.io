@@ -4,6 +4,8 @@ function Engine ( collider, solverHit, solver1, solver2 )
 	this.solver = { resolveHit: solverHit, resolveY: solver1, resolveX: solver2 };
 	this.entities = [];
 	this.collidables = [];
+	
+	console.log( "debug options: enter gPXAbsPos = true to change camera tracking");
 }
 
 Engine.prototype = {
@@ -20,8 +22,11 @@ Engine.prototype = {
 			var i = this.entities.indexOf( el );
 			if ( i >= 0 ) this.entities.splice( i, 1 );
 			
-			i = this.collidables.indexOf( el );
-			if ( i >= 0 ) this.collidables.splice( i, 1 );
+			for ( var cset of this.collidables )
+			{
+				i = cset.indexOf( el );
+				if ( i >= 0 ) cset.splice( i, 1 );
+			}
 			
 			i = collisions.indexOf( el );
 			if ( i >= 0 ) collisions.splice( i, 1 );
@@ -100,9 +105,12 @@ Engine.prototype = {
 			var d = (this.player.x + this.player.width) % levelXchunk;
 			var i = Math.floor( this.player.x  / levelXchunk );
 			if ( d >= 0 && d <= this.player.width && i + 1 < this.colBlocks.length )
-				this.collidables = [].concat( this.colBlocks[i], this.colBlocks[i+1] );
+			{
+				this.collidables = [ this.colBlocks[i], this.colBlocks[i+1] ];
+				//console.log( this.collidables );
+			}
 			else
-				this.collidables = this.colBlocks[i];
+				this.collidables = [ this.colBlocks[i] ];
 				
 			
 			// find hits
@@ -142,7 +150,7 @@ Engine.prototype = {
 	 
 			collisions2 = this.collider.detectCollisions(
 				this.player, 
-				collisions // only deal with previously existing collisions (risky?)
+				[ collisions ] // only deal with previously existing collisions (risky?)
 			);
 	 
 			/*collisions = this.collider.detectCollisions(
@@ -177,23 +185,33 @@ Engine.prototype = {
 		
 			ctx.save();
 			
-			var x = Math.min( 0, hboardX - this.player.x );
-			var y = Math.min( 0, hboardY - this.player.y );
-			x = Math.max( x, boardX - levelX );
-			y = Math.max( y, boardY - levelY );
+			var x = (hboardX - this.player.x); // + (this.player.curState.width / 2);
+			var y = (hboardY - this.player.y); // + (this.player.curState.height / 2);
+			
+			if ( ! this.player.flipX )
+				x -= this.player.curState.width;
+			
+			if ( !window.gPXAbsPos ) // debug feature
+			{
+				x = Math.min( 0, x );
+				y = Math.min( 0, x );
+			
+				/*var x = Math.min( 0, hboardX - this.player.x );
+				var y = Math.min( 0, hboardY - this.player.y );*/
+			
+				x = Math.max( x, boardX - levelX );
+				y = Math.max( y, boardY - levelY );
+			}
 			
 			ctx.translate( x, y );
 		
 			for ( var el of this.entities )
-			{
-				ctx.save();
-				ctx.translate( el.x, el.y );
-				el.curState.draw( ctx, el );
-				//ctx.fillRect( el.x, el.y, el.width, el.height );
-				ctx.restore();
-			}
+				el.frame( ctx, el, t );
 			
 			ctx.restore();
+			
+			ctx.font = "48pt sans-serif";
+			ctx.fillText( this.player.score, 50, 50 );
 			
 			requestAnimationFrame( this.step.bind( this ) );
 		}

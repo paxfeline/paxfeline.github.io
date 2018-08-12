@@ -37,10 +37,14 @@ var CollisionDetector_checkAll =
     	
     	if ( !collidees ) return;
     	
-    	for ( var el of collidees )
+    	for ( var cset of collidees )
     	{
-    		if ( CollisionDetector_collideRect( collider, el ) )
-    			r.push( el );
+    		if ( ! cset ) continue;
+    		for ( var el of cset )
+    		{
+				if ( CollisionDetector_collideRect( collider, el ) )
+					r.push( el );
+			}
     	}
     	
     	return r;

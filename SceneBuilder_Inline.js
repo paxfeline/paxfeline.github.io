@@ -76,7 +76,23 @@ for ( var blocki = 0; blocki < level.length; blocki++ )
                 	var s = new PXColorSprite( BOXSIZE, BOXSIZE, "darkgrey" );
                 	s.subDraw = specialBoxDraw;
                     var plat = new PhysicsEntity( PhysicsEntity.ESLASTIC, PhysicsEntity.KINEMATIC, x, y, s );
-                    plat.yHit = function (d,v) { /*console.log( "hitZ", this );*/ if ( d < 0 && v < 0 ) this.curState.color = cGen.next().value; };
+                    plat.yHit =
+                    	function (d,v)
+                    	{
+                    		/*console.log( "hitZ", this );*/
+                    		if ( d < 0 && v < 0 )
+                    		{
+                    			if ( Math.random() <= 0.01 )
+                    			{
+                    				eng.player.score += 200;
+                    				this.curState.color = cGen.next().value;
+                    			}
+                    			else
+                    			{
+                    				eng.player.score -= 2;
+                    			}
+							}
+						};
                     plat.restitution = 0; // no bounce
                     eng.entities.push( plat );
                     curColBlock.push( plat );
@@ -86,7 +102,7 @@ for ( var blocki = 0; blocki < level.length; blocki++ )
                     
                     var s = new PXColorSprite( BOXSIZE, BOXSIZE, "gold" );
                     var plat = new PhysicsEntity( PhysicsEntity.ESLASTIC, PhysicsEntity.KINEMATIC, x, y, s );
-                    plat.anyHit = function () { /*console.log( "hit", this );*/ eng.toRemove.push( this ); };
+                    plat.anyHit = function () { /*console.log( "hit", this );*/ eng.player.score++; eng.toRemove.push( this ); };
                     eng.entities.push( plat );
                     curColBlock.push( plat );
                     
@@ -107,6 +123,8 @@ for ( var blocki = 0; blocki < level.length; blocki++ )
                 	s.setTargetFPS( 7 );
                     eng.player.addState( "fly", s );
                     eng.entities.push( eng.player );
+                    
+                    eng.player.score = 0;
                     
                     break;
             }

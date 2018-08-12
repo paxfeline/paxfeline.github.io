@@ -42,7 +42,7 @@ var PhysicsEntity = function( collisionName, type, x, y, sprite ) {
  		{
  			"default": sprite
  		};
- 		
+ 	
  	this.updateState( "default" );
  
  	var w = sprite.width;
@@ -81,17 +81,125 @@ var PhysicsEntity = function( collisionName, type, x, y, sprite ) {
 // Physics entity calculations
 PhysicsEntity.prototype = {
 
+	// add a new 'skin' to use
 	addState:
 		function ( name, state )
 		{
 			this.states[ name ] = state;
 		},
 
+	// set skin and update bounds (immediately)
 	updateState:
 		function ( state )
 		{
-			this.curState = this.states[ state ];
-			this.updateBounds();
+			if ( ! this.curState )
+			{
+				this.curStateName = state;
+				this.curState = this.states[ state ];
+				this.updateBounds();
+			}
+			else
+			{
+				var w1 = this.curState.width;
+				var h1 = this.curState.height;
+			
+				this.curStateName = state;
+				this.curState = this.states[ state ];
+			
+				var dx, dy;
+			
+				if ( ! this.flipX )
+				{
+					dx = w1 - this.curState.width;
+					this.x += dx;
+				}
+			
+				dy = h1 - this.curState.height;
+				this.y += dy;
+			
+				this.updateBounds();
+			}
+		},
+
+	// set skin and update bounds (immediately)
+	updateStateInPlace:
+		function ( state )
+		{
+			this.updateState( this.curStateName );
+		},
+
+	stateStack: [],
+	
+	nextState:
+		function ( ts )
+		{
+			var state, delay;
+			
+			if ( this.stateStack.length > 1 )
+			{
+				({ state, delay } = this.stateStack.shift());
+			
+				var t = ts ? ts : performance.now();
+				this.stateStart = t;
+				this.stateDur = delay;
+			}
+			else
+			{
+				this.stateStart = null;
+				this.stateDur = null;
+				
+				state = this.stateStack[0];
+			}
+			
+			this.updateState( state );
+		},
+	
+	pushState:
+		function ( state, delay )
+		{
+			this.stateStack.push( { state: state, delay: delay } );
+			
+			if ( this.stateStack.length == 1 )
+				this.nextState();
+		},
+	
+	clearStateStack:
+		function ()
+		{
+			this.stateStack = [];
+		},
+	
+	setState:
+		function ( state )
+		{
+			this.stateStack = [ state ];
+			this.updateState( state );
+		},
+		
+	frame:
+		function ( ctx, el, t )
+		{
+			ctx.save();
+			ctx.translate( el.x, el.y );
+			
+			if ( this.stateDur && t - this.stateStart >= this.stateDur )
+			{
+				this.nextState();
+				this.lastFrame = t;
+			}
+		
+			if ( this.lastFrame && t - this.lastFrame >= this.curState.targetFrameDelay )
+			{
+				this.curState.index = ++this.curState.index % (this.curState.length || 1);
+				this.lastFrame = t;
+			}
+			
+			if ( !this.lastFrame )
+				this.lastFrame = t;
+			
+			this.curState.draw( ctx, el );
+			
+			ctx.restore();
 		},
  
     // Update bounds includes the rect's
