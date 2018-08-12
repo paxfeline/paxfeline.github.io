@@ -23,6 +23,8 @@ body
     text-align: center;
 }
 
+#jumpBtn { margin-top: 1em; }
+
 .gameBtn
 {
     font-size: 3em;
@@ -219,7 +221,7 @@ var levelY = level[0].length * BOXSIZE;
 
 <div id="base">
 
-<div style="float: left">
+<div style="position: absolute">
 	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'default' );">default</div>
 	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'hatman' );">hatman</div>
 	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'robot' );">robot</div>
