@@ -1,0 +1,9 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.grokprog.spacewyrm",
+    "sha256_cert_fingerprints":
+    ["3F:83:55:DA:8D:60:4A:2D:EF:3D:BB:58:2C:D2:94:4B:35:95:DA:92:A0:CF:FF:7E:BE:93:F8:BA:CE:2C:24:F6"]
+  }
+}]
