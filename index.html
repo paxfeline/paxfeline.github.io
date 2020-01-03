@@ -1,379 +1,124 @@
 <html>
 <head>
-<meta name="viewport" content="user-scalable=no, height=device-height">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<style type="text/css">
-
-*
-{
-    box-sizing: border-box;
-    -webkit-user-select: none; /* disable selection/Copy of UIWebView */
-    -webkit-tap-highlight-color: rgba(0,0,0,0);
+<title>grok programming</title>
+<style>
+body {}
+.cen {
+    background-color: #6a848c;
+    font-family: sans-serif;
+    padding: 2em;
+    padding-top: 2em;
+    font-size: 1.2em;
+    line-height: 1.25em;
 }
-
-body
-{
-    margin: 0;
-    overflow-y: hidden;
+.main {
+	border: 1px solid black;
+	border-radius: 10px;
+	padding: 1.5em;
+	width: 66%;
+	margin: 0 auto 2em;
+	background-color: white;
+	color: -moz-fieldtext;
+	text-align: justify;
 }
-
-#base
-{
-    height: 100vh;
-    text-align: center;
+h1 {
+	font-size: 4em;
+	text-align: center;
+	font-family: monospace;
+	margin: 1em;
 }
-
-#jumpBtn { margin-top: 1em; }
-
-.gameBtn
-{
-    font-size: 3em;
-    background-color: black;
-    color: white;
-    border: 0.1em outset black;
-    width: 1.5em;
-    height: 1.5em;
-    display: inline-block;
-    vertical-align: text-bottom;
-    text-align: center;
-    border-radius: 50%;
-    margin: 0.1em;
-    margin-bottom: .75em;
+h2 {
+    font-size: 1.6em;
+    margin: 0 0 1em;
+    border-bottom: 1px solid gray;
+    font-weight: normal;
 }
-
-/* while pressed the button's border style will change from outset to inset */
-
-.gameBtn:active
-{
-    border-style: inset;
+.em, .emf::first-line { font-weight: bold; font-variant: small-caps; font-style: italic; }
+ul ul ul { line-height: 1em; }
+li, ul { margin-bottom: 1em; }
+ul { 
+    padding-inline-end: 2em;
 }
-
-/* the canvas will fit to the screen */
-
-canvas
-{
-    height: 100vmin;
-    width: 100vmin;
-    border: 1px solid black;
-}
-
 </style>
-
-<script type="text/javascript" src="EngineConstants.js"></script>
-
-<script type="text/javascript">
-
-// This method actually gets called by all input methods (see below)
-// But it was first designed for keyboard input
-
-var keysDown = {};
-
-function keyDown( e )
-{
-	if ( keysDown[ e.key ] ) return;
-	
-	// e.key will be " ", "ArrowRight", or "ArrowLeft"
-	if ( e.key == " " || e.key == "ArrowUp" )
-	{
-		function revert()
-		{
-			if ( keysDown[ "ArrowLeft" ] )
-			{
-				eng.player.flipX = true;
-				eng.player.updateState( "walk" );
-			}
-			else if ( keysDown[ "ArrowRight" ] )
-			{
-				eng.player.flipX = false;
-				eng.player.updateState( "walk" );
-			}
-			else
-				eng.player.updateState( "default" );
-		}	
-		
-		function jump()
-		{
-			eng.player.vy = -15; // jump = set vertical velocity to -15 (gravity will make you fall back)
-			eng.player.updateState( "fly" );
-			
-			if ( eng.player.jumpRet )
-				clearTimeout( eng.player.jumpRet )
-			
-			eng.player.jumpRet = setTimeout( revert, 600 );
-		}
-		
-		jump();
-	
-		eng.player.jumperval = setInterval( jump, 200 );
-	}
-	else if ( e.key.includes( "Left" ) )
-	{
-		eng.player.vx = -10; // Sets horizontal velocity to -8 (until key is let up)
-		if ( keysDown[ " " ] || keysDown[ "ArrowUp" ] )
-			eng.player.updateState( "fly" );
-		else
-			eng.player.updateState( "walk" );
-		eng.player.flipX = true;
-	}
-	else if ( e.key.includes( "Right" ) )
-	{
-		eng.player.vx = 10; // Sets horizontal velocity to 8 (until key is let up)
-		if ( keysDown[ " " ] || keysDown[ "ArrowUp" ] )
-			eng.player.updateState( "fly" );
-		else
-			eng.player.updateState( "walk" );
-		eng.player.flipX = false;
-	}
-	
-	keysDown[ e.key ] = true;
-	
-	if ( e.preventDefault ) e.preventDefault();
-}
-
-function keyUp( e )
-{
-	// when the left or right arrow keys is raised, stop horizontal motion
-	if ( e.key.includes( "Left" ) || e.key.includes( "Right" ) )
-	{
-		eng.player.vx = 0;
-		eng.player.updateState( "default" );
-	}
-	else if ( e.key = " " )
-	{
-		clearInterval( eng.player.jumperval );
-		eng.player.jumping = false;
-	}
-	
-	keysDown[ e.key ] = false;
-	
-	if ( e.preventDefault ) e.preventDefault();
-}
-
-addEventListener( "keydown", keyDown );
-addEventListener( "keyup", keyUp );
-
-/**************/
-
-// this is fun: design your level via ASCII.
-// the meanings of these characters is determined in SceneBuilder_Inline.js (included below).
-
-// note: the "chunks" below are laid out horizontally, sequentially.
-// while the chunks can be whatever size you want, they should be a uniform size.
-
-// (the # character hasn't been defined yet, so it is ignored (like space))
-
-var level =
-    [
-        [
-            "XXXXXXXXXX",
-            "0         ",
-            "0    S * *",
-            "0         ",
-            "0   P     ",
-            "0  SZS9900",
-            "0         ",
-            "0         ",
-            "0         ",
-            "XXXXXXXXXX"
-        ],
-        [
-            "XXXXXXXXXX",
-            "          ",
-            " * * * *0*",
-            "          ",
-            "          ",
-            "S00       ",
-            "          ",
-            "          ",
-            "          ",
-            "X#########"
-        ],
-        [
-            "XXXXXXXXXX",
-            "          ",
-            "0* * * * *",
-            "          ",
-            "          ",
-            "          ",
-            "         X",
-            "         X",
-            "         X",
-            "####99XXXX"
-        ]
-    ];
-
-// these variables are used elsewhere
-var levelblocksize = level[0][0].length;
-var levelXchunk = levelblocksize * BOXSIZE;
-var levelX = level.length * levelXchunk;
-var levelY = level[0].length * BOXSIZE;
-
-</script>
-
-<script type="text/javascript" src="PXSprite.js"></script>
-<script type="text/javascript" src="PhysicsEntity.js"></script>
-<script type="text/javascript" src="CollisionDetector.js"></script>
-<script type="text/javascript" src="Resolver.js"></script>
-<script type="text/javascript" src="Engine.js"></script>
-
 </head>
-<body>
+<body style="margin: 0">
 
-<div id="base">
-
-<div style="position: absolute">
-	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'default' );">default</div>
-	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'hatman' );">hatman</div>
-	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'robot' );">robot</div>
-	<div style="background-color: lightblue; margin: 1em;" onclick="setCharacter( 'dino' );">dino</div>
+<div style="text-align: center; font-size: 7em; background-color: black; color: white; font-family: Krungthep, monospace; padding: 0.75em 0 0.5em;">
+Grok Programming
 </div>
 
-<div class="gameBtn" id="jumpBtn">^</div>
+<div class="cen">
 
-<canvas width="500" height="500" id="board"></canvas>
+<div class="main emf">
+The power of programming is astounding. Programming is like a secret code: a language that only a few understand. But more than that, it's a language that actually brings about change in the world. In a very real sense, it's like magic.<br><br>
+The meaning of <span class="em">grok prog</span> is to get beyond a basic understanding. To <span class="em">grok</span> is to understand intuitively &mdash; in a way that leaves behind the need for words &mdash; while maintaining the ability to explain your reasoning.
+</div>
 
-<div class="gameBtn" id="leftBtn">&lt;</div>
+<div class="main">
 
-<div class="gameBtn" id="rightBtn">&gt;</div>
+<h2>Projects</h2>
+
+<ul>
+
+
+	<li>
+
+		<div>
+		<a href="http://wyrm3d.com">Space Wyrm: 3D Snake</a>, is a game for iOS and Android. Tracing its roots back to the lowly Snake, in this version you pilot a dragon through space. While the goal and perils are essentially the same, the gameplay is transformed by the steering mechanism. You pilot not with a joystick, but by simply tilting your device up and down, left and right.
+		</div>
+
+	</li>
+	
+	<li>
+
+		<div>
+		My current project is called RiffTube. Inspired by the show <em>Mystery Science Theater 3000</em> and its progeny, the idea of this app is to allow users to riff or otherwise add commentary to any video on YouTube. This is the first app I have made using React. Development is taking place in collaboration with Joscelyn Owen.<br>
+		<a href="http://rocky-sea-18701.herokuapp.com">Live Demo (alpha)</a><br>
+		<a href="https://github.com/Joscelyn1/RiffTube">GitHub</a>
+		</div>
+
+	</li>
+	
+	<li>
+
+		<div>
+		My earliest exposure to programming was through a language called Logo, which was designed especially for teaching children to code. The idea is that the commands manipulating a digital robot, which can draw lines on a canvas. The original actually used a <a href="https://en.wikipedia.org/wiki/Turtle_(robot)">physical robot</a> (link to WikiPedia). I've made several toy implementations in various languages; here are the two most recent:
+		</div>
+
+	</li>
+	
+	<ul>
+
+		<li><a href="https://paxfeline.github.io/LogoRedux/">Logo Redux</a></li>
+		<ul>
+		This interface is designed to help the user see how lines of code are evaluated and executed. The language borrows from BASIC to declare variables and functions.<br>
+		<a href="https://github.com/paxfeline/logo-redux">GitHub</a>
+		</ul>
+
+		<li><a href="https://paxfeline.github.io/Nugo/">Nugo</a></li>
+		<ul>
+		This interface is designed for code to be entered by clicking buttons and adjusting sliders and other graphical input controls. Textual input is also possible, but not the main focus. As of yet there is no support for variables or functions.<br>
+		<a href="https://github.com/paxfeline/nugo">GitHub</a>
+		</ul>
+	
+	</ul>
+	
+	<li>
+
+		<div>
+		<a href="https://paxfeline.github.io/PXSpriteEngine/">PXSpriteEngine</a> is a very bare-bones sprite engine that.<br>
+		<a href="">GitHub</a>
+		</div>
+
+	</li>
+
+</ul>
 
 </div>
 
-<script type="text/javascript">
+</div>
 
-// these variables are pointless, but I find them somewhat prettier than the alternative
-
-var collider = CollisionDetector_checkAll;
-var solveHit = resolveAllHit;
-var solverY = resolveAllY;
-var solverX = resolveAllX;
-
-// create the game engine
-var eng = new Engine( collider, solveHit, solverY, solverX );
-
-// next invoke scene builder (which adds sprites to the engine)
-
-</script>
-<script type="text/javascript" src="SceneBuilder_Inline.js"></script>
-<script type="text/javascript">
-
-// this is the main game "loop"
-
-//setInterval( eng.step.bind( eng ), 50 );
-requestAnimationFrame( eng.step.bind( eng ) );
-
-// this makes the buttons function
-// this is a bit messy: it fakes a 'key' event and calls the keyDown function
-
-var leftBtn = document.querySelector( "#leftBtn" );
-var leftDown = function ( e ) { e.key = "ArrowLeft"; keyDown( e ); };
-var leftUp = function ( e ) { e.key = "ArrowLeft"; keyUp( e ); };
-leftBtn.addEventListener( "touchstart", leftDown, false );
-leftBtn.addEventListener( "touchend", leftUp, false );
-leftBtn.addEventListener( "touchcancel", leftUp, false );
-leftBtn.addEventListener( "mousedown", leftDown, false );
-leftBtn.addEventListener( "mouseup", leftUp, false );
-
-var rightBtn = document.querySelector( "#rightBtn" );
-var rightDown = function ( e ) { e.key = "ArrowRight"; keyDown( e ); };
-var rightUp = function ( e ) { e.key = "ArrowRight"; keyUp( e ); };
-rightBtn.addEventListener( "touchstart", rightDown, false );
-rightBtn.addEventListener( "touchend", rightUp, false );
-rightBtn.addEventListener( "touchcancel", rightUp, false );
-rightBtn.addEventListener( "mousedown", rightDown, false );
-rightBtn.addEventListener( "mouseup", rightUp, false );
-
-var jumpBtn = document.querySelector( "#jumpBtn" );
-var jumpDown = function ( e ) { e.preventDefault(); e.stopPropagation(); e.key = " "; keyDown( e ); };
-var jumpUp = function ( e ) { e.preventDefault(); e.stopPropagation(); e.key = " "; keyUp( e ); };
-jumpBtn.addEventListener( "touchstart", jumpDown, false );
-jumpBtn.addEventListener( "touchend", jumpUp, false );
-jumpBtn.addEventListener( "touchcancel", jumpUp, false );
-jumpBtn.addEventListener( "mousedown", jumpDown, false );
-jumpBtn.addEventListener( "mouseup", jumpUp, false );
-
-// tapping or clicking the canvas will also jump
-
-jumpBtn = document.querySelector( "canvas" );
-jumpBtn.addEventListener( "touchstart", jumpDown, false );
-jumpBtn.addEventListener( "touchend", jumpUp, false );
-jumpBtn.addEventListener( "touchcancel", jumpUp, false );
-jumpBtn.addEventListener( "mousedown", jumpDown, false );
-jumpBtn.addEventListener( "mouseup", jumpUp, false );
-
-// deregister mouse events if a touch event is registered
-addEventListener( "touchstart",
-	function tscheck ()
-	{
-		removeEventListener( "touchstart", tscheck );
-		
-		var leftBtn = document.querySelector( "#leftBtn" );
-		var rightBtn = document.querySelector( "#rightBtn" );
-		var jumpBtn = document.querySelector( "#jumpBtn" );
-
-		leftBtn.removeEventListener( "mousedown", leftDown, false );
-		leftBtn.removeEventListener( "mouseup", leftUp, false );
-		rightBtn.removeEventListener( "mousedown", rightDown, false );
-		rightBtn.removeEventListener( "mouseup", rightUp, false );
-		jumpBtn.removeEventListener( "mousedown", jumpDown, false );
-		jumpBtn.removeEventListener( "mouseup", jumpUp, false );
-		
-		jumpBtn = document.querySelector( "canvas" );
-		jumpBtn.removeEventListener( "mousedown", jumpDown, false );
-		jumpBtn.removeEventListener( "mouseup", jumpUp, false );
-	} );
-
-// also messy...
-// this presents an alert with the keyboard controls, if there is no touch screen
-// it determines this hackily by checking whether window.orientation exists
-// just due to weird behavior on my phone, I added the timeout
-
-if ( typeof window.orientation == 'undefined' )
-    setTimeout( alert.bind( null, "Use the left and right arrow keys to move, spacebar to jump." ), 10 );
-
-var spriteSet =
-	{
-		"default":
-			{
-				"default": new PXSprite( 20, 25, 'images/sprites/stander20x25.png', BOXSIZE ),
-				walk: new PXSprite( 20, 30, 'images/sprites/walker20x30.png', BOXSIZE ),
-				fly: new PXSprite( 20, 25, 'images/sprites/flyer20x25.png', BOXSIZE )
-			},
-		robot:
-			{
-				"default": new PXSprite( 18, 29, 'images/sprites/robotstand18x29.png', BOXSIZE ),
-				walk: new PXSprite( 18, 29, 'images/sprites/robotstand18x29.png', BOXSIZE ),
-				fly: new PXSprite( 30, 14, 'images/sprites/robotjet30x14.png', BOXSIZE )
-			},
-		hatman:
-			{
-				"default": new PXSprite( 10, 29, 'images/sprites/hatman10x29.png', BOXSIZE ),
-				walk: new PXSprite( 32, 25, 'images/sprites/hatwalk32x25.png', BOXSIZE ),
-				fly: new PXSprite( 24, 22, 'images/sprites/hatfly24x22.png', BOXSIZE )
-			},
-		dino:
-			{
-				"default": new PXSprite( 32, 32, 'images/sprites/dino32x32.png', BOXSIZE ),
-				walk: new PXSprite( 32, 32, 'images/sprites/dino32x32.png', BOXSIZE ),
-				fly: new PXSprite( 32, 32, 'images/sprites/dino32x32.png', BOXSIZE )
-			}
-		};
-
-spriteSet[ "default" ][ "default" ].setTargetFPS( 7 );
-spriteSet[ "default" ].fly.setTargetFPS( 7 );
-spriteSet.hatman.fly.setTargetFPS( 10 );
-spriteSet.robot["default"].setTargetFPS( 10 );
-
-function setCharacter( name )
-{
-	if ( ! spriteSet[ name ] ) return;
-	
-	for ( var e in spriteSet[ name ] )
-		eng.player.states[ e ] = spriteSet[ name ][ e ];
-	
-	eng.player.updateStateInPlace();
-}
-
-</script>
+</div>
 
 </body>
 </html>

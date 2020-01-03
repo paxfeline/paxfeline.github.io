@@ -1,0 +1,250 @@
+<html>
+
+<!-- Mirrored from members.sti.net/newberry/David/grokprogramming/logo/lbasic/ by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 16 Nov 2019 07:57:16 GMT -->
+<head>
+
+	<title>Logo Redux (by GrokProg)</title>
+  
+<!-- holds functions for runtime -->
+<script language="JavaScript" src="includes.js"></script>
+
+<!-- holds def of Logo BASIC lang for parser -->
+<script language="JavaScript" src="lBasicLang.js"></script>
+
+<!-- code vizualizer -->
+<script language="JavaScript" src="langVisualizer.js"></script>
+
+<!-- holds lBasic processing -->
+<script language="JavaScript" src="lBasicProcessing.js"></script>
+
+<!-- holds def of Logo BASIC runtime -->
+<script language="JavaScript" src="lBasicRuntime.js"></script>
+
+<!-- generic language parser -->
+<script language="JavaScript" src="langParse.js"></script>
+  
+  <script id="setupscript" type="text/javascript">
+
+var lBasicLang = new lBasicLangDef();
+
+var parser = new langParse( lBasicLang );
+
+var lbasicproc = null;
+
+var gRuntime = null;
+	
+	function makePoint( vx, vy )
+	{
+		//alert( "make:" + vx + "," + vy );
+		return { "x": vx, "y": vy, "type": "l" };
+	}
+	
+	function makeAng( ang )
+	{
+		return { "ang": ang, "type": "r" };
+	}
+  
+  function alerta( b, a )
+  {
+  	var out = b + ":";
+  	for ( var i = 0; i < a.length; i++ )
+  	{
+  		if ( a[i].type && a[i].type == "r" ) out += ("r(" + a[i].ang + ") ");
+  		else out += (a[i].type + "(" + a[i].x + "," + a[i].y + ") ");
+  	}
+	alert( out );
+  }
+  
+  function reloadcode(proc)
+  {
+  	//if ( gRuntime && gRuntime.running ) return;
+  	
+  	//gcode = new Array();
+  	document.getElementById( 'visDivOut' ).style.display = 'block';
+
+	var vis = new langVis( document.getElementById( 'visDivOut' ),
+							document.getElementById( 'runButDiv' ) );
+  	
+  	var code = document.getElementById( 'incode' ).value;
+	
+	var tok = parser.tokenize( code );
+	
+	lBasicLang.getFuncs( tok );
+
+	if ( !lbasicproc ) lbasicproc = new lBasicProcessing( "canvas1" );
+	
+	gRuntime = new lBasicRuntime( lBasicLang, vis, lbasicproc );
+
+	//alert( "t" );
+	
+	vis.setRuntime( gRuntime );
+	
+	//rt.cRuntimeWriteInt( 260, 0, 'int' );
+	
+	gRuntime.run( [] );
+	
+	//debugOut( enumerateX( o, 0 ) );
+  }
+  
+  gTimer = null;
+  
+  function autoStep()
+  {
+  	gRuntime.runStep();
+  	
+  	if ( !gRuntime.running )
+  		clearInterval( gTimer );
+  }
+  
+  function killStep()
+  {
+  	if ( gTimer )
+  		clearInterval( gTimer );
+  }
+  
+  function createTimer()
+  {
+  	gTimer = setInterval( autoStep, 0 );
+  }
+  
+  </script>
+</head>
+
+
+<!-- onUnload="p.exit();" -->
+<body>
+
+<h1>Logo BASIC - the best thing ever</h1>
+created by <a href="http://grokprogramming.com/">Grok Programming</a>
+
+<div style="float: right; border: 1px solid black; width: 51%; max-width: 500px; overflow: auto">
+<canvas id="canvas1" width="500" height="500"></canvas>
+</div>
+
+<br><br>
+
+<div style="position: relative;" id="runButDiv">
+
+<div style="float: left; width: 45%; height: 60%; border: 1px solid black; position: relative; overflow: auto">
+
+<div style="position: absolute; display: none; width: 100%; background-color: white;" id="visDivOut">
+</div>
+
+<textarea id="incode" style="margin: 1em; width: 80%; height: 90%">
+// opening function
+
+function main ( )
+
+  var i
+  i = 0
+
+  while ( i < 200 )
+
+    fd i
+    rt 90
+
+    i = i + 10
+
+  wend
+
+endfunc
+</textarea>
+
+<!--input type="text" id="incode" value="10 10 60 10 60 60"-->
+
+</div>
+
+</div>
+
+<div style="clear: left;">
+<input type="button" value="ready" onClick="reloadcode(parser);"> | 
+<input type="button" value="ready & run" onClick="reloadcode(parser); createTimer();">
+</div>
+
+<div style="clear: both">
+<h3>Super short intro</h3>
+Enter code into the text box, then click the "ready" button. An overlay will appear over the 
+text box.<br>
+- Then using the links at the top of the overlay -- step, run and pause -- you 
+can watch the code execute.<br>
+- or, <b>click "ready & run"</b><br>
+<br>
+You can have multiple functions, but there should always be a function called "main" 
+where the program will start.<br>
+<br>
+Bear in mind this software is still in development. There's a lot yet to be done, and
+bugs to be fixed. If you do get an error, it is prudent to reload the page.<br>
+<br>
+<u>Logo commands:</u><br>
+fd x - move forward x pixels<br>
+bk x - move back x pixels<br>
+rt x - turn clockwise x degrees<br>
+lt x - turn counter-clockwise x degrees<br>
+pu() - pen up (move but don't draw)<br>
+pd() - pen down (move and draw)<br>
+home() - move to the center of the canvas<br>
+setX n & setY n - set the x or y location<br>
+setWeight x - set the size of the pen<br>
+setPPF x - set how many pixels (i.e. how far) the turtle can move each frame<br>
+setAPF x - set how many degrees the turtle can turn each frame<br>
+setAngle x - change orientation to x<br>
+<br>
+<u>BASIC commands:</u><br>
+var <i>label</i> - declare a variable named <i>label</i><br>
+math operations: +, -, /, +<br>
+to assign a value to a variable, use =<br>
+<i>var</i>++ is equivalent to <i>var = var + 1</i><br>
+to test if two values are equal, use ==<br>
+or != to see if two values are not equal<br>
+test if one value is larger or smaller than another with &lt; and &gt;<br>
+<br>
+if ( <i>condition</i> )<br>
+...<br>
+end<br>
+<br>
+while ( <i>condition</i> )<br>
+...<br>
+wend<br>
+<br>
+<i>Built in functions</i><br>
+alert( x ) - display the value x<br>
+input( x ) - displays the message x, prompts the user for a value, and returns it<br>
+sqrt( x ) - returns the square root of x<br>
+<br>
+function <i>name</i> ( <i>parameters (optional)</i> )<br>
+...<br>
+endfunc<br>
+<br>
+return x - returns the value x from a function (but currently does not halt execution of the function)
+</div>
+
+<textarea id=outfield cols="80" rows="20"></textarea>
+
+<script id="script1" type="text/javascript">
+
+// Simple way to attach js code to the canvas is by using a function
+/*function sketchProc(processing)
+{
+	processing.setup = function() { 
+		processing.size( 500, 500 );
+		processing.frameRate(60);
+	};
+
+  // Override draw function, by default it will be called 60 times per second
+  processing.draw = function()
+  {
+  	gLogo.draw(processing);
+  };
+  
+}
+
+var canvas = document.getElementById("canvas1");
+// attaching the sketchProc function to the canvas
+p = new Processing(canvas, sketchProc);
+reloadcode(p);
+// p.exit(); to detach it*/
+</script>
+</body>
+
+<!-- Mirrored from members.sti.net/newberry/David/grokprogramming/logo/lbasic/ by HTTrack Website Copier/3.x [XR&CO'2014], Sat, 16 Nov 2019 07:57:22 GMT -->
+</html>
