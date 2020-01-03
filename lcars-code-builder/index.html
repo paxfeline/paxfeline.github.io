@@ -1,0 +1,366 @@
+<html>
+<head>
+<title></title>
+
+<link type="text/css" rel="stylesheet" href="style.css" />
+
+<meta name="apple-mobile-web-app-capable"
+      content="yes" />
+      
+<meta name="viewport"
+    content="user-scalable=no, width=device-width" />
+
+<script language="JavaScript">
+
+function BlockMove(event)
+{
+	// Tell Safari not to move the window.
+	event.preventDefault() ;
+}
+
+function set_cursor_event( el, func )
+{
+	if ( el.ontouchend )
+		el.ontouchstart = func;
+	else
+		el.onmouseup = func;
+}
+
+function code_line()
+{
+	this.type = "line";
+	
+	this.htmlEl = document.createElement( "div" );
+	this.htmlEl.className = "line";
+	
+	var lbut = document.createElement( "div" );
+	lbut.className = "line-buttons";
+	
+	var lbutspan = document.createElement( "span" );
+	
+	var lb_add = document.createElement( "div" );
+	lb_add.className = "line-add";
+	lb_add.appendChild( document.createTextNode( "+" ) );
+	
+	var lb_rem = document.createElement( "div" );
+	lb_rem.className = "line-remove";
+	lb_rem.appendChild( document.createTextNode( "-" ) );
+	
+	lbut.appendChild( lb_add );
+	lbut.appendChild( lb_rem );
+	
+	this.add_but = lb_add;
+	this.rem_but = lb_rem;
+	this.out_but = lbut;
+	
+	this.htmlEl.appendChild( lbut );
+}
+
+function code_block( in_parent )
+{
+	this.type = "block";
+	
+	this.parent = in_parent;
+	
+	var par = this;
+	
+	this.content = new Array();
+	
+	this.calcStyles = function ( sup )
+		{
+			if ( !sup )
+			{
+				if ( par.parent )
+					par.parent.calcStyles();
+				else
+					par.calcStyles( true );
+			}
+			else
+			{
+				for ( var i = 0; i < par.content.length; i++ )
+				{
+					//alert( in_block.htmlEl.parentNode.id );
+					
+					if ( par.content[i].type == "block" )
+					{
+						if ( par.content[i].content.length > 0 )
+							par.content[i].calcStyles( true );
+						
+						if ( (par.parent && i == par.content.length - 1 && par.type == "block") )
+						{
+							//alert( par.content[i].b_line.className );
+							par.content[i].b_line.className = "line-inner";
+							par.content[i].b_line.style.borderBottomWidth = "0px";
+							
+							par.content[i].b_lr.setAttribute( "src", "block-bot-side-fin.jpg" );
+							
+							//par.content[i].b_lr.style.display = "none";
+							
+							//alert( par.content[i].b_line.offsetHeight );
+							// TO GET AROUND CHROME BUG(!?)
+							//par.content[i].b_line.style.height = par.content[i].b_line.offsetHeight + "px";
+						}
+						else
+						{
+							par.content[i].b_line.className = "line";
+							//par.content[i].b_line.style.borderBottomWidth = "10px";
+							//par.content[i].b_lr.style.display = "block";
+						}
+					}
+					else if ( par.content[i].type == "line" )
+					{
+						//alert( par.content[i].htmlEl.offsetHeight - par.content[i].rem_but.offsetHeight - 13 );
+						
+						/*alert( i + "/" + par.content.length )
+						if (i < par.content.length - 1 && par.content[i + 1].type == "block")
+							alert( par.content[i + 1].type );*/
+
+						//par.content[i].add_but.style.height = (par.content[i].htmlEl.offsetHeight - par.content[i].rem_but.offsetHeight) + "px";
+							
+						if ( (i == par.content.length - 1 /*&& par.parent*/) ||
+								(i < par.content.length - 1 && par.content[i + 1].type == "block") )
+						{
+							//par.content[i].htmlEl.className = "line-inner";
+							par.content[i].htmlEl.style.borderBottomWidth = "0px";
+							
+							/*par.content[i].add_but.style.height = (par.content[i].htmlEl.offsetHeight - par.content[i].rem_but.offsetHeight - 13) + "px";
+							if (i != par.content.length - 1)
+								par.content[i].add_but.style.height = (par.content[i].htmlEl.offsetHeight - par.content[i].rem_but.offsetHeight) + "px";
+							if ( (i == par.content.length - 1 && par.parent) && (par.parent && par.parent.type == "block") )
+								par.content[i].add_but.style.height = (par.content[i].htmlEl.offsetHeight - par.content[i].rem_but.offsetHeight - 8) + "px";*/
+							
+							/*if ( par.content[i].b_lr )
+								par.content[i].b_lr.style.display = "none";*/
+								
+							if ( !par.content[i].b_lr )
+							{
+								par.content[i].b_lr = document.createElement( "img" );
+								//par.content[i].b_lr.setAttribute( "src", "block-bot-side.jpg" );
+								par.content[i].b_lr.className = "block-lr-side";
+								par.content[i].htmlEl.appendChild( par.content[i].b_lr );
+							}
+							
+							/*if (i < par.content.length - 1 && par.content[i + 1].type == "block")
+								par.content[i].b_lr.style.display = "none";
+							else*/
+							{
+								par.content[i].htmlEl.className = "line";
+								par.content[i].b_lr.className = "block-lr-side";
+								par.content[i].b_lr.setAttribute( "src", "block-bot-side-fin.jpg" );
+								par.content[i].b_lr.style.display = "block";
+							}
+						}
+						else
+						{
+							par.content[i].htmlEl.className = "line";
+							//par.content[i].htmlEl.style.borderBottomWidth = "10px";
+							//par.content[i].add_but.style.height = (par.content[i].htmlEl.offsetHeight - par.content[i].rem_but.offsetHeight - 18) + "px";
+							if ( i < par.content.length - 1 /*&& par.parent*/ )
+							{
+								if ( !par.content[i].b_lr )
+								{
+									par.content[i].b_lr = document.createElement( "img" );
+									//par.content[i].b_lr.setAttribute( "src", "block-bot-side.jpg" );
+									par.content[i].b_lr.className = "block-lr-side";
+									par.content[i].htmlEl.appendChild( par.content[i].b_lr );
+								}
+								
+								par.content[i].b_lr.setAttribute( "src", "block-bot-side.jpg" );
+								//par.content[i].htmlEl.style.borderColor = "blue";
+								par.content[i].b_lr.style.display = "block";
+							}
+						}
+					}
+					else
+						alert( par.content[i].type );
+				}
+			}
+		};
+	
+	this.addLine = function ()
+		{
+			var nl = new code_line();
+			par.content.push( nl );
+			par.htmlEl.appendChild( nl.htmlEl );
+			
+			par.ur_el.src = "block-ur.jpg";
+			par.ur_el.style.width = "9em";
+			par.ur_el.style.height = "6em";
+			
+			this.remove = function ()
+				{
+					for ( var i = 0; i < par.content.length; i++ )
+					{
+						if ( par.content[i] == nl )
+						{
+							par.content.splice( i, 1 );
+							break;
+						}
+					}
+					
+					nl.htmlEl.parentNode.removeChild( nl.htmlEl );
+					
+					if ( par.content.length == 0 )
+					{
+						par.ur_el.src = "block-ur-cap.jpg";
+						par.ur_el.style.width = "2em";
+						par.ur_el.style.height = "3em";
+					}
+					
+					par.calcStyles();
+					
+					return true;
+				};
+			
+			set_cursor_event( nl.rem_but, this.remove );
+				
+			par.calcStyles();
+		};
+		
+	this.addBlock = function ()
+		{
+			var nl = document.createElement( "div" );
+			nl.className = "line";
+	
+			var lbut = document.createElement( "div" );
+			lbut.className = "line-buttons";
+	
+			/*var nb_ur = document.createElement( "img" );
+			nb_ur.setAttribute( "src", "block-rem-cap.jpg" );
+			nb_ur.className = "block-rem-cap";*/
+	
+			var lb_rem = document.createElement( "div" );
+			lb_rem.className = "line-remove-red";
+			lb_rem.appendChild( document.createTextNode( "-" ) );
+			
+			//lbut.appendChild( nb_ur );
+			lbut.appendChild( lb_rem );
+			
+			var nb = new code_block( par );
+			par.content.push( nb );
+			par.htmlEl.appendChild( nl );
+			
+			nb.b_line = nl;
+			
+			nb.htmlEl.style.minHeight = "15em";
+			
+			nl.appendChild( lbut );
+			nl.appendChild( nb.htmlEl );
+			
+			par.ur_el.src = "block-ur.jpg";
+			par.ur_el.style.width = "9em";
+			par.ur_el.style.height = "6em";
+			
+			this.remove = function ()
+				{
+					for ( var i = 0; i < par.content.length; i++ )
+					{
+						if ( par.content[i] == nb )
+						{
+							par.content.splice( i, 1 );
+							break;
+						}
+					}
+					
+					nl.parentNode.removeChild( nl );
+					
+					if ( par.content.length == 0 )
+					{
+						par.ur_el.src = "block-ur-cap.jpg";
+						par.ur_el.style.width = "2em";
+						par.ur_el.style.height = "3em";
+					}
+						
+					par.calcStyles();
+					
+					return true;
+				};
+			
+			set_cursor_event( lb_rem, this.remove );
+				
+			par.calcStyles();
+		};
+	
+	this.htmlEl = document.createElement( "div" );
+	this.htmlEl.className = "block";
+
+	var block_top = document.createElement( "div" );
+	block_top.className = "block-top";
+
+	var btbs = document.createElement( "div" );
+	btbs.className = "block-top-buttons";
+
+	var btb1 = document.createElement( "div" );
+	btb1.className = "block-top-button";
+	
+	var btb1_span = document.createElement( "span" );
+	btb1_span.appendChild( document.createTextNode( "+LINE" ) );
+	btb1.appendChild( btb1_span );
+	
+	set_cursor_event( btb1, this.addLine );
+
+	var btb2 = document.createElement( "div" );
+	btb2.className = "block-top-button";
+	
+	var btb2_span = document.createElement( "span" );
+	btb2_span.appendChild( document.createTextNode( "+BLOCK" ) );
+	btb2.appendChild( btb2_span );
+	
+	set_cursor_event( btb2, this.addBlock );
+
+	btbs.appendChild( btb1 );
+	btbs.appendChild( btb2 );
+	
+	block_top.appendChild( btbs );
+
+	var textspan = document.createElement( "span" );
+	textspan.appendChild( document.createTextNode( "MAIN" ) );
+
+	block_top.appendChild( textspan );
+	
+	var b_ul = document.createElement( "img" );
+	b_ul.setAttribute( "src", "block-ul.jpg" );
+	b_ul.className = "block-ul";
+	
+	var b_ur = document.createElement( "img" );
+	b_ur.setAttribute( "src", "block-ur-cap.jpg" );
+	b_ur.className = "block-ur";
+	
+	block_top.appendChild( b_ul );
+	block_top.appendChild( b_ur );
+	
+	this.ur_el = b_ur;
+	
+	this.htmlEl.appendChild( block_top );
+	
+	this.b_lr = null;
+	if ( in_parent )
+	{
+		var b_lr = document.createElement( "img" );
+		b_lr.setAttribute( "src", "block-bot.jpg" );
+		b_lr.className = "block-lr";
+		this.htmlEl.appendChild( b_lr );
+		this.b_lr = b_lr;
+	}
+}
+
+</script>
+
+</head>
+<body>
+
+<div id=code_main style="width: 100%"></div>
+
+</body>
+
+<script language="JavaScript">
+
+var root = new code_block();
+
+document.getElementById( "code_main" ).appendChild( root.htmlEl );
+
+root.htmlEl.style.marginRight = 0;
+
+</script>
+
+</html>

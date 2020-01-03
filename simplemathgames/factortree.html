@@ -1,0 +1,247 @@
+<html>
+<head>
+
+<style>
+
+.baseEl { margin-top: 0.5em; }
+
+.lChild, .rChild
+{
+	display: inline-block;
+	width: 50%;
+	text-align: center;
+}
+
+.score { font-size: 18pt; }
+
+.midDiv1 { width: 1px; height: 1em; background-color: black; margin: 0 auto; }
+.midDiv2 { width: 50%; height: 1px; background-color: black; margin: 0 auto; }
+.midDiv3 { width: 50%; height: 1em; border: 1px solid black; border-width: 0 1px; margin: 0 auto; }
+
+div input { width: 5em; }
+
+</style>
+
+</head>
+<body>
+
+<input type="button" onClick="setupNewNumber();" value="New Number"><br>
+
+<script>
+
+var highNum = 50;
+
+function is_prime( n )
+{
+    // 1 (or less) is not prime
+    if ( n <= 1 ) {
+        return false;
+    }
+    // 2 is the only even prime number
+    if ( n == 2 ) {
+        return true;
+    }
+    // square root algorithm speeds up testing of bigger prime numbers
+    var x = Math.sqrt( n );
+    x = Math.floor( x );
+    
+    for ( var i = 2; i <= x; i++ ) {
+        if ( n % i == 0 ) {
+            break;
+        }
+    }
+    
+    if ( x == i - 1 )
+        return true;
+    else
+        return false;
+}
+
+var body = document.getElementsByTagName( "body" )[0];
+
+var scoreDiv = document.createElement( "div" );
+scoreDiv.className = "score";
+
+body.appendChild( scoreDiv );
+
+var holder = document.createElement( "div" );
+
+body.appendChild( holder );
+
+function traverseSelect()
+{
+	if ( ! traverseSelectRecursive( root ) )
+		; //
+}
+
+function traverseSelectRecursive( n )
+{
+	//console.log( n );
+	if ( n.lChild.factNode )
+	{
+		if ( n.lChild.factNode.factField && n.lChild.factNode.factField.parentNode )
+		{
+			n.lChild.factNode.factField.focus();
+			//console.log( "focus", n.lChild.factNode.factField );
+			return true;
+		}
+		else if ( n.lChild.factNode.lChild &&
+					traverseSelectRecursive( n.lChild.factNode ) )
+		{
+			return true;
+		}
+		
+	}
+	
+	if ( n.rChild.factNode )
+	{
+		if ( n.rChild.factNode.factField && n.rChild.factNode.factField.parentNode )
+		{
+			n.rChild.factNode.factField.focus();
+			//console.log( "focus", n.rChild.factNode.factField );
+			return true;
+		}
+		else if ( n.rChild.factNode.lChild &&
+					traverseSelectRecursive( n.rChild.factNode ) )
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+function FactorNode( n )
+{
+	var self = this;
+	this.num = n;
+	this.el = document.createElement( "div" );
+	this.el.className = "baseEl";
+	this.numDiv = document.createElement( "div" );
+	this.numDiv.style.textAlign = "center";
+	this.numDiv.innerHTML = n;
+	this.el.appendChild( this.numDiv );
+	
+	if ( ! is_prime( n ) )
+	{
+		this.midDiv = document.createElement( "div" );
+		this.midDiv1 = document.createElement( "div" );
+		this.midDiv1.className = "midDiv1";
+		this.midDiv2 = document.createElement( "div" );
+		this.midDiv2.className = "midDiv2";
+		this.midDiv3 = document.createElement( "div" );
+		this.midDiv3.className = "midDiv3";
+		this.midDiv.appendChild( this.midDiv1 );
+		this.midDiv.appendChild( this.midDiv2 );
+		this.midDiv.appendChild( this.midDiv3 );
+		this.el.appendChild( this.midDiv );
+	
+		this.lChild = document.createElement( "div" );
+		this.rChild = document.createElement( "div" );
+		this.lChild.className = "lChild";
+		this.rChild.className = "rChild";
+		this.factField = document.createElement( "input" );
+		this.lChild.appendChild( this.factField );
+		this.el.appendChild( this.lChild );
+		this.el.appendChild( this.rChild );
+		this.factField.addEventListener( "keypress",
+			function ( e )
+			{
+				//console.log( e );
+				if ( (e.key == "Enter" || e.keyCode == 13) &&
+						self.factField.value != "" )
+				{
+					var fi = Math.floor( self.factField.value );
+					self.factField.value = fi;
+					var f = self.num / fi;
+					
+					if ( isNaN(f) || isNaN(fi) || fi >= self.num || fi <= 1 )
+					{
+						alert( "Not a factor" );
+						return;
+					}
+					
+					if ( f - Math.floor(f) > 0 )
+					{
+						alert( "Not a factor (-100 points)" );
+						score -= 10;
+						scoreDiv.innerHTML = (score * 10) + " / " + count;
+						self.factField.value = "";
+					}
+					else
+					{
+						if ( fi > 5 && is_prime(fi) )
+							score += 10 * fi;
+						else
+							score += fi;
+						
+						scoreDiv.innerHTML = (score * 10)  + " / " + count;
+						
+						var rfac = new FactorNode( f );						
+						var lfac = new FactorNode( fi );
+						
+						self.rChild.innerHTML = "";
+						self.rChild.appendChild( rfac.el );
+						self.rChild.factNode = rfac;
+				
+						self.lChild.innerHTML = "";
+						self.lChild.appendChild( lfac.el );
+						self.lChild.factNode = lfac;
+						
+						traverseSelect();
+						
+						/*if ( lfac.factField )
+							lfac.factField.focus();
+						else if ( rfac.factField )
+						{
+							rfac.factField.focus();
+						}*/
+					}
+				}
+			} );
+	}
+}
+
+var score = 0;
+var count = 0;
+
+var used = [];
+
+var root;
+
+function setupNewNumber( pn )
+{
+	count++;
+	scoreDiv.innerHTML = (score * 10) + " / " + count;
+	var n;
+	if ( pn )
+		n = pn;
+	else
+	{
+		do
+		{
+			n = Math.floor( Math.random() * highNum ) + 2;
+		}
+		while ( is_prime(n) || used.indexOf(n) >= 0 );
+	}
+	used.push( n );
+	root = new FactorNode( n );
+	body.replaceChild( root.el, holder );
+	holder = root.el;
+	
+	rootTimer = setInterval( function ()
+		{
+			if ( root.factField )
+			{
+				root.factField.focus();
+				clearInterval( rootTimer );
+			}
+		}, 50 );
+}
+
+setupNewNumber();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,306 @@
+<html>
+<head>
+<title>Equation Game</title>
+<style type="text/css">
+
+#board
+{
+	font-size: 12pt;
+	width: 80%;
+	min-width: 30em;
+	margin: 0 auto;
+	background-color: #FFFFCC;
+	text-align: center;
+}
+
+#eqDiv { font-size: 36pt; }
+
+#graphDiv
+{
+	width: 80%;
+	height: 70%;
+	margin: 0 auto;
+	border: 1px solid black;
+	position: relative;
+}
+
+#inDiv
+{
+	width: 80%;
+	height: 10%;
+	margin: 0 auto;
+}
+
+#doneDiv
+{
+	font-size: 2em;
+	color: rgb( 175, 0, 0 );
+	text-align: center;
+}
+
+#graphLeft, #graphRight
+{
+	width: 49%;
+	height: 100%;
+	border: 1px solid black;
+	position: relative;
+}
+
+#graphLeft { float: left; }
+#graphRight { float: right; }
+
+.xterm { font-style: italic; }
+
+</style>
+<script type="text/javascript">
+
+
+
+function getRandomIntInclusive(min, max)
+{
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+var game = {};
+
+function drawGraphs()
+{
+	if ( (game.cxl == 1 && game.cxr == 0 && game.cl == 0) || (game.cxr == 1 && game.cxl == 0 && game.cr == 0) )
+		game.doneEl.innerHTML = "Nicely done!";
+	
+	game.cxlEl.innerHTML = game.cxl;
+	game.cxrEl.innerHTML = game.cxr;
+	game.clEl.innerHTML = game.cl;
+	game.crEl.innerHTML = game.cr;
+	
+	var eqStr = "";
+	
+	if ( game.cxl != 0 )
+		eqStr = (Math.abs(game.cxl) == 1 ? (game.cxl < 0 ? "-" : "") : game.cxl) + "x ";
+	if ( game.cl != 0 )
+		eqStr += (game.cl < 0 ? "-" + (game.cxl != 0 ? " " : "") + -game.cl : (game.cxl != 0 ?"+ ":"") + game.cl);
+		
+	var eqStrL = eqStr;
+	eqStr = "";
+	
+	if ( game.cxr != 0 )
+		eqStr = (Math.abs(game.cxr) == 1 ? (game.cxr < 0 ? "-" : "") : game.cxr) + "x ";
+	if ( game.cr != 0 )
+		eqStr += (game.cr < 0 ? "-" + (game.cxr != 0 ? " " : "") + -game.cr : (game.cxr != 0 ?"+ ":"") + game.cr);
+		
+	var eqStrR = eqStr;
+	
+	var eqStrAll = (eqStrL ? eqStrL : 0) + " = " + (eqStrR ? eqStrR : 0);
+	
+	game.eqEl.innerHTML = eqStrAll;
+	
+	var N = game.N;
+	var a = game.a;
+	var b = game.b;
+	var c = game.c;
+
+	var cxL = game.cxl;
+	var cxl = game.cxl * Math.abs( game.N );
+	var cl = game.cl;
+	var cxR = game.cxr;
+	var cxr = game.cxr * Math.abs( game.N );
+	var cr = game.cr;
+	
+	var gm = Math.abs( cxl );
+	if ( Math.abs( cxr ) > gm ) gm = Math.abs( cxr );
+	if ( Math.abs( cl ) > gm ) gm = Math.abs( cl );
+	if ( Math.abs( cr ) > gm ) gm = Math.abs( cr );
+	game.gm = gm;
+	
+	game.canvasLeftCtx.clearRect( 0, 0, 100, 200 );
+	game.canvasRightCtx.clearRect( 0, 0, 100, 200 );
+	
+	var cxlm = (cxl / gm) * 100;
+	
+	if ( cxl > 0 )
+		game.canvasLeftCtx.fillRect( 0, 100 - cxlm, 50, cxlm );
+	if ( cxl < 0 )
+		game.canvasLeftCtx.fillRect( 0, 100, 50, -cxlm );
+		
+	var clm = (cl / gm) * 100;
+	
+	if ( cl > 0 )
+		game.canvasLeftCtx.fillRect( 50, 100 - clm, 50, clm );
+	if ( cl < 0 )
+		game.canvasLeftCtx.fillRect( 50, 100, 50, -clm );
+		
+	var cxrm = (cxr / gm) * 100;
+	
+	if ( cxr > 0 )
+		game.canvasRightCtx.fillRect( 0, 100 - cxrm, 50, cxrm );
+	if ( cxr < 0 )
+		game.canvasRightCtx.fillRect( 0, 100, 50, -cxrm );
+		
+	var crm = (cr / gm) * 100;
+	
+	if ( cr > 0 )
+		game.canvasRightCtx.fillRect( 50, 100 - crm, 50, crm );
+	if ( cr < 0 )
+		game.canvasRightCtx.fillRect( 50, 100, 50, -crm );
+		
+	game.canvasRightCtx.strokeStyle = "#ff0000";
+	game.canvasLeftCtx.strokeStyle = "#ff0000";
+	
+	for ( var i = 0; i < Math.abs(cr); i++ )
+	{
+		game.canvasRightCtx.beginPath();
+		var y = 100 - (cr > 0 ? crm - (i * (crm / cr)) : -(i * (crm / cr)));
+		game.canvasRightCtx.moveTo( 50, y );
+		game.canvasRightCtx.lineTo( 100, y );
+		game.canvasRightCtx.stroke();
+	}
+	
+	for ( var i = 0; i < Math.abs(cl); i++ )
+	{
+		game.canvasLeftCtx.beginPath();
+		var y = 100 - (cl > 0 ? clm - (i * (clm / cl)) : -(i * (clm / cl)));
+		game.canvasLeftCtx.moveTo( 50, y );
+		game.canvasLeftCtx.lineTo( 100, y );
+		game.canvasLeftCtx.stroke();
+	}
+		
+	game.canvasRightCtx.strokeStyle = "#ff00ff";
+	game.canvasLeftCtx.strokeStyle = "#ff00ff";
+	
+	for ( var i = 0; i < Math.abs(cxR); i++ )
+	{
+		game.canvasRightCtx.beginPath();
+		var y = 100 - (cxr > 0 ? cxrm - (i * (cxrm / cxR)) : -(i * (cxrm / cxR)));
+		game.canvasRightCtx.moveTo( 0, y );
+		game.canvasRightCtx.lineTo( 50, y );
+		game.canvasRightCtx.stroke();
+	}
+	
+	for ( var i = 0; i < Math.abs(cxL); i++ )
+	{
+		game.canvasLeftCtx.beginPath();
+		var y = 100 - (cxl > 0 ? cxlm - (i * (cxlm / cxL)) : -(i * (cxlm / cxL)));
+		game.canvasLeftCtx.moveTo( 0, y );
+		game.canvasLeftCtx.lineTo( 50, y );
+		game.canvasLeftCtx.stroke();
+	}
+}
+
+function newEq ()
+{
+	game.doneEl.innerHTML = "";
+	
+	game.N = getRandomIntInclusive( -10, 10 );
+	
+	do
+	{
+		game.a = getRandomIntInclusive( -game.aMax, game.aMax );
+	}
+	while ( game.a == 0 );
+	
+	game.b = getRandomIntInclusive( -game.bMax, game.bMax );
+	game.c = getRandomIntInclusive( -game.cMax, game.cMax );
+	
+	/*game.N = 2;
+	game.a = 1;
+	game.b = 0;
+	game.c = 1;*/
+	
+	var N = game.N;
+	var a = game.a;
+	var b = game.b;
+	var c = game.c;
+
+	var cxl = a + c;
+	var cl = b;
+	var cxr = c;
+	var cr = a * N + b;
+	
+	game.cxl = cxl;
+	game.cl = cl;
+	game.cxr = cxr;
+	game.cr = cr;
+
+	//alert( cxl + "x + " + cl + " = " + cxr + "x + " + cr + "\nx = " + N );
+	
+	drawGraphs();
+}
+
+function main ()
+{
+	game.cxlEl = document.getElementById( "cxl" );
+	game.cxrEl = document.getElementById( "cxr" );
+	game.clEl = document.getElementById( "cl" );
+	game.crEl = document.getElementById( "cr" );
+	
+	game.doneEl = document.getElementById( "doneDiv" );
+	game.eqEl = document.getElementById( "eqDiv" );
+	
+	game.canvasLeftCtx = document.getElementById( "graphLeft" ).getContext( "2d" );
+	game.canvasRightCtx = document.getElementById( "graphRight" ).getContext( "2d" );
+	
+	game.aMax = 9;
+	game.bMax = 15;
+	game.cMax = 15;
+	
+	newEq();
+}
+
+function addX()
+{
+	var v = document.getElementById( "addX" ).value;
+	
+	game.cxl -= -v;
+	game.cxr -= -v;
+	
+	drawGraphs();
+}
+
+function addC()
+{
+	var v = document.getElementById( "addC" ).value;
+	
+	game.cl -= -v;
+	game.cr -= -v;
+	
+	drawGraphs();
+}
+
+function divT()
+{
+	var v = document.getElementById( "divT" ).value;
+		
+	game.cxl /= v;
+	game.cl /= v;
+	game.cxr /= v;
+	game.cr /= v;
+	
+	drawGraphs();
+}
+
+</script>
+</head>
+<body onLoad="main();">
+
+<div id=board>
+<div id=oldDiv><span id=cxl>A</span><span id=xl class="xterm">x</span> + <span id=cl>B</span> = <span id=cxr>C</span><span id=xr class="xterm">x</span> + <span id=cr>D</span></div>
+<div id=eqDiv></div>
+</div>
+
+<div id=graphDiv>
+<canvas id="graphLeft" width="100" height="200"></canvas>
+<canvas id="graphRight" width="100" height="200"></canvas>
+</div>
+
+<br>
+<div id=inDiv>
+Do the following to each side:<br>
+<input id=addX><input type="button" value="add multiple of x" onClick="addX();"><br>
+<input id=addC><input type="button" value="add constant" onClick="addC();"><br>
+<input id=divT><input type="button" value="divide" onClick="divT();"><br><br>
+<div id=doneDiv></div>
+<input type="button" value="new equation" onClick="newEq();">
+</div>
+
+</body>
+</html>

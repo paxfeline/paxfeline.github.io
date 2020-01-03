@@ -1,0 +1,221 @@
+<html>
+<head>
+
+<style>
+body { font-family: monospace; }
+</style>
+
+</head>
+<body>
+
+<script>
+
+function Link( next, prev, data )
+{
+	if ( next ) next.prev = this;
+	if ( prev ) prev.next = this;
+	
+	Object.assign( this, { next, prev, data } ); // copy params to props
+}
+
+function Point( x, y )
+{
+	this.x = x;
+	this.y = y;
+}
+Point.prototype.index = function () { return `${this.x},${this.y}`; };
+
+// constants
+const WIDTH = 30;
+const HEIGHT = 30;
+
+const SNAKE = 'S';
+const FOOD = '&cent;';
+const WALL = '#';
+
+const UP = "ArrowUp";
+const DOWN = "ArrowDown";
+const LEFT = "ArrowLeft";
+const RIGHT = "ArrowRight";
+
+// global variables
+var board;
+var grow;
+var dir;
+
+// start and end of linked list
+var head, tail;
+
+var gameTimer;
+
+// starts a new game
+function new_game()
+{
+	board = {};
+	grow = 3;
+	dir = UP;
+	
+	head = new Link( null, null, new Point( 15, 15 ) );
+	tail = head;
+	
+	board[ head.data.index() ] = SNAKE;
+	
+	setup_board();
+	place_food();
+	
+	gameTimer = setInterval( game_frame, 100 );
+}
+
+// places the wall bordering the playing field
+function setup_board()
+{
+	for ( var x = 0; x < WIDTH; x++ )
+	{
+		board[ (new Point(x,0)).index() ] = WALL;
+		board[ (new Point(x,HEIGHT-1)).index() ] = WALL;
+	}
+
+	for ( var y = 1; y < HEIGHT - 1; y++ )
+	{
+		board[ (new Point(0,y)).index() ] = WALL;
+		board[ (new Point(WIDTH-1,y)).index() ] = WALL;
+	}	
+}
+
+// places a new piece of food at a random location on the board
+function place_food()
+{
+	var x,y;
+	var p;
+	
+	do
+	{
+		x = Math.floor( Math.random() * WIDTH );
+		y = Math.floor( Math.random() * HEIGHT );
+		p = (new Point( x, y )).index();
+	}
+	while ( board[ p ] );
+		
+	board[ p ] = FOOD;
+}
+
+// draw the snake at a new location
+function game_frame()
+{
+	var nh = getNextHeadPosition();
+	
+	var mark = board[ nh.index() ];
+	
+	if ( mark == FOOD )
+	{
+		grow = 1;
+		place_food();
+	}
+	else if ( mark )
+	{
+		clearInterval( gameTimer );
+		gameTimer = null;
+		alert( "ded" );
+		return;
+	}
+	
+	head = new Link( head, null, nh );
+	board[ head.data.index() ] = SNAKE;
+
+	if ( grow > 0 )
+		grow--;
+	else
+	{
+		board[ tail.data.index() ] = null;
+		tail = tail.prev;
+		tail.next = null;
+	}
+	
+	draw_board();
+}
+
+// draw the board.
+// this could easily be done with a canvas instead.
+function draw_board()
+{
+	var out = "";
+			
+	for ( var y = 0; y < HEIGHT; y++ )
+	{
+		for ( var x = 0; x < WIDTH; x++ )
+		{
+			var mark = board[ (new Point( x, y )).index() ];
+			if ( mark )
+				out += mark + mark;
+			else
+				out += "&nbsp;&nbsp;";
+		}
+		out += "<br>";
+	}
+		
+	document.body.innerHTML = out;
+}
+
+// calculate the snake's next head location
+function getNextHeadPosition()
+{
+	var dx = 0, dy = 0;
+	
+	switch ( dir )
+	{
+		case UP:
+			dy = -1;
+			break;
+		case DOWN:
+			dy = 1;
+			break;
+		case LEFT:
+			dx = -1;
+			break;
+		case RIGHT:
+			dx = 1;
+			break;
+	}
+	
+	return new Point( head.data.x + dx, head.data.y + dy );
+}
+
+// respond to key presses
+addEventListener( "keydown", e =>
+	{
+		
+		switch ( e.key )
+		{
+			case UP:
+			case DOWN:
+			case LEFT:
+			case RIGHT:
+				if ( gameTimer )
+				{
+					dir = e.key;
+					game_frame();
+					reset_timer();
+				}
+				break;
+			case "n":
+				if ( !gameTimer )
+					new_game();
+				break;
+		}
+	});
+
+// reset the timer
+// this smoothes out animation when the user presses a key
+function reset_timer()
+{
+	clearInterval( gameTimer );
+	gameTimer = setInterval( game_frame, 100 );
+}
+
+
+</script>
+
+Press 'n' to start.
+
+</body>
+</html>

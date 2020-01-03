@@ -1,0 +1,814 @@
+<html>
+<head>
+<title>Equation Game</title>
+<style type="text/css">
+
+#board
+{
+	font-size: 12pt;
+	width: 80%;
+	min-width: 30em;
+	margin: 0 auto;
+	background-color: #FFFFCC;
+	text-align: center;
+}
+
+#eqDiv { font-size: 36pt; }
+
+#graphDiv
+{
+	width: 80%;
+	height: 70%;
+	margin: 0 auto;
+	border: 1px solid black;
+	position: relative;
+}
+
+#inDiv
+{
+	width: 80%;
+	height: 10%;
+	margin: 0 auto;
+}
+
+#doneDiv
+{
+	font-size: 2em;
+	color: rgb( 175, 0, 0 );
+	text-align: center;
+}
+
+#graphLeft, #graphRight
+{
+	width: 49%;
+	height: 100%;
+	border: 1px solid black;
+	position: relative;
+}
+
+#graphLeft { float: left; }
+#graphRight { float: right; }
+
+.xterm { font-style: italic; }
+
+#congrats
+{
+	display: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba( 255, 255, 255, 0.8 );
+}
+
+</style>
+<script type="text/javascript">
+
+// this is a pseudo-class in javascript
+// this function is called upon "new integerNumber(...)"
+// the "this" variable refers to the new object being initiated
+function integerNumber( n )
+{
+	// probably more accurately this would be called wholeNumber
+	// or nonNegativeIntegerNumber, i.e. { 0, 1, 2... }
+	
+	this.factors = [];
+	
+	// a special boolean property tracks if the number is 0.
+	if ( n == 0 )
+	{
+		this.zero = true;
+		return;
+	}
+	
+	// factor the number
+	for ( var i = 2; i <= n / 2; i++ )
+	{
+		while ( n % i == 0 )
+		{
+			this.factors.push( i );
+			n /= i;
+		}
+	}
+	if ( n > 1 )
+		this.factors.push( n );
+}
+// javascript uses the "prototype" property to define
+// a set of properties that will be added to new instances
+// of this pseudo-class
+integerNumber.prototype.toString =
+	function ()
+	{
+		if ( this.zero ) return "0";
+		var r = 1;
+		for ( var i = 0; i < this.factors.length; i++ )
+			r *= this.factors[i];
+		return r;
+	};
+
+function specialPad( v, l )
+{
+	for ( var i = v.length; i < l; i++ )
+		v += "0";
+	return v;
+}
+
+function rationalNumber( n )
+{
+	console.log( "make rational number", n );
+	
+	n = new String( n );
+	
+	this.sign = true; // positive
+	
+	var a;
+	var b;
+	
+	//alert( "1:" + n );
+	
+	if ( n.split )
+	{
+		n = n.split( "(" ).join( "" );
+		n = n.split( ")" ).join( "" );
+	}
+	
+	//alert( "2:" + n );
+	
+	while ( n.indexOf && n.indexOf( "-" ) == 0 )
+	{
+		this.sign = !this.sign;
+		n = n.substr( 1 );
+	}
+	
+	//alert( "3:" + n );
+
+	if ( n.indexOf && n.indexOf( "/" ) >= 0 )
+	{
+		var arr = n.split( "/" );
+		a = arr[0];
+		b = arr[1];
+		
+		console.log( "frac", a, b );
+		
+		if ( a.indexOf( "." ) >= 0 || b.indexOf( "." ) >= 0 )
+		{
+			var aR = new rationalNumber( a );
+			var bR = new rationalNumber( b );
+			
+			console.log( "divide", aR, bR );
+			
+			aR = aR.divideBy( bR );
+			
+			a = aR.a;
+			b = aR.b;
+			
+			console.log( "mixed: ", a, b );
+		}
+		
+	}
+	else if ( n.indexOf && n.indexOf( "." ) >= 0 )
+	{
+		var arr = n.split( "." );
+		a = arr[0] + arr[1];
+		b = "1";
+		for ( var i = 0; i < arr[1].length; i++ ) b += "0";
+		console.log( "decimal becomes: " + a + "/" + b );
+	}
+	else
+	{
+		a = n;
+		b = 1;
+	}
+	
+	//alert( "4:" + n );
+	
+	this.a = new integerNumber( a );
+	this.b = new integerNumber( b );
+	this.reduce();
+	
+	console.log( "make rat 2", this );
+}
+rationalNumber.prototype.abs =
+	function ()
+	{
+		if ( this.a.zero ) return "0";
+		var r = new rationalNumber( this );
+		r.sign = true;
+		return r;
+	};
+rationalNumber.prototype.toString =
+	function ()
+	{
+		if ( this.a.zero ) return "0";
+		//console.log( "rat toString", this.a );
+		if ( this.b.factors.length == 0 )
+			return (!this.sign ? "-" : "" ) + this.a.toString();
+		else
+			return (!this.sign ? "-" : "" ) + "(" + this.a + "/" + this.b + ")";
+	};
+// return the decimal approximation
+rationalNumber.prototype.decimal =
+	function ()
+	{
+		if ( this.a.zero ) return "0";
+		//console.log( "rat toString", this.a );
+		if ( this.b.factors.length == 0 )
+			return (!this.sign ? "-" : "" ) + this.a.toString();
+		else
+			return (!this.sign ? "-" : "" ) + (this.a / this.b);
+	};
+// return a new rationalNumber, b / a
+rationalNumber.prototype.invert =
+	function ()
+	{
+		var inv = new rationalNumber( this.toString() );
+		var temp = inv.a;
+		inv.a = inv.b;
+		inv.b = temp;
+		//console.log( "inv", this, inv );
+		return inv;
+	};
+// return a new rationalNumber, this * m = (this.a * m.a) / (this.b * m.b)
+rationalNumber.prototype.multiplyBy =
+	function ( m )
+	{
+		if ( this.a.zero || m.a.zero ) return new rationalNumber( "0" );
+			
+		var r = new rationalNumber( this.toString() );
+		r.a.factors = r.a.factors.concat( m.a.factors );
+		r.b.factors = r.b.factors.concat( m.b.factors );
+		r.reduce();
+		//console.log( "mult", this, m, r );
+		r.sign = (this.sign == m.sign);
+		return r;
+	};
+// return a new rationalNumber, this * (1/m) = (this.a * m.b) / (this.b * m.a)
+rationalNumber.prototype.divideBy =
+	function ( m )
+	{
+		if ( this.a.zero ) return new rationalNumber( "0" );
+		
+		var den = m.invert(); // (new rationalNumber( m.toString() )).invert()
+		
+		return this.multiplyBy( den );
+	};
+// return a new rationalNumber
+// (this + m) is equivalent to (this.a * m.b + m.a * this.b) / (this.b * m.b)
+rationalNumber.prototype.add =
+	function ( m )
+	{
+		var l = new integerNumber( this.a.toString() );
+		var r = new integerNumber( m.a.toString() );
+		
+		l.factors = l.factors.concat( m.b.factors );
+		r.factors = r.factors.concat( this.b.factors );
+		
+		var d = new integerNumber( "1" );
+		
+		d.factors = d.factors.concat( this.b.factors );
+		d.factors = d.factors.concat( m.b.factors );
+		
+		console.log( "sum", l, r, d );
+		
+		var lv = new Number( l );
+		var rv = new Number( r );
+		
+		if ( ! this.sign ) lv *= -1;
+		if ( ! m.sign ) rv *= -1;
+		
+		console.log( "add ", lv, rv, m );
+		var sum = new rationalNumber( "1" );
+		sum.a = new integerNumber( Math.abs( lv + rv ) ); // add
+		sum.b = d;
+		
+		sum.reduce();
+		
+		// account for the sign of the sum
+		sum.sign = (lv + rv >= 0);
+		
+		return sum;
+	};
+// reduce fraction by removing factors appearing in this.a and this.b
+// the value of one (1) is empty factor arrays for both:
+// this.a.factors = this.b.factors = Ø
+rationalNumber.prototype.reduce =
+	function ()
+	{
+		//console.log( "reduce 1", this );
+		for ( var i = this.b.factors.length - 1; i >= 0; i-- )
+		{
+			for ( var j = this.a.factors.length - 1; j >= 0; j-- )
+			{
+				if ( this.b.factors[i] == this.a.factors[j] )
+				{
+					this.b.factors.splice( i, 1 );
+					this.a.factors.splice( j, 1 );
+				}
+			}
+		}
+		//console.log( "reduce 2", this );
+	};
+
+
+/*var A = new rationalNumber( "28/7" );
+var B = new rationalNumber( "-5/7" );
+var C = A.add( B );
+
+alert( C );*/
+
+function getRandomIntInclusive(min, max)
+{
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+var game = {};
+
+var gCanvasWidth = 500, gCanvasHeight = 500;
+
+function fadeCongratsCB()
+{
+	game.cFadeIndex += 0.02;
+	game.confetDiv.style.opacity = game.cFadeIndex;
+	
+	if ( game.cFadeIndex >= 1 ) clearInterval( game.cFadeTimer );
+}
+
+function fadeInCongrats()
+{
+	game.confetDiv.style.opacity = 0;
+	game.confetDiv.style.display = "block";
+	game.cFadeIndex = 0;
+	game.cFadeTimer = setInterval( fadeCongratsCB, 10 );
+}
+
+game.FC = 50;
+game.frameDelay = 25;
+game.curFrame;
+
+function setPreAnim()
+{
+	game.lxp = game.cxl.decimal();
+	game.lcp = game.cl.decimal();
+	game.rxp = game.cxr.decimal();
+	game.rcp = game.cr.decimal();
+	
+	game.animOn = true;
+	
+	game.curFrame = 0;
+}
+
+function startGraphAnim()
+{
+	game.animLx = game.lxp;
+	game.animLc = game.lcp;
+	game.animRx = game.rxp;
+	game.animRc = game.rcp;
+	
+	game.lxs = (game.cxl.decimal() - game.lxp) / game.FC;
+	game.lcs = (game.cl.decimal() - game.lcp) / game.FC;
+	game.rxs = (game.cxr.decimal() - game.rxp) / game.FC;
+	game.rcs = (game.cr.decimal() - game.rcp) / game.FC;
+	
+	console.log( "  delta", game.lxs, game.lcs, game.rxs, game.rcs );
+	console.log( "  start", game.lxp, game.lcp, game.rxp, game.rcp );
+	console.log( "anim to", game.cxl.decimal(), game.cl.decimal(), game.cxr.decimal(), game.cr.decimal() );
+	
+	animateGraphChange();
+}
+
+function animateGraphChange()
+{
+	game.curFrame++;
+	
+	if ( game.curFrame >= game.FC )
+	{
+		game.animLx = null;
+		game.animLc = null;
+		game.animRx = null;
+		game.animRc = null;
+		
+		game.animOn = false;
+	}
+	else
+	{
+		game.animLx -= (game.lxs) * -1;
+		game.animLc -= (game.lcs) * -1;
+		game.animRx -= (game.rxs) * -1;
+		game.animRc -= (game.rcs) * -1;
+
+		setTimeout( animateGraphChange, game.frameDelay );
+	}
+	
+	drawGraphs();
+}
+		
+
+function drawGraphs()
+{
+	if ( !game.animOn && ((game.cxl == 1 && game.cxr == 0 && game.cl == 0) ||
+		 (game.cxr == 1 && game.cxl == 0 && game.cr == 0)) )
+		fadeInCongrats();
+	
+	game.cxlEl.innerHTML = game.cxl;
+	game.cxrEl.innerHTML = game.cxr;
+	game.clEl.innerHTML = game.cl;
+	game.crEl.innerHTML = game.cr;
+
+	var cxL = game.animLx ? game.animLx : game.cxl.decimal();
+	var cl = game.animLc ? game.animLc : game.cl.decimal();
+	var cxR = game.animRx ? game.animRx : game.cxr.decimal();
+	var cr = game.animRc ? game.animRc : game.cr.decimal();
+	
+	//var cxl = game.cxl.decimal() * Math.abs( game.N );
+	//var cxr = game.cxr.decimal() * Math.abs( game.N );
+	
+	var eqStr = "";
+	
+	if ( cxL != 0 )
+		eqStr = (cxL < 0 ? "-" : "") + (Math.abs(cxL) != 1 ? game.cxl.abs() : "") + "x ";
+	if ( cl != 0 )
+		eqStr += (cl < 0 ? "-" + (cxL != 0 ? " " : "") + game.cl.abs() : (cxL != 0 ? "+ " : "") + game.cl.abs());
+		
+	var eqStrL = eqStr;
+	eqStr = "";
+	
+	if ( cxR != 0 )
+		eqStr = (cxR < 0 ? "-" : "") + (Math.abs(cxR) != 1 ? game.cxr.abs() : "") + "x ";
+	if ( cr != 0 )
+		eqStr += (cr < 0 ? "-" + (cxR != 0 ? " " : "") + game.cr.abs() : (cxR != 0 ? "+ " : "") + game.cr.abs());
+		
+	var eqStrR = eqStr;
+	
+	var eqStrAll = (eqStrL ? eqStrL : 0) + " = " + (eqStrR ? eqStrR : 0);
+	
+	game.eqEl.innerHTML = eqStrAll;
+	
+	var N = game.N;
+	var a = game.a;
+	var b = game.b;
+	var c = game.c;
+	
+	var gm = Math.abs( cxL ); // used to be cxl...
+	if ( Math.abs( cxR ) > gm ) gm = Math.abs( cxR );
+	if ( Math.abs( cl ) > gm ) gm = Math.abs( cl );
+	if ( Math.abs( cr ) > gm ) gm = Math.abs( cr );
+	game.gm = gm;
+	
+	game.canvasLeftCtx.clearRect( 0, 0, gCanvasWidth, gCanvasHeight * 2 );
+	game.canvasRightCtx.clearRect( 0, 0, gCanvasWidth, gCanvasHeight * 2 );
+	
+	var cxlm = (cxL / gm) * gCanvasHeight; // used top be (cxl / gm) * gCanvasHeight
+	
+	if ( cxL > 0 )
+		game.canvasLeftCtx.fillRect( 0, gCanvasHeight - cxlm, gCanvasWidth / 2, cxlm );
+	if ( cxL < 0 )
+		game.canvasLeftCtx.fillRect( 0, gCanvasHeight, gCanvasWidth / 2, -cxlm );
+		
+	var clm = (cl / gm) * gCanvasWidth;
+	
+	if ( cl > 0 )
+		game.canvasLeftCtx.fillRect( gCanvasWidth / 2, gCanvasHeight - clm, gCanvasWidth / 2, clm );
+	if ( cl < 0 )
+		game.canvasLeftCtx.fillRect( gCanvasWidth / 2, gCanvasHeight, gCanvasWidth / 2, -clm );
+		
+	var cxrm = (cxR / gm) * gCanvasHeight;
+	
+	if ( cxR > 0 )
+		game.canvasRightCtx.fillRect( 0, gCanvasHeight - cxrm, gCanvasWidth / 2, cxrm );
+	if ( cxR < 0 )
+		game.canvasRightCtx.fillRect( 0, gCanvasHeight, gCanvasWidth / 2, -cxrm );
+		
+	var crm = (cr / gm) * gCanvasWidth;
+	
+	if ( cr > 0 )
+		game.canvasRightCtx.fillRect( gCanvasWidth / 2, gCanvasHeight - crm, gCanvasWidth / 2, crm );
+	if ( cr < 0 )
+		game.canvasRightCtx.fillRect( gCanvasWidth / 2, gCanvasHeight, gCanvasWidth / 2, -crm );
+		
+	game.canvasRightCtx.strokeStyle = "#ff0000";
+	game.canvasLeftCtx.strokeStyle = "#ff0000";
+	
+	var div = [ 1, game.cr.b ];
+	
+	nextScale1:
+	for ( var scale = 0; scale < 3; scale++ )
+	{
+		for ( var i = 0; i <= Math.abs(cr); i += 1 / div[scale] )
+		{
+			game.canvasRightCtx.beginPath();
+			var y = gCanvasHeight - (cr > 0 ? crm - (i * (crm / cr)) : -(i * (crm / cr)));
+			if ( 1 / div[scale] * (crm / cr) < 3 ) continue nextScale1;
+			console.log( "x1x2", gCanvasWidth - gCanvasWidth * (0.5 / div[scale]), gCanvasWidth );
+			game.canvasRightCtx.moveTo( gCanvasWidth - gCanvasWidth * (0.5 / div[scale]), y );
+			game.canvasRightCtx.lineTo( gCanvasWidth, y );
+			game.canvasRightCtx.stroke();
+		}
+	}
+	
+	div = [ 1, game.cl.b ];
+	
+	nextScale2:
+	for ( var scale = 0; scale < 3; scale++ )
+	{
+		for ( var i = 0; i <= Math.abs(cl); i += 1 / div[scale] )
+		{
+			game.canvasLeftCtx.beginPath();
+			var y = gCanvasHeight - (cl > 0 ? clm - (i * (clm / cl)) : -(i * (clm / cl)));
+			if ( 1 / div[scale] * (clm / cl) < 3 ) continue nextScale2;
+			game.canvasLeftCtx.moveTo( gCanvasWidth - gCanvasWidth * (0.5 / div[scale]), y );
+			game.canvasLeftCtx.lineTo( gCanvasWidth, y );
+			game.canvasLeftCtx.stroke();
+		}
+	}
+		
+	game.canvasRightCtx.strokeStyle = "#ff00ff";
+	game.canvasLeftCtx.strokeStyle = "#ff00ff";
+	
+	div = [ 1, game.cxr.b ];
+	
+	nextScale3:
+	for ( var scale = 0; scale < 3; scale++ )
+	{
+		for ( var i = 0; i <= Math.abs(cxR); i += 1 / div[scale] )
+		{
+			game.canvasRightCtx.beginPath();
+			var y = gCanvasHeight - (cxR > 0 ? cxrm - (i * (cxrm / cxR)) : -(i * (cxrm / cxR)));
+			if ( 1 / div[scale] * (cxrm / cxR) < 3 ) continue nextScale3;
+			game.canvasRightCtx.moveTo( (gCanvasWidth / 2) - (gCanvasWidth * (0.5 / div[scale])), y );
+			game.canvasRightCtx.lineTo( gCanvasWidth / 2, y );
+			game.canvasRightCtx.stroke();
+		}
+	}
+	
+	div = [ 1, game.cxl.b ];
+	
+	nextScale4:
+	for ( var scale = 0; scale < 3; scale++ )
+	{
+		for ( var i = 0; i <= Math.abs(cxL); i += 1 / div[scale] )
+		{
+			game.canvasLeftCtx.beginPath();
+			var y = gCanvasHeight - (cxL > 0 ? cxlm - (i * (cxlm / cxL)) : -(i * (cxlm / cxL)));
+			if ( 1 / div[scale] * (cxlm / cxL) < 3 ) continue nextScale4;
+			game.canvasLeftCtx.moveTo( (gCanvasWidth / 2) - (gCanvasWidth * (0.5 / div[scale])), y );
+			game.canvasLeftCtx.lineTo( gCanvasWidth / 2, y );
+			game.canvasLeftCtx.stroke();
+		}
+	}
+	
+	game.canvasRightCtx.strokeStyle = "#000000";
+	game.canvasLeftCtx.strokeStyle = "#000000";
+	
+	game.canvasRightCtx.beginPath();
+	game.canvasLeftCtx.beginPath();
+		
+	game.canvasRightCtx.moveTo( 0, gCanvasHeight );
+	game.canvasRightCtx.lineTo( gCanvasWidth, gCanvasHeight );
+	game.canvasLeftCtx.moveTo( 0, gCanvasHeight );
+	game.canvasLeftCtx.lineTo( gCanvasWidth, gCanvasHeight );
+	
+	game.canvasRightCtx.stroke();
+	game.canvasLeftCtx.stroke();
+}
+
+// set up a new equation
+function newEq ( manual )
+{
+	game.doneEl.innerHTML = "";
+	
+	// cxl = x coefficient, left
+	// cl = left constant, etc.
+	
+	var cxl;
+	var cl;
+	var cxr;
+	var cr;
+	
+	// you can pass in an array of values, if you want
+	if ( manual )
+	{
+		cxl = new rationalNumber( manual[0] );
+		cl = new rationalNumber( manual[1] );
+		cxr = new rationalNumber( manual[2] );
+		cr = new rationalNumber( manual[3] );
+	}
+	else
+	{
+		do
+		{
+			var Na, Nb;
+			Na = getRandomIntInclusive( 1, game.NMax ) * game.dMax; // pow?
+			Nb = getRandomIntInclusive( 1, game.dMax );
+			
+			var nN = (Math.random() >= 0.5 ? "" : "-") + Math.abs(Na) + "/" + Math.abs(Nb);
+			console.log( "newEq nN", nN );
+			//debugger;
+			game.N = new rationalNumber( nN );
+	
+			do
+			{
+				game.a = getRandomIntInclusive( -game.aMax, game.aMax ) + "/" + getRandomIntInclusive( 1, game.dMax );
+				game.a = new rationalNumber( game.a );
+			}
+			while ( game.a.decimal() == 0 );
+	
+			game.b = new rationalNumber( getRandomIntInclusive( -game.bMax, game.bMax ) + "/" +
+				getRandomIntInclusive( 1, game.dMax ) );
+			game.c = new rationalNumber( getRandomIntInclusive( -game.cMax, game.cMax ) + "/" +
+				getRandomIntInclusive( 1, game.dMax ) );
+	
+			var N = game.N;
+			
+			var a = game.a;
+			var b = game.b;
+			var c = game.c;
+
+			cxl = a.add( c );
+			cl = b;
+			cxr = c;
+			cr = a.multiplyBy( N ).add( b );
+		}
+		while ( (cxl.decimal() == cxr.decimal()) /*|| (cl == cr)*/ );
+	}
+	
+	console.log( "neweq", cxl, cl, cxr, cr );
+	
+	game.cxl = cxl; //new rationalNumber( cxl );
+	game.cl = cl; // new rationalNumber( cl );
+	game.cxr = cxr; // new rationalNumber( cxr );
+	game.cr = cr; // new rationalNumber( cr );
+	
+	console.log( "cr", game.cr );
+
+	//alert( cxl + "x + " + cl + " = " + cxr + "x + " + cr + "\nx = " + N );
+	
+	drawGraphs();
+}
+
+function main ()
+{
+	game.cxlEl = document.getElementById( "cxl" );
+	game.cxrEl = document.getElementById( "cxr" );
+	game.clEl = document.getElementById( "cl" );
+	game.crEl = document.getElementById( "cr" );
+	
+	game.doneEl = document.getElementById( "doneDiv" );
+	game.eqEl = document.getElementById( "eqDiv" );
+	
+	game.canvasLeftCtx = document.getElementById( "graphLeft" ).getContext( "2d" );
+	game.canvasRightCtx = document.getElementById( "graphRight" ).getContext( "2d" );
+	
+	game.canvasLeftCtx.fillStyle = "#cccccc";
+	game.canvasRightCtx.fillStyle = "#cccccc";
+	
+	game.NMax = 10;
+	game.aMax = 4;
+	game.bMax = 15;
+	game.cMax = 15;
+	
+	game.dMax = 6;
+	
+	game.confetDiv = document.getElementById( "congrats" );
+	
+	newEq();
+	
+		// debug: fadeInCongrats();
+}
+
+function addX( val )
+{
+	setPreAnim();
+	
+	if ( val )
+		var v = val;
+	else
+		var v = new rationalNumber( document.getElementById( "addX" ).value );
+	
+	game.cxl = game.cxl.add( v );
+	game.cxr = game.cxr.add( v );
+	
+	/*game.cxl -= -v;
+	game.cxr -= -v;*/
+	
+	startGraphAnim();
+	
+	//drawGraphs();
+}
+
+function subX()
+{
+	var val = new rationalNumber( document.getElementById( "addX" ).value );
+	val.sign = !val.sign;
+	addX( val );
+}
+
+function addC( val )
+{
+	setPreAnim();
+	
+	if ( val )
+		var v = val
+	else
+		var v = new rationalNumber( document.getElementById( "addC" ).value );
+	
+	game.cl = game.cl.add( v );
+	game.cr = game.cr.add( v );
+	
+	/*game.cl -= -v;
+	game.cr -= -v;*/
+	
+	startGraphAnim();
+	
+	//drawGraphs();
+}
+
+function subC()
+{
+	var val = new rationalNumber( document.getElementById( "addC" ).value );
+	val.sign = !val.sign;
+	addC( val );
+}
+
+function divT()
+{
+	setPreAnim();
+	
+	//var v = document.getElementById( "divT" ).value;
+	var v = new rationalNumber( document.getElementById( "multT" ).value );
+	
+	game.cxl = game.cxl.divideBy( v );
+	game.cl = game.cl.divideBy( v );
+	game.cxr = game.cxr.divideBy( v );
+	game.cr = game.cr.divideBy( v );
+	
+	/*game.cxl /= v;
+	game.cl /= v;
+	game.cxr /= v;
+	game.cr /= v;*/
+	
+	startGraphAnim();
+	
+	//drawGraphs();
+}
+
+function multT()
+{
+	setPreAnim();
+	
+	//var v = document.getElementById( "divT" ).value;
+	var v = new rationalNumber( document.getElementById( "multT" ).value );
+	
+	game.cxl = game.cxl.multiplyBy( v );
+	game.cl = game.cl.multiplyBy( v );
+	game.cxr = game.cxr.multiplyBy( v );
+	game.cr = game.cr.multiplyBy( v );
+	
+	/*game.cxl /= v;
+	game.cl /= v;
+	game.cxr /= v;
+	game.cr /= v;*/
+	
+	startGraphAnim();
+	
+	//drawGraphs();
+}
+
+</script>
+</head>
+<body onLoad="main();">
+
+<div id=board>
+<div id=oldDiv><span id=cxl>A</span><span id=xl class="xterm">x</span> + <span id=cl>B</span> = <span id=cxr>C</span><span id=xr class="xterm">x</span> + <span id=cr>D</span></div>
+<div id=eqDiv></div>
+</div>
+
+<div id=graphDiv>
+<canvas id="graphLeft" width="500" height="1000"></canvas>
+<canvas id="graphRight" width="500" height="1000"></canvas>
+</div>
+
+<br>
+<div id=inDiv>
+Do the following to each side:<br>
+<input id=addX><input type="button" value="add multiple of x" onClick="addX();">
+	<input type="button" value="subtract multiple of x" onClick="subX();"><br>
+<input id=addC><input type="button" value="add constant" onClick="addC();">
+	<input type="button" value="subtract constant" onClick="subC();"><br>
+Do the following to each term:<br>
+<input id=multT><input type="button" value="multiply" onClick="multT();"><input type="button" value="divide" onClick="divT();"><br>
+<div id=doneDiv></div>
+</div>
+
+<div id=congrats>
+<img src="http://moziru.com/images/confetti-clipart-animated-gif-4.gif" style="width: 100%; height: 100%; position: absolute; z-index: 1; opacity: 0.75;">
+<img src="https://media.giphy.com/media/120ErahsQyf1q8/giphy.gif" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 3; opacity: 1;">
+<div style="width: 100%; top: 25%; left: 0; text-align: center; font-size: 10em; position: absolute; z-index: 2">
+Got it!</div>
+<div style="width: 100%; top: 50%; left: 0; text-align: center; position: absolute; z-index: 4">
+<input type="button" value="new equation" onClick="newEq(); game.confetDiv.style.display = 'none';" style="font-size: 4em;">
+</div>
+</div>
+
+</body>
+</html>

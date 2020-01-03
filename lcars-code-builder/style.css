@@ -1,0 +1,236 @@
+body
+{
+	background-color: black;
+	font-size: 0.66em;
+}
+
+.block
+{
+	background-color: black;
+	margin-top: 0.5em;
+margin-bottom: -0.5em;
+margin-right: 5.5em;
+background-image: url('block-l-mid.jpg');
+background-position: bottom;
+background-repeat: repeat-x;
+background-size: 2em;
+}
+
+.block-top
+{
+	position: relative;
+	padding-right: 4em;
+	padding-left: 2em;
+	height: 3em;
+	/*background-color: #fe9900;*/
+	font-family: Avenir Next Condensed;
+	font-weight: bold;
+	margin-bottom: 3.5em;
+	border-width: 0 2em 0 0;
+	border-style: solid;
+	border-color: #fe9900;
+	background-image: url('block-u-mid.jpg');
+	background-size: 6em;
+}
+
+.block-top span, .block-top div span
+{
+	font-size: 2em;
+	position: relative;
+	top: 0.2em;
+}
+
+.block-top div div span
+{
+	font-size: 1em;
+	position: relative;
+}
+
+.block-top-buttons
+{
+	display: inline-block;
+	background-color: black;
+	padding: 0 0.2em;
+	position: relative;
+	top: -1em;
+}
+
+.block-top-button
+{
+	display: inline-block;
+	/*float: left;
+	background-color: #9a99ff;*/
+	height: 3em;
+	text-align: right;
+	padding: 0 0.2em;
+	margin: 0 0.2em;
+	background-image: url('block-u-mid-blue.jpg');
+	background-position: top;
+	background-size: 6em;
+	position: relative;
+}
+
+.block-ul
+{
+	position: absolute;
+	left: 0;
+	/*top: -1px;*/
+	width: 2em;
+	height: 3em;
+}
+
+.block-ur
+{
+	position: absolute;
+	right: -2em;
+	/*top: -1px;*/
+	width: 2em;
+	height: 3em;
+}
+
+.block-lr
+{
+	position: absolute;
+	right: 0;
+	bottom: 0;
+
+	width: 9em;
+	/*height: 2em;*/
+}
+
+.block-lr-side
+{
+	position: absolute;
+	right: 0em;
+	bottom: 0em;
+	width: 9em;
+	height: 2em;
+}
+
+.block-ls
+{
+	position: absolute;
+	right: -4em;
+	bottom: -0.5em;
+}
+
+.block-rem-cap
+{
+	position: absolute;
+	top: 0;
+	width: 5em;
+}
+
+.line
+{
+	position: relative;
+	border-width: 0 /*8em 0 0*/;
+	border-style: solid;
+	border-color: #fe9900;
+	padding: 0 0.5em 0 0;
+	
+	/*margin-bottom: 0.5em;*/
+
+	/*padding-right: 8em;*/
+
+	min-height: 9em;
+	
+	background-position: bottom;
+	background-image: url('block-l-mid.jpg');
+	background-repeat: repeat-x;
+	background-size: 2em 2em;
+	
+	margin-top: 0.5em;
+}
+
+.line-inner
+{
+	position: relative;
+	border-width: 0 /*8em 0 0*/;
+	border-style: solid;
+	border-color: #fe9900;
+	padding: 0 0.5em 0 0;
+
+	min-height: 9em;
+	
+	margin-bottom: 0px;
+	
+	margin-top: 0.5em;
+}
+
+.line-buttons
+{
+	display: inline-block;
+	position: absolute;
+	right: 0;
+	top: 0;
+	background-color: transparent;
+	width: 8em;
+	height: 100%;
+	background-position: right;
+	background-image: url('block-r-mid.jpg');
+	background-size: 9em;
+}
+
+.line-add
+{
+	font-family: Avenir Next Condensed;
+	font-weight: bold;
+	width: 8em;
+	height: 3em;
+	border-width: 0;
+	border-style: solid;
+	border-color: black;
+	/*background-color: #9a99ff;*/
+	text-align: right;
+	position: relative;
+	left: 0;
+	
+	background-image: url('block-r-mid-blue.jpg');
+	background-size: 9em;
+	background-position: right;
+}
+
+.line-remove
+{
+	font-family: Avenir Next Condensed;
+	font-weight: bold;
+	width: 8em;
+	height: 3em;
+	border-width: 0.5em 0;
+	border-style: solid;
+	border-color: black;
+	/*background-color: #cc6698;*/
+	text-align: right;
+	position: relative;
+	left: 0;
+	
+	background-image: url('block-r-mid-purp.jpg');
+	background-size: 9em;
+	background-position: right;
+}
+
+.line-remove-red
+{
+	position: relative;
+	font-family: Avenir Next Condensed;
+	font-weight: bold;
+	width: 8em;
+	height: 6em;
+border-width: 0 0 0.5em;
+	border-style: solid;
+	border-color: black;
+	background-color: transparent;
+	text-align: right;
+	left: 0;
+	background-image: url( "block-rem-cap.jpg" );
+	background-position: top right;
+	background-repeat: repeat-y;
+	background-size: 9em;
+}
+
+.line-content
+{
+	padding: 8px 1em;
+	color: white;
+}

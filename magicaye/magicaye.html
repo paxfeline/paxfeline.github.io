@@ -1,0 +1,205 @@
+<html>
+<head>
+
+</head>
+<body>
+
+Click to generate 3d picture. 
+<input type="button" onmouseup="makeit();" value="makeit">
+
+<br><br>
+
+Select pattern:
+<input type="file" onchange="previewFile(0);" id="field0"><br>
+<img src="pattern.png" alt="Image preview..." id="pre0">
+
+<br><br>
+
+Select greyscale image: <input type="file" onchange="previewFile(1);" id="field1"><br>
+<img src="two.png" alt="Image preview..." id="pre1">
+
+<br><br>
+
+<script type="text/javascript">
+
+var pre =
+	[
+		document.getElementById( 'pre0' ),
+		document.getElementById( 'pre1' )
+	];
+var fields =
+	[
+		document.getElementById( 'field0' ),
+		document.getElementById( 'field1' )
+	];
+
+// previewFile taken from MDN docs:
+
+function previewFile(n) {
+  var preview = pre[n]; //document.querySelector('img');
+  var file    = fields[n].files[0]; //document.querySelector('input[type=file]').files[0];
+  var reader  = new FileReader();
+
+  reader.onloadend = function () {
+    preview.src = reader.result;
+  }
+
+  if (file) {
+    reader.readAsDataURL(file);
+  } else {
+    preview.src = "";
+  }
+}
+
+function getPixel( d, x, y )
+{
+	return	'rgb(' +
+			d.data[ ((y * (d.width * 4)) + (x * 4)) ] + ',' +
+			d.data[ ((y * (d.width * 4)) + (x * 4)) + 1 ] + ',' +
+			d.data[ ((y * (d.width * 4)) + (x * 4)) + 2 ] +
+			')';
+}
+
+function getRawPixelRed( d, x, y )
+{
+	return	d.data[ ((y * (d.width * 4)) + (x * 4)) ];
+}
+
+function makeit()
+{
+	//alert( pre[0].width + "/" + pre[0].height + "\n" + pre[1].width + "/" + pre[1].height );
+	
+	var smush = 10;
+	
+	var pat = pre[0];
+	var img = pre[1];
+	
+	var patWidth = pat.width;
+	var patHeight = pat.height;
+	var imgWidth = img.width;
+	var imgHeight = img.height;
+	
+	var imgCan = document.createElement( 'canvas' );
+	imgCan.width = imgWidth;
+	imgCan.height = imgHeight;
+	
+	//document.getElementsByTagName( 'body' )[0].appendChild( imgCan );
+	
+	var imgCx = imgCan.getContext('2d');
+	imgCx.drawImage( img, 0, 0 );
+	var imgData = imgCx.getImageData( 0, 0, imgWidth, imgHeight );
+	
+	var patCount = Math.floor( imgWidth / patWidth ) + 1;
+	var outWidth = (patCount + 1) * patWidth;
+	var outN = Math.ceil( imgHeight / patHeight );
+	var outHeight = (Math.ceil( imgHeight / patHeight )) * patHeight;
+	
+	var out = document.createElement( 'canvas' );
+	out.width = outWidth;
+	out.height = imgHeight;
+	
+	document.getElementsByTagName( 'body' )[0].appendChild( out );
+	
+	var cx = out.getContext('2d');
+	
+	var lastTile = document.createElement( 'canvas' );
+	lastTile.width = patWidth;
+	lastTile.height = outHeight;
+	
+	var lastCx = lastTile.getContext('2d');
+	
+	var lastTile2 = document.createElement( 'canvas' );
+	lastTile2.width = patWidth;
+	lastTile2.height = outHeight;
+	
+	var last2Cx = lastTile2.getContext('2d');
+	
+	for ( var i = 0; i < outN; i++ )
+		lastCx.drawImage( pat, 0, i * patHeight );
+	
+	var lastData = lastCx.getImageData( 0, 0, patWidth, imgHeight );
+	
+	cx.drawImage( lastTile, 0, 0 );
+	
+	var nextTile = document.createElement( 'canvas' );
+	nextTile.width = patWidth;
+	nextTile.height = outHeight;
+	
+	var nextCx = nextTile.getContext('2d');
+	
+	nextCx.drawImage( lastTile, 0, 0 );
+	
+	var curTile = document.createElement( 'canvas' );
+	curTile.width = patWidth;
+	curTile.height = outHeight;
+	
+	var curCx = curTile.getContext('2d');
+	
+	//alert( patCount );
+	
+	for ( var sec = 0; sec <= patCount; sec++ )
+	{
+		curCx.drawImage( nextTile, 0, 0 );
+		
+		var lastData = lastCx.getImageData( 0, 0, patWidth, imgHeight );
+		var lastData2 = last2Cx.getImageData( 0, 0, patWidth, imgHeight );
+	
+		//alert( imgHeight + "/" + patWidth );
+	
+		for ( var y = 0; y < imgHeight; y++ )
+		{
+			for ( var x = patWidth; x >= 0; x-- )
+			{
+				if ( x + (sec * patWidth) <= imgWidth )
+				{
+					var pd = getRawPixelRed( imgData, x + (sec * patWidth), y );
+					var offset = pd / smush;
+				
+					if ( offset > 0 && x + (sec * patWidth) <= imgWidth )
+					{
+						var c = getPixel( lastData, x, y );
+						nextCx.fillStyle = c;
+					
+						if ( x + offset >= patWidth - 1 )
+						{
+							nextCx.fillRect( x + offset - patWidth, y, 1, 1 );
+						}
+						else
+						{
+							curCx.fillStyle = c;
+							curCx.fillRect( x + offset, y, 1, 1 );
+						
+							nextCx.fillRect( x + offset, y, 1, 1 );
+						}
+						
+						if ( sec > 0 )
+						{
+							var pd = getRawPixelRed( imgData, x + ((sec - 1) * patWidth), y );
+							var offset = pd / smush;
+				
+							if ( offset > 0 && x + offset >= patWidth - 1 )
+							{
+								var c = getPixel( lastData2, x, y );
+								curCx.fillStyle = c;
+								curCx.fillRect( x + offset - patWidth, y, 1, 1 );
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		last2Cx.drawImage( lastTile, 0, 0 );
+		
+		lastCx.drawImage( curTile, 0, 0 );
+		
+		cx.drawImage( curTile, (sec + 1) * patWidth, 0 );
+	}
+	
+	alert( 'done!' );
+}
+
+</script>
+
+</body>
+</html>
