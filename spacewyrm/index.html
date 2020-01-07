@@ -98,9 +98,9 @@ body {
 .dl {
 	width: 10vw;
 	height: 10vw;
-	border: 0.25em solid black;
+	border: 0.25em solid darkblue;
 	border-radius: 0.5em;
-	margin: 4em;
+	margin: 0 4em 1em;
 	padding: 3em;
 	
 	display: flex;
@@ -114,11 +114,13 @@ body {
 .dlcontent {
 	font-size: 4vw;
 	text-align: center;
+	color: red;
 }
 
 .dlextra {
 	font-size: 2vw;
 	text-align: center;
+	color: darkred;
 }
 
 a:link {
@@ -138,6 +140,7 @@ a:active {
 	color: magenta;
 }
 
+h1 { color: red; font-size: 5em; text-align: center; }
 
 </style>
 </head>
@@ -173,6 +176,8 @@ a:active {
 <iframe class="movie" width="560" height="315" allow="autoplay" src="https://www.youtube.com/embed/BpRa4fyvtKA?autoplay=1" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+<h1>Play Now!</h1>
+
 <div class="dlcontainer">
 
 <a href="https://itunes.apple.com/us/app/space-wyrm-3d-snake/id1457469987">
@@ -185,7 +190,7 @@ a:active {
 <a href="https://play.google.com/store/apps/details?id=com.grokprog.spacewyrm.scene">
 <div class="dl">
 <div class="dlcontent">Android</div>
-<div style="font-size: 0.8em;"><em>(pre-release)</em></div>
+<div style="font-size: 0.8em; color: darkred;"><em>(pre-release)</em></div>
 <div class="dlextra">View in Google Play</div>
 </div>
 </a>
