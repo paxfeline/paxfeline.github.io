@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>3d Centipede!</title>
+		<style>
+			@font-face {
+				font-family: 'inconsolata';
+				src: url('../files/inconsolata.woff') format('woff');
+				font-weight: normal;
+				font-style: normal;
+			}
+
+			body {
+				margin:0;
+				font-family: 'inconsolata';
+				font-size: 15px;
+				line-height: 18px;
+				overflow: hidden;
+			}
+
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+
+		<script src="js/three.min.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script src="js/ParametricGeometries.js"></script>
+
+		<script src='js/geometry.js'></script>
+
+		<script>
+			
+			const vec3 = ( x, y, z ) => { return new THREE.Vector3( x, y, z ) };
+			
+			function createBox( meshMaterial, pos )
+			{
+				var boxGroup = new THREE.Group();
+
+				var geometry = new THREE.SphereGeometry( 5, 8, 4 );
+			
+				ngeometry = new THREE.BufferGeometry().fromGeometry( geometry );
+				boxGroup.add( new THREE.Mesh( ngeometry, meshMaterial ) );
+				
+				if ( pos )
+					boxGroup.position.copy( pos );
+				
+				return boxGroup;
+			}
+			
+			function SnakeHead( pos )
+			{
+				var mat = new THREE.MeshPhongMaterial( { color: 0x891520, transparent: false, opacity: 1, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true } );
+				
+				this.mesh = createBox( mat, pos );
+			}
+			
+			function SnakeTail( pos )
+			{
+				var mat = new THREE.MeshPhongMaterial( { color: 0x156289, transparent: true, opacity: 0.2, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true, depthWrite: false } );
+				
+				this.mesh = createBox( mat, pos );
+			}
+			
+			var rotWorldMatrix;
+			function rotateAroundWorldAxis( object, axis, radians ) {
+
+				var rotationMatrix = new THREE.Matrix4();
+
+				rotationMatrix.makeRotationAxis( axis.normalize(), radians );
+				rotationMatrix.multiply( object.matrix );                       // pre-multiply
+				object.matrix = rotationMatrix;
+				object.rotation.setFromRotationMatrix( object.matrix );
+			}
+			
+			function distance3d( p1, p2 )
+			{
+				return Math.sqrt( Math.pow( p1.x - p2.x, 2 ) + 
+									Math.pow( p1.y - p2.y, 2 ) + 
+									Math.pow( p1.z - p2.z, 2 ) );
+			}
+			
+			// for SnakeMove type
+			SnakeMove = {};
+			SnakeMove.rollType = 1;
+			SnakeMove.pitchType = 2;
+			SnakeMove.turnType = 3; // roll and pitch, (or pivot and roll)
+			SnakeMove.pivotType = 4; // yaw
+						
+			function Snake( scene, camera, dir )
+			{
+				this.camera = camera;
+				
+				this.dir = dir ? dir : vec3( 0, 0, 1 );
+				this.up = vec3( 0, 1, 0 );
+				
+				this.head = vec3( 0, 0, 0 );
+				
+				this.tail =
+					[
+						new SnakeTail( vec3( 0, 0, -10 ) ),
+						new SnakeTail( vec3( 0, 0, -20 ) )
+					];
+				
+				// change to pass in and save ref
+				/*board.place( this.head, SnakeBoard.snakeType );
+				board.place( this.tail[0].mesh.position, SnakeBoard.snakeType );
+				board.place( this.tail[1].mesh.position, SnakeBoard.snakeType );*/
+				
+				this.softHead = this.head.clone();
+
+				this.headBox = new SnakeHead();
+
+				scene.add( this.headBox.mesh );
+				
+				for ( let p of this.tail )
+					scene.add( p.mesh );
+				
+				this.moveStack = [];
+			}
+			Snake.prototype.advance =
+				function ( t, dir )
+				{
+					t = t ? t : performance.now();
+					// can override dir to scootch
+					
+					dir = dir ? dir : this.dir;
+					
+					if ( gSnakeGrow )
+					{
+						var n = new SnakeTail( this.head );
+						this.tail.unshift( n );
+						scene.add( n.mesh );
+						gSnakeGrow = false;
+					}
+					else if ( this.tail.length > 0 )
+					{
+						var tip = this.tail.pop();
+						
+						//board.clear( tip.mesh.position );
+						
+						tip.mesh.position.copy( this.head );
+						this.tail.unshift( tip );
+					}
+					
+					// could be streamlined?
+					this.head.addScaledVector( dir, 10 );
+					this.headBox.mesh.position.copy( this.head );
+					
+					if ( board.checkFood( this.head ) )
+						;//alert( "woop" );
+					else if ( board.check( this.head ) )
+						;//alert( "wup" );
+					
+					//board.place( this.head, SnakeBoard.snakeType );
+					
+					
+					lastT = t;
+				};
+			Snake.prototype.update =
+				function ()
+				{
+					if ( stepN < 1 ) return;
+					
+					var amt;
+					
+					if ( gMoves.axis.roll )
+					{
+						amt = gMoves.dir.roll * gMoves.m.roll * turnRad;
+						
+						this.up.applyAxisAngle( this.dir, amt );
+						rotateAroundWorldAxis( camera, this.dir, amt );
+					}
+					
+					if ( gMoves.axis.pitch )
+					{
+						amt = gMoves.dir.pitch * gMoves.m.pitch * turnRad;
+						
+						var norm = vec3().crossVectors( this.dir, this.up );
+						this.dir.applyAxisAngle( norm, amt );
+						this.up.applyAxisAngle( norm, amt );
+						rotateAroundWorldAxis( camera, norm, amt );
+					}
+					
+					if ( gMoves.axis.turn )
+					{
+						amt = gMoves.dir.turn * gMoves.m.turn * turnRad;
+						
+						this.up.applyAxisAngle( this.dir, amt );
+						rotateAroundWorldAxis( camera, this.dir, amt );
+						
+						var norm = vec3().crossVectors( this.dir, this.up );
+						this.dir.applyAxisAngle( norm, gMoves.m.turn * turnRad );
+						this.up.applyAxisAngle( norm, gMoves.m.turn * turnRad );
+						rotateAroundWorldAxis( camera, norm, gMoves.m.turn * turnRad );
+						
+						this.dir.applyAxisAngle( this.up, amt );
+						rotateAroundWorldAxis( camera, this.up, amt );
+					}
+					
+					var d = Math.max( 10 / stepN, distance3d( this.head, this.softHead ) / stepN );
+					
+					const axes = [ "x", "y", "z" ];
+					
+					for ( let axis of axes )
+					{
+						let diff = this.softHead[ axis ] - this.head[ axis ];
+						let sign = diff / Math.abs( diff );
+						if ( Math.abs( diff ) < d * 3 ) // increased from const 1 in effort to reduce jiggle
+							this.softHead[ axis ] = this.head[ axis ];
+						else
+							this.softHead[ axis ] -= sign * d;
+					}
+					
+					//console.log( this.softHead );
+					
+					this.camera.position.copy( this.softHead );
+					
+					this.camera.translateZ( 50 );
+					this.camera.translateY( 10 );
+					
+				};
+			Snake.prototype.scootchX =
+				function ( m )
+				{
+					// m is really just for sign
+					if ( !m ) m = 1;
+					var norm = vec3().crossVectors( this.dir, this.up );
+					//console.log( this.dir, this.up, norm );
+					if ( m < 0 ) norm.negate();
+					norm.round();
+					this.advance( null, norm );
+				};
+			Snake.prototype.scootchY =
+				function ( m )
+				{
+					// m is really just for sign
+					if ( !m ) m = 1;
+					var v = this.up.clone();
+					if ( m < 0 ) v.negate();
+					v.round();
+					this.advance( null, v );
+				};
+			
+			
+			function SnakeBoard( snake )
+			{
+				this.snake = snake;
+				this.food = null;
+			}
+			SnakeBoard.prototype.check =
+				function ( v )
+				{
+					if ( this.food && distance3d( v, this.food ) < 9 )
+						return SnakeBoard.foodType;
+					
+					if ( distance3d( v, this.snake.head ) < 9 )
+						return SnakeBoard.snakeType;
+						
+					for ( let el of this.snake.tail )
+					{
+						let p = el.mesh.position;
+						if ( distance3d( v, p ) < 9 )
+							return SnakeBoard.snakeType;
+					}
+					
+					return null;
+				};
+			SnakeBoard.prototype.getRandomLocation =
+				function ( radius, center )
+				{
+					radius = radius ? radius : 5;
+					center = center ? center : vec3( 0, 0, 0 );
+					
+					var x, y, z, v;
+					do
+					{
+						x = getRandomInt( center.x - radius, center.x + radius ) * 10;
+						y = getRandomInt( center.y - radius, center.y + radius ) * 10;
+						z = getRandomInt( center.z - radius, center.z + radius ) * 10;
+						v = vec3( x, y, z );
+					}
+					while ( this.check( v ) );
+					
+					//console.log( "random", v );
+					
+					return v;
+				};
+			SnakeBoard.prototype.generateFood =
+				function ()
+				{
+					var pos = this.getRandomLocation( 5 );
+					
+					this.food = pos;
+					
+					var mat = new THREE.MeshPhongMaterial( { color: 0x999900, transparent: false, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true } );
+				
+					this.foodBox = createBox( mat, pos );
+					
+					scene.add( this.foodBox )
+				};
+			SnakeBoard.prototype.checkFood =
+				function ( pos )
+				{
+					var slot = this.check( pos );
+					
+					if ( slot == SnakeBoard.foodType )
+					{
+						scene.remove( this.foodBox );
+						this.generateFood();
+						gSnakeGrow = true;
+						return true;
+					}
+					
+					return false;
+				};
+			
+			function getRandomInt(min, max) {
+			  min = Math.ceil(min);
+			  max = Math.floor(max);
+			  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+			}
+			
+			SnakeBoard.snakeType = 1;
+			SnakeBoard.foodType = 2;
+			SnakeBoard.wallType = 3;
+		
+			
+		
+		
+		
+		
+		
+		
+		
+		
+		var gSnakeGrow = false;
+
+
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 500 );
+			camera.rotateY( Math.PI );
+			camera.translateZ( 50 );
+
+			var renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.setClearColor( 0x000000, 1 );
+			document.body.appendChild( renderer.domElement );
+
+			//var orbit = new THREE.OrbitControls( camera, renderer.domElement );
+			//orbit.enableZoom = false;
+
+			var lights = [];
+			lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+			lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+			lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+
+			lights[ 0 ].position.set( 0, 200, 0 );
+			lights[ 1 ].position.set( 100, 200, 100 );
+			lights[ 2 ].position.set( - 100, - 200, - 100 );
+
+			scene.add( lights[ 0 ] );
+			scene.add( lights[ 1 ] );
+			scene.add( lights[ 2 ] );
+			
+			var snake = new Snake( scene, camera );
+			
+			var board = new SnakeBoard( snake );
+			
+			board.generateFood();
+			
+			var prevFog = false;
+			
+			var lastT;
+			var debugT;
+			var dt;
+			
+			var tHist = [];
+			var tAvg;
+			
+			var stepN = -1;
+			
+			var frameDelay = 250; //500;
+			
+			var turnRad;
+
+			var render = function ( t ) {
+
+				requestAnimationFrame( render );
+				
+				if ( !t && !lastT )
+				{
+					lastT = dt = debugT = performance.now();
+					return;
+				}
+				else if ( !t )
+				{
+					t = performance.now();
+				}
+				
+				tHist.push( t - dt );
+				if ( tHist.length > 5 )
+					tHist.shift();
+				
+				dt = t;
+				
+				tAvg = tHist.reduce( (a,c) => a+c ) / tHist.length;
+				
+				stepN = Math.min( frameDelay / tAvg, 1 );
+				
+				turnRad = Math.PI / (24 * stepN); // 90° / ... frames to move 90°
+				
+				//if ( t - debugT > 1000 ) // for debugging
+				{
+					snake.update();
+					debugT = t;
+				}
+				
+				if ( t - lastT > frameDelay )
+					snake.advance( t );
+
+				renderer.render( scene, camera );
+				
+				
+
+			};
+
+			window.addEventListener( 'resize', function resize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}, false );
+
+			var gMoves = { axis: {}, dir: {}, m: {} };
+			var gKeyPressCount = {};
+			var gKeyTime = {};
+			var gKeyDown = {};
+			
+			var keyRepTime = 50; // ms
+
+			window.addEventListener( 'keydown', function keydown( event ) {
+				
+				var now = performance.now();
+				
+				if ( ! gKeyTime[ event.code ] || now - gKeyTime[ event.code ] > keyRepTime )
+					gKeyPressCount[ event.count ] = 1;
+				else if ( now - gKeyTime[ event.code ] <= keyRepTime )
+					gKeyPressCount[ event.count ]++;
+				
+				var c = gKeyPressCount[ event.count ];
+				
+				switch(event.code) {
+				case "ArrowDown":
+				case "Numpad2":
+					if ( gMoves.axis.pitch && gMoves.dir.pitch == -1 )
+					{
+						gMoves.axis.pitch = false;
+						break;
+					}
+					gMoves.axis.pitch = true;
+					gMoves.dir.pitch = 1;
+					gMoves.m.pitch = c;
+				  break;
+				case "ArrowUp":
+				case "Numpad5":
+					if ( gMoves.axis.pitch && gMoves.dir.pitch == 1 )
+					{
+						gMoves.axis.pitch = false;
+						break;
+					}
+					gMoves.axis.pitch = true;
+					gMoves.dir.pitch = -1;
+					gMoves.m.pitch = c;
+				  break;
+				case "ArrowRight":
+				case "Numpad6":
+					if ( gMoves.axis.turn && gMoves.dir.turn == 1 )
+					{
+						gMoves.axis.turn = false;
+						break;
+					}
+					gMoves.axis.turn = true;
+					gMoves.dir.turn = -1;
+					gMoves.m.turn = c;
+				  break;
+				case "ArrowLeft":
+				case "Numpad4":
+					if ( gMoves.axis.turn && gMoves.dir.turn == -1 )
+					{
+						gMoves.axis.turn = false;
+						break;
+					}
+					gMoves.axis.turn = true;
+					gMoves.dir.turn = 1;
+					gMoves.m.turn = c;
+				  break;
+				case "Numpad3":
+					if ( gMoves.axis[ 'roll' ] && gMoves.dir[ 'roll' ] == -1 )
+					{
+						gMoves.axis[ 'roll' ] = false;
+						break;
+					}
+					gMoves.axis[ 'roll' ] = true;
+					gMoves.dir[ 'roll' ] = 1;
+					gMoves.m[ 'roll' ] = c;
+				  break;
+				case "Numpad1":
+					if ( gMoves.axis[ 'roll' ] && gMoves.dir[ 'roll' ] == 1 )
+					{
+						gMoves.axis[ 'roll' ] = false;
+						break;
+					}
+					gMoves.axis[ 'roll' ] = true;
+					gMoves.dir[ 'roll' ] = -1;
+					gMoves.m[ 'roll' ] = c;
+				  break;
+			  }
+			  
+			  gKeyTime[ event.code ] = now;
+			  gKeyDown[ event.code ] = true;
+
+				
+			}, false );
+
+			window.addEventListener( 'keyup', function keydown( event ) {
+				
+				switch(event.code) {
+				case "ArrowDown":
+				case "Numpad2":
+					if ( gMoves.axis.pitch && gMoves.dir.pitch == 1 )
+					{
+						gMoves.axis.pitch = false;
+						break;
+					}
+				  break;
+				case "ArrowUp":
+				case "Numpad5":
+					if ( gMoves.axis.pitch && gMoves.dir.pitch == -1 )
+					{
+						gMoves.axis.pitch = false;
+						break;
+					}
+				  break;
+				case "ArrowRight":
+				case "Numpad6":
+					if ( gMoves.axis.turn && gMoves.dir.turn == -1 )
+					{
+						gMoves.axis.turn = false;
+						break;
+					}
+				  break;
+				case "ArrowLeft":
+				case "Numpad4":
+					if ( gMoves.axis.turn && gMoves.dir.turn == 1 )
+					{
+						gMoves.axis.turn = false;
+						break;
+					}
+				  break;
+				case "Numpad3":
+						gMoves.axis.roll = false;
+				  break;
+				case "Numpad1":
+						gMoves.axis.roll = false;
+				  break;
+				case "KeyD":
+					snake.scootchX( 1 );
+				  break;
+				case "KeyA":
+					snake.scootchX( -1 );
+				  break;
+				case "KeyW":
+					snake.scootchY( 1 );
+				  break;
+				case "KeyS":
+					snake.scootchY( -1 );
+				  break;
+			  }
+			  
+			  gKeyDown[ event.code ] = false;
+
+				
+			}, false );
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			// start
+			render();
+
+		</script>
+	</body>
+</html>
