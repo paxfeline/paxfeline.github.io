@@ -1,203 +1,1015 @@
-<html>
-<head>
-<title>Space Wyrm: 3D Snake</title>
-<style>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name = "viewport" content = "initial-scale=1.0, user-scalable=no, width=device-width">
+		<title>Space Wyrm: 3D Snake (Limited Web-Only Version)</title>
+		<style>
+			/*@font-face {
+				font-family: 'inconsolata';
+				src: url('../files/inconsolata.woff') format('woff');
+				font-weight: normal;
+				font-style: normal;
+			}*/
 
-body {
-	margin: 0;
-	padding: 0;
-}
+			body {
+				margin:0;
+				font-family: 'inconsolata';
+				font-size: 15px;
+				line-height: 18px;
+				overflow: hidden;
+			}
+			
+			#stats
+			{
+				position: absolute;
+				font-size: 1.5em;
+				font-family: sans-serif;
+				color: white;
+			}
+			
+			#stats div
+			{
+				height: 1em;
+				padding: 0.2em;
+			}
+			
+			#accelFeedback
+			{
+				position: fixed;
+				top: 0;
+				right: 0;
+				height: 100%;
+				z-index: 1;
+				display: none;
+			}
+			
+			#pauseScreen
+			{
+				display: none;
+				font-size: 3em;
+			}
+			
+			#pauseTop
+			{
+				position: fixed;
+				top: 0;
+				background-color: black;
+				color: white;
+				padding-top: 1em;
+				text-align: center;
+				width: 100%;
+				z-index: 2;
+				height: 1em;
+			}
+			
+			#pauseBottom
+			{
+				position: fixed;
+				bottom: 0;
+				background-color: black;
+				color: white;
+				padding-bottom: 1em;
+				padding-top: 0.5em;
+				text-align: center;
+				width: 100%;
+				z-index: 2;
+				height: 1em;
+			}
 
-.body {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
+			.gameCanvas { width: 100%; height: 100%; z-index: 0 }
+		</style>
+	</head>
+	<body>
 	
-	background-image: radial-gradient(circle at 50% 100%,
-		#0000f8 0%, #00005f 100%);
-	background-size: 100% 100%;
-	
-	z-index: 0;
-}
+		<div id="stats">
+			<div id="time"></div>
+			<div id="score"></div>
+			<div id="collisions"></div>
+		</div>
+		
+		<canvas id="accelFeedback" width="500" height="500"></canvas>
+		<div id="pauseScreen">
+			<div id="pauseTop">Paused</div>
+			<div id="pauseBottom">Tap or Press Enter to Resume</div>
+		</div>
 
-.all {
-	position: relative;
-	z-index: 1;
-}
+		<script src="js/three.min.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script src="js/ParametricGeometries.js"></script>
 
-.header {
-	overflow: hidden;
-	height: 47vw;
-	position: relative;
-}
+		<script src='js/geometry.js'></script>
 
-.seg
-{
-	border-radius: 50%;
-	width: 175px;
-	height: 175px;
-	background-image: radial-gradient(farthest-corner at 25% 25%,
-		#76287a 0%, #2d062f 100%);
-	position: absolute;
-	width: 15vw;
-	height: 15vw;
-}
+		<script>
+		
+			var aFew = 0;
+			function debugAFew()
+			{
+				if ( aFew < 20 )
+				{
+					console.log.apply( console, arguments );
+					aFew++;
+				}
+			}
+			
+			//const vec3 = ( x, y, z ) => { new THREE.Vector3( x, y, z ) };
+			function vec3( x, y, z ) { return new THREE.Vector3( x, y, z ) };
+			
+			var rotWorldMatrix;
+			function rotateAroundWorldAxis( object, axis, radians ) {
 
-.head {
-	position: absolute;
-	z-index: 1;
-	width: 32vw;
-	height: 38vw;
-    top: 1vw;
-}
+				var rotationMatrix = new THREE.Matrix4();
 
-.outer {
-	position: relative;
-	width: 80%;
-	margin: 0 auto;
-}
+				rotationMatrix.makeRotationAxis( axis.normalize(), radians );
+				rotationMatrix.multiply( object.matrix );                       // pre-multiply
+				object.matrix = rotationMatrix;
+				object.rotation.setFromRotationMatrix( object.matrix );
+			}
+			
+			function distance3d( p1, p2 )
+			{
+				return Math.sqrt( Math.pow( p1.x - p2.x, 2 ) + 
+									Math.pow( p1.y - p2.y, 2 ) + 
+									Math.pow( p1.z - p2.z, 2 ) );
+			}
+			
+			
+			
+			function createBox( meshMaterial, pos, wireframe )
+			{
+				var boxGroup = new THREE.Group();
+				
+				//var geometry = new THREE.SphereGeometry( 5, 8, 4 );
+				var geometry = new THREE.BoxGeometry( 7, 7, 7 );
+				
+				var ngeometry;
+				
+				if ( wireframe )
+				{
+					var wireframe = new THREE.EdgesGeometry( geometry );
+					var line = new THREE.LineSegments( wireframe, new THREE.LineBasicMaterial( { color: 0x66ccff, linewidth: 5 } ) );
+					boxGroup.add( line );
+				}
+				else
+				{
+					ngeometry = new THREE.BufferGeometry().fromGeometry( geometry );
+					boxGroup.add( new THREE.Mesh( ngeometry, meshMaterial ) );
+				}
+				
+				if ( pos )
+					boxGroup.position.copy( pos );
+				
+				return boxGroup;
+			}
+			
+			function getRandomInt(min, max) {
+			  min = Math.ceil(min);
+			  max = Math.floor(max);
+			  return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+			}
+			
+			function SnakeHead( pos )
+			{
+				var mat = new THREE.MeshPhongMaterial( { color: 0x891520, transparent: false, opacity: 1, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true } );
+				
+				this.mesh = createBox( mat, pos );
+			}
+			
+			function SnakeTail( pos )
+			{
+				//var mat = new THREE.MeshPhongMaterial( { color: 0x156289, transparent: true, opacity: 0.2, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true, depthWrite: false } );
+				
+				var mat = new THREE.MeshPhongMaterial( { color: 0x156289, transparent: false, opacity: 1, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true } );
+				
+				this.mesh = createBox( mat, pos, true ); // third param = wireframe
+			}
+			
+			// for SnakeMove type
+			SnakeMove =
+				{
+					rollType: 1,
+					pitchType: 2,
+					turnType: 3,
+					pivotType: 4 // unused
+				};
+						
+			function Snake( eng )
+			{
+				this.engine = eng;
+			
+				this.camera = eng.camera;
+				
+				this.dir = vec3( 0, 0, 1 );
+				this.up = vec3( 0, 1, 0 );
+				
+				this.head = vec3( 0, 0, 0 );
+				
+				this.tail =
+					[
+						new SnakeTail( vec3( 0, 0, -10 ) ),
+						new SnakeTail( vec3( 0, 0, -20 ) )
+					];
+				
+				this.spineP = []; // spine position
+				this.spineR = []; // spine rotation
+				
+				for ( var i = 1; i >= -20; i-- )
+				{
+					spineP.push( vec3( 0, 0, i ) );
+					spineR.push( eng.camera.rotation.clone() );
+				}
+				
+				//this.softHead = this.head.clone();
 
-.title {
-	position: absolute;
-	width: 100%;
-	text-align: center;
-	font-size: 8vw; /*5em;*/
-	transform: perspective(4em) rotate3d( 0, -1, 0, 25deg );
-	top: 270px;
-	font-family: Impact;
-	background-image: linear-gradient(to right, rgb(255, 255, 75) 30%, rgba(255, 255, 75, 0.75) 80%);
-	z-index: 0;
-	top: 23vw;
-}
+				this.headBox = new SnakeHead();
+				
+				this.group = new THREE.Group();
+				
+				this.group.add( this.headBox.mesh );
 
-.title2 {
-	position: absolute;
-	width: 400%;
-	text-align: center;
-	font-size: 5vw; /*6em;*/
-	transform: perspective(2em) rotate3d( 0, 1, 0, 20deg );
-	top: 280px;
-	font-family: Impact;
-	background-image: linear-gradient(to left, rgb(255, 255, 75) 30%, rgba(255, 255, 75, 0.75) 80%);
-	top: 34vw;
-	left: -150%;
-}
+				eng.scene.add( this.group );
+				
+				for ( var p of this.tail )
+					this.group.add( p.mesh );
+				
+				this.moveStack = [];
+			}
+			Snake.prototype.advance =
+				function ( t, dir )
+				{
+					t = t ? t : performance.now();
+					
+					// can override dir to scootch
+					
+					dir = dir ? dir : this.dir;
+					
+					this.spineP.push( this.head.clone() );
+					this.spineR.push( this.headBox.mesh.rotation.clone() );
+					
+					if ( this.spineP.length >= this.tail.length * 10 )
+					{
+						this.spineP = this.spineP.slice( 0, this.tail.length * 10 );
+						this.spineR = this.spineR.slice( 0, this.tail.length * 10 );
+					}
+					
+					// could be streamlined?
+					this.head.addScaledVector( dir, 1 );
+					this.headBox.mesh.position.copy( this.head );
+					
+					this.headBox.mesh.rotation.copy( this.engine.camera.rotation );
+					
+					if ( this.engine.board.checkFood( this.head ) ); // action is taken in checkFood
+					else if ( this.engine.board.check( this.head ) )
+					{
+						this.collisions = this.collisions ? ++this.collisions : 1;
+						document.querySelector( "#collisions" ).innerHTML = `Collisions: ${this.collisions}`;
+					}
+					
+					if ( this.engine.gSnakeGrow )
+					{
+						var curTail = this.tail( this.tail.length - 1 ).mesh;
+						var n = new SnakeTail( curTail.position );
+						n.mesh.rotation.copy( curTail.rotation );
+						this.tail.push( n );
+						this.group.add( n.mesh );
+						this.engine.gSnakeGrow = false;
+						
+						document.querySelector( "#score" ).innerHTML = `Score: ${this.tail.length}`;
+					}
+					else if ( this.tail.length > 0 )
+					{
+						for ( var i = 0; i < this.tail.length - 1; i++ )
+						{
+							this.tail[ i ].mesh.position.copy( this.spineP[ i * 10 - 1 ] );
+							this.tail[ i ].mesh.rotation.copy( this.spineR[ i * 10 - 1 ] );
+						}
+						
+						i = this.tail.length;
+						this.tail[ i ].mesh.position.copy( this.spineP[ this.spineP.length - 1 ] );
+						this.tail[ i ].mesh.rotation.copy( this.spineR[ this.spineR.length - 1 ] );
+					}					
+					
+					this.engine.lastT = t;
+				};
+			Snake.prototype.update =
+				function ( t )
+				{
+					if ( this.engine.stepN < 1 ) return;
+					
+					//debugger;
+						
+					
+					/*if ( this.engine.usingKeys )
+					{
+						if ( this.engine.gMoves.axis.roll )
+							this.engine.gMoves.m.roll = this.engine.shiftDown ? 6 : 3;
+				
+						if ( this.engine.gMoves.axis.pitch )
+							this.engine.gMoves.m.pitch = this.engine.shiftDown ? 8 : 4;
+				
+						if ( this.engine.gMoves.axis.turn )
+							this.engine.gMoves.m.turn = this.engine.shiftDown ? 4 : 2;
+					}*/
+					
+					var amt = 1;
+					
+					if ( this.engine.shiftDown )
+						amt = 2;
+					
+					if ( this.engine.gMoves.axis.roll )
+					{
+						amt *= this.engine.gMoves.dir.roll * this.engine.gMoves.m.roll * this.engine.turnRad;
+					
+						this.up.applyAxisAngle( this.dir, amt );
+						rotateAroundWorldAxis( this.engine.camera, this.dir, amt );
+					}
+					
+					var amt = 1;
+					
+					if ( this.engine.shiftDown )
+						amt = 2;
+				
+					if ( this.engine.gMoves.axis.pitch )
+					{
+						amt *= this.engine.gMoves.dir.pitch * this.engine.gMoves.m.pitch * this.engine.turnRad;
+					
+						var norm = vec3().crossVectors( this.dir, this.up );
+						this.dir.applyAxisAngle( norm, amt );
+						this.up.applyAxisAngle( norm, amt );
+						rotateAroundWorldAxis( this.engine.camera, norm, amt );
+					}
+					
+					var amt = 1;
+					
+					if ( this.engine.shiftDown )
+						amt = 2;
+					
+					//document.body.innerHTML = `${amt}<br>${document.body.innerHTML}`;
+				
+					if ( this.engine.gMoves.axis.turn )
+					{
+						amt *= this.engine.gMoves.dir.turn * this.engine.gMoves.m.turn * this.engine.turnRad;
+					
+						this.up.applyAxisAngle( this.dir, amt );
+						rotateAroundWorldAxis( this.engine.camera, this.dir, amt );
+					
+						var norm = vec3().crossVectors( this.dir, this.up );
+						this.dir.applyAxisAngle( norm, this.engine.gMoves.m.turn * this.engine.turnRad );
+						this.up.applyAxisAngle( norm, this.engine.gMoves.m.turn * this.engine.turnRad );
+						rotateAroundWorldAxis( this.engine.camera, norm, this.engine.gMoves.m.turn * this.engine.turnRad );
+					
+						this.dir.applyAxisAngle( this.up, amt );
+						rotateAroundWorldAxis( this.engine.camera, this.up, amt );
+					}
+					
+					//document.body.innerHTML = `${amt}<br>${document.body.innerHTML}`;
+					
+					
+					//var d = Math.max( 10 / this.engine.stepN, distance3d( this.head, this.softHead ) / this.engine.stepN );
+					
+					var d = 10 / this.engine.stepN;
+					
+					const axes = [ "x", "y", "z" ];
+					
+					for ( var axis of axes )
+					{
+						var diff = this.softHead[ axis ] - this.head[ axis ];
+						var sign = diff / Math.abs( diff );
+						if ( Math.abs( diff ) < d * 2 ) // increased from const 1 in effort to reduce jiggle
+							this.softHead[ axis ] = this.head[ axis ];
+						else
+							this.softHead[ axis ] -= sign * d;
+					}
+					
+					//console.log( this.softHead );
+					
+					this.camera.position.copy( this.softHead );
+					
+					this.camera.translateZ( 50 );
+					this.camera.translateY( 10 );
+				};
+			Snake.prototype.scootchX =
+				function ( m )
+				{
+					// m is really just for sign
+					if ( !m ) m = 1;
+					var norm = vec3().crossVectors( this.dir, this.up );
+					//console.log( this.dir, this.up, norm );
+					if ( m < 0 ) norm.negate();
+					norm.round();
+					this.advance( null, norm );
+				};
+			Snake.prototype.scootchY =
+				function ( m )
+				{
+					// m is really just for sign
+					if ( !m ) m = 1;
+					var v = this.up.clone();
+					if ( m < 0 ) v.negate();
+					v.round();
+					this.advance( null, v );
+				};
+			
+			
+			function SnakeBoard( eng )
+			{
+				this.engine = eng;
+				this.snake = eng.snake;
+				this.food = null;
+			}
+			SnakeBoard.prototype.check =
+				function ( v )
+				{
+					if ( this.food && distance3d( v, this.food ) < 9 )
+						return SnakeBoard.foodType;
+						
+					for ( var el of this.snake.tail )
+					{
+						var p = el.mesh.position;
+						if ( distance3d( v, p ) < 9 )
+							return SnakeBoard.snakeType;
+					}
+					
+					return null;
+				};
+			SnakeBoard.prototype.getRandomLocation =
+				function ( radius, center )
+				{
+					radius = radius ? radius : 5;
+					center = center ? center : vec3( 0, 0, 0 );
+					
+					var x, y, z, v;
+					do
+					{
+						x = getRandomInt( center.x - radius, center.x + radius ) * 10;
+						y = getRandomInt( center.y - radius, center.y + radius ) * 10;
+						z = getRandomInt( center.z - radius, center.z + radius ) * 10;
+						v = vec3( x, y, z );
+					}
+					while ( this.check( v ) );
+					
+					//console.log( "random", v );
+					
+					return v;
+				};
+			SnakeBoard.prototype.generateFood =
+				function ()
+				{
+					var pos = this.getRandomLocation( 5 );
+					
+					this.food = pos;
+					
+					var mat = new THREE.MeshPhongMaterial( { color: 0x999900, transparent: false, emissive: 0x072534, side: THREE.DoubleSide, flatShading: true } );
+				
+					this.foodBox = createBox( mat, pos );
+					
+					this.engine.scene.add( this.foodBox )
+				};
+			SnakeBoard.prototype.checkFood =
+				function ( pos )
+				{
+					var slot = this.check( pos );
+					
+					if ( slot == SnakeBoard.foodType )
+					{
+						this.engine.scene.remove( this.foodBox );
+						this.generateFood();
+						this.engine.gSnakeGrow = true;
+						return true;
+					}
+					
+					return false;
+				};
+			
+			SnakeBoard.snakeType = 1;
+			SnakeBoard.foodType = 2;
+			SnakeBoard.wallType = 3;
+		
+			
+		
+		
+		
+		
+		
+		
+		function SnakeGameEngine()
+		{
+			this.init();
+		}
+		SnakeGameEngine.prototype.init =
+			function ()
+			{
+				this.gSnakeGrow = false;
+				
+				this.scene = new THREE.Scene();
+				this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 500 );
+				this.camera.translateZ( 50 );
 
-.movie {
-	text-align: center;
-}
+				this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+				this.renderer.setPixelRatio( window.devicePixelRatio );
+				this.renderer.setSize( window.innerWidth, window.innerHeight );
+				this.renderer.setClearColor( 0x000000, 1 );
+				document.body.appendChild( this.renderer.domElement );
+				
+				this.renderer.domElement.className = "gameCanvas";
 
-.dlcontainer {
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-}
+				//var orbit = new THREE.OrbitControls( camera, renderer.domElement );
+				//orbit.enableZoom = false;
 
-.dl {
-	width: 10vw;
-	height: 10vw;
-	border: 0.25em solid darkblue;
-	border-radius: 0.5em;
-	margin: 0 4em 1em;
-	padding: 3em;
-	
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	
-	background-image: linear-gradient(70deg, rgb(20, 20, 20) 30%, rgb(30, 30, 30) 100%);
-}
+				this.lights = [];
+				this.lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+				this.lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+				this.lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
 
-.dlcontent {
-	font-size: 4vw;
-	text-align: center;
-	color: red;
-}
+				this.lights[ 0 ].position.set( 0, 200, 0 );
+				this.lights[ 1 ].position.set( 100, 200, 100 );
+				this.lights[ 2 ].position.set( - 100, - 200, - 100 );
 
-.dlextra {
-	font-size: 2vw;
-	text-align: center;
-	color: darkred;
-}
+				this.scene.add( this.lights[ 0 ] );
+				this.scene.add( this.lights[ 1 ] );
+				this.scene.add( this.lights[ 2 ] );
+			
+				var redgeometry = new THREE.RingGeometry( 50, 51, 32, 1 );
+				var material = new THREE.MeshBasicMaterial( { color: 0xff0000, side: THREE.DoubleSide } );
+				var redmesh = new THREE.Mesh( redgeometry, material );
+				this.scene.add( redmesh );
+			
+				var greengeometry = new THREE.RingGeometry( 50, 51, 32, 1 );
+				material = new THREE.MeshBasicMaterial( { color: 0x00ff00, side: THREE.DoubleSide } );
+				greengeometry.rotateX( Math.PI / 2 );
+				greenmesh = new THREE.Mesh( greengeometry, material );
+				this.scene.add( greenmesh );
+			
+				var bluegeometry = new THREE.RingGeometry( 50, 51, 32, 1 );
+				material = new THREE.MeshBasicMaterial( { color: 0x0000ff, side: THREE.DoubleSide } );
+				bluegeometry.rotateY( Math.PI / 2 );
+				bluemesh = new THREE.Mesh( bluegeometry, material );
+				this.scene.add( bluemesh );
+			
+				this.renderStart =
+					function ()
+					{
+						requestAnimationFrame( this.renderStart2.bind( this ) );
+						this.lastT = this.dt = this.debugT = performance.now();
+					
+						this.renderer.render( this.scene, this.camera );
+					};
+			
+				this.renderStart2 = 
+					function ( t )
+					{
+						requestAnimationFrame( this.render.bind( this ) );
+						window.addEventListener( 'deviceorientation', window.devorev, true );
+						this.tHist.push( t - this.dt );
+						this.dt = t;
+					
+						this.renderer.render( this.scene, this.camera );
+					};
+			
+				this.render =
+					function render( t ) {
+				
+					debugAFew( "render event" );
 
-a:link {
-	color: darkblue;
-	text-decoration: none;
-}
+					requestAnimationFrame( render.bind( this ) );
+				
+					if ( this.paused ) return;
+				
+					this.tHist.push( t - this.dt );
+					if ( this.tHist.length > 50 ) // was 5
+						this.tHist.shift();
+				
+					this.dt = t;
+				
+					//this.tAvg = this.tHist.reduce( (a,c) => a+c ) / this.tHist.length;
+					this.tAvg = this.tHist.reduce( function (a,c) { return a+c; } ) / this.tHist.length;
+				
+					this.stepN = Math.max( this.frameDelay / this.tAvg, 1 );
+				
+					//console.log( "stepN", this.stepN );
+				
+					this.turnRad = Math.PI / (24 * this.stepN);
+				
+					//if ( t - debugT > 1000 ) // for debugging
+					{
+						this.snake.update();
+						this.debugT = t;
+					}
+				
+					//console.log( "fd", this.frameDelay, t - this.lastT );
+					if ( t - this.lastT > this.frameDelay )
+						this.snake.advance( t );
+						// for some reason I put this.lastT = t in snake.advance
+						// oh yeah, for scootching .e.g
 
-a:visited {
-	color: rgb(150,100,150);
-}
+					this.renderer.render( this.scene, this.camera );
+					
+					if ( document.querySelector( "#time" ).innerHTML != Math.floor( (t - this.gameStart - this.timePaused) / 1000 ) )
+						document.querySelector( "#time" ).innerHTML = Math.floor( (t - this.gameStart - this.timePaused) / 1000 );
 
-a:hover {
-	text-shadow: #C00 1px 0 10px;
-}
+				};
 
-a:active {
-	color: magenta;
-}
+				window.addEventListener( 'resize', (function resize() {
+			
+					//debugAFew( "resize event" );
+				
+					if ( ! this.camera ) return;
+					this.camera.aspect = window.innerWidth / window.innerHeight;
+					this.camera.updateProjectionMatrix();
 
-h1 { color: red; font-size: 5em; text-align: center; }
+					this.renderer.setSize( window.innerWidth, window.innerHeight );
+					
+					var el = document.querySelector( "#accelFeedback" );
+					
+					var s = Math.min( window.innerWidth, window.innerHeight ) + "px";
+					
+					el.style.width = s;
+					el.style.height = s;
+					
+				}).bind( this ), false );
 
-</style>
-</head>
-<body>
+				this.renderer.domElement.addEventListener( 'click', this.togglePause.bind( this ), false );
 
-<div class="body"></div>
+				window.addEventListener( 'keydown', (function keydown( event ) {
+			
+					this.usingKeys = true;
+				
+					this.shiftDown = event.shiftKey;
+				
+					var now = performance.now();
+			
+					console.log( 'kd', this.gKeyTime[ event.code ], now - this.gKeyTime[ event.code ] );
+				
+					if ( ! this.gKeyDown[ event.code ] && (! this.gKeyTime[ event.code ] || now - this.gKeyTime[ event.code ] > this.keyRepTime) )
+						this.gKeyPressCount[ event.count ] = 3;
+					else if ( ! this.gKeyDown[ event.code ] && now - this.gKeyTime[ event.code ] <= this.keyRepTime )
+					{
+						this.gKeyPressCount[ event.count ] = Math.min( this.gKeyPressCount[ event.count ] + 1.5, 12 );
+						console.log( "faster!", this.gKeyPressCount[ event.count ] );
+					}
+				
+					var c = this.gKeyPressCount[ event.count ];
+					
+					console.log( c );
+					
+					if ( event.code == "ArrowDown" )
+					{
+						if ( this.gMoves.axis.pitch && this.gMoves.dir.pitch == -1 )
+						{
+							this.gMoves.axis.pitch = false;
+						}
+						this.gMoves.axis.pitch = true;
+						this.gMoves.dir.pitch = 1;
+						this.gMoves.m.pitch = c;
+					}
+					else if ( event.code == "ArrowUp" )
+					{
+						if ( this.gMoves.axis.pitch && this.gMoves.dir.pitch == 1 )
+						{
+							this.gMoves.axis.pitch = false;
+						}
+						this.gMoves.axis.pitch = true;
+						this.gMoves.dir.pitch = -1;
+						this.gMoves.m.pitch = c;
+					}
+					else if ( event.code == "ArrowRight" )
+					{
+						if ( this.gMoves.axis.turn && this.gMoves.dir.turn == 1 )
+						{
+							this.gMoves.axis.turn = false;
+						}
+						this.gMoves.axis.turn = true;
+						this.gMoves.dir.turn = -1;
+						this.gMoves.m.turn = c;
+					}
+					else if ( event.code == "ArrowLeft" )
+					{
+						if ( this.gMoves.axis.turn && this.gMoves.dir.turn == -1 )
+						{
+							this.gMoves.axis.turn = false;
+						}
+						this.gMoves.axis.turn = true;
+						this.gMoves.dir.turn = 1;
+						this.gMoves.m.turn = c;
+					}
+					else if ( event.code == "KeyX" )
+					{
+						if ( this.gMoves.axis[ 'roll' ] && this.gMoves.dir[ 'roll' ] == -1 )
+						{
+							this.gMoves.axis[ 'roll' ] = false;
+						}
+						this.gMoves.axis[ 'roll' ] = true;
+						this.gMoves.dir[ 'roll' ] = 1;
+						this.gMoves.m[ 'roll' ] = c;
+					}
+					else if ( event.code == "KeyZ" )
+					{
+						if ( this.gMoves.axis[ 'roll' ] && this.gMoves.dir[ 'roll' ] == 1 )
+						{
+							this.gMoves.axis[ 'roll' ] = false;
+						}
+						this.gMoves.axis[ 'roll' ] = true;
+						this.gMoves.dir[ 'roll' ] = -1;
+						this.gMoves.m[ 'roll' ] = c;
+					}
+					
+					/*switch(event.code) {
+					case "ArrowDown":
+					case "Numpad2":
+						if ( this.gMoves.axis.pitch && this.gMoves.dir.pitch == -1 )
+						{
+							this.gMoves.axis.pitch = false;
+							break;
+						}
+						this.gMoves.axis.pitch = true;
+						this.gMoves.dir.pitch = 1;
+						this.gMoves.m.pitch = c;
+					  break;
+					case "ArrowUp":
+					case "Numpad5":
+						if ( this.gMoves.axis.pitch && this.gMoves.dir.pitch == 1 )
+						{
+							this.gMoves.axis.pitch = false;
+							break;
+						}
+						this.gMoves.axis.pitch = true;
+						this.gMoves.dir.pitch = -1;
+						this.gMoves.m.pitch = c;
+					  break;
+					case "ArrowRight":
+					case "Numpad6":
+						if ( this.gMoves.axis.turn && this.gMoves.dir.turn == 1 )
+						{
+							this.gMoves.axis.turn = false;
+							break;
+						}
+						this.gMoves.axis.turn = true;
+						this.gMoves.dir.turn = -1;
+						this.gMoves.m.turn = c;
+					  break;
+					case "ArrowLeft":
+					case "Numpad4":
+						if ( this.gMoves.axis.turn && this.gMoves.dir.turn == -1 )
+						{
+							this.gMoves.axis.turn = false;
+							break;
+						}
+						this.gMoves.axis.turn = true;
+						this.gMoves.dir.turn = 1;
+						this.gMoves.m.turn = c;
+					  break;
+					case "Numpad3":
+						if ( this.gMoves.axis[ 'roll' ] && this.gMoves.dir[ 'roll' ] == -1 )
+						{
+							this.gMoves.axis[ 'roll' ] = false;
+							break;
+						}
+						this.gMoves.axis[ 'roll' ] = true;
+						this.gMoves.dir[ 'roll' ] = 1;
+						this.gMoves.m[ 'roll' ] = c;
+					  break;
+					case "Numpad1":
+						if ( this.gMoves.axis[ 'roll' ] && this.gMoves.dir[ 'roll' ] == 1 )
+						{
+							this.gMoves.axis[ 'roll' ] = false;
+							break;
+						}
+						this.gMoves.axis[ 'roll' ] = true;
+						this.gMoves.dir[ 'roll' ] = -1;
+						this.gMoves.m[ 'roll' ] = c;
+					  break;
+				  }*/
+			  
+				  this.gKeyTime[ event.code ] = now;
+				  this.gKeyDown[ event.code ] = true;
 
-<div class="all">
+				
+				}).bind( this ), false );
 
-<div class="header">
+				window.addEventListener( 'keyup', (function keyup( event ) {
+			
+					this.shiftDown = event.shiftKey;
+				
+					switch(event.code) {
+					case "ArrowDown":
+					case "Numpad2":
+						if ( this.gMoves.axis.pitch && this.gMoves.dir.pitch == 1 )
+						{
+							this.gMoves.axis.pitch = false;
+							break;
+						}
+					  break;
+					case "ArrowUp":
+					case "Numpad5":
+						if ( this.gMoves.axis.pitch && this.gMoves.dir.pitch == -1 )
+						{
+							this.gMoves.axis.pitch = false;
+							break;
+						}
+					  break;
+					case "ArrowRight":
+					case "Numpad6":
+						if ( this.gMoves.axis.turn && this.gMoves.dir.turn == -1 )
+						{
+							this.gMoves.axis.turn = false;
+							break;
+						}
+					  break;
+					case "ArrowLeft":
+					case "Numpad4":
+						if ( this.gMoves.axis.turn && this.gMoves.dir.turn == 1 )
+						{
+							this.gMoves.axis.turn = false;
+							break;
+						}
+					  break;
+					case "KeyX":
+							this.gMoves.axis.roll = false;
+					  break;
+					case "KeyZ":
+							this.gMoves.axis.roll = false;
+					  break;
+					  // move to keydown?
+					case "KeyD":
+						this.snake.scootchX( 1 );
+					  break;
+					case "KeyA":
+						this.snake.scootchX( -1 );
+					  break;
+					case "KeyW":
+						this.snake.scootchY( 1 );
+					  break;
+					case "KeyS":
+						this.snake.scootchY( -1 );
+					  break;
+					case "Enter":
+					case "KeyP":
+						this.togglePause();
+					  break;
+				  }
+			  
+				  this.gKeyDown[ event.code ] = false;
 
-<div class="outer">
+				
+				}).bind( this ), false );
+			
+				//var sign = ( v ) => v / Math.abs( v );
+				function sign( v ) { return v / Math.abs( v ); }
+			
+				window.devorev =
+					(function( event )
+					{
+			
+						debugAFew( "orientation event" );
+				
+						this.gMoves.dir.pitch = -sign( event.gamma + 45 );
+						//this.gMoves.m.pitch = 0.001416862 * Math.pow( Math.abs(event.gamma + 45), 2.234299 );
+						this.gMoves.m.pitch = Math.abs(event.gamma + 45) / 5;
+				
+						this.gMoves.dir.turn = -sign( event.beta );
+						//this.gMoves.m.turn = 0.07 * Math.pow( Math.abs(event.beta), 1.4 );
+						this.gMoves.m.turn = Math.abs(event.beta) / (20 / 3);
+				
+						this.gMoves.axis.pitch = Math.abs( this.gMoves.m.pitch ) > 0.2;
+						this.gMoves.axis.turn =  Math.abs( this.gMoves.m.turn ) > 0.2;
+				
+						/*document.body.innerHTML = `${event.beta}`;
+						document.body.innerHTML = `${this.gMoves.dir.turn}<br>${document.body.innerHTML}`;
+						document.body.innerHTML = `${this.gMoves.m.turn}<br>${document.body.innerHTML}`;*/
+				
+					}).bind( this );
+			
+				document.querySelector( "#accelFeedback" ).addEventListener( 'click', () => { DeviceOrientationEvent.requestPermission(); this.togglePause(); } ); // .bind( this ), false );
+			
+				//window.addEventListener('deviceorientation', window.devorev);
+			
+				//setTimeout( devorev.bind( window.screen.orientation ), 5000 );
+			
+				this.startGame();
+			
+				// start
+				this.renderStart();
+			};
+		SnakeGameEngine.prototype.startGame =
+			function ()
+			{
+				if ( this.snake )
+				{
+					this.scene.remove( this.snake.group );
+					this.scene.remove( this.board.foodBox );
+				}
+				
+				this.gameStart = performance.now();
+				
+				this.snake = new Snake( this );
+			
+				this.camera.rotation.x
+					= this.camera.rotation.y
+					= this.camera.rotation.z
+					= 0;
+				this.camera.rotateY( Math.PI );
+			
+				this.board = new SnakeBoard( this );
+			
+				this.board.generateFood();
+			
+				this.lastT;
+				this.debugT;
+				this.dt;
+				
+				this.timePaused = 0;
+			
+				this.tHist = [];
+				this.tAvg;
+			
+				this.stepN = -1;
+			
+				this.frameDelay = 350; //500;
+			
+				this.turnRad;
+				
+				this.paused = false;
+			
+				this.gMoves = { axis: { pitch: false, turn: false }, dir: { pitch: 1, turn: 1 }, m: { pitch: 0, turn: 0 } };
+				this.gKeyPressCount = {};
+				this.gKeyTime = {};
+				this.gKeyDown = {};
+			
+				this.keyRepTime = 200; // ms
+			
+				this.usingKeys = false;
+			
+				this.shiftDown = false;
+				
+				this.togglePause();
+			};
+		SnakeGameEngine.prototype.updateAccelFeedback =
+			function ( event )
+			{
+				var el = document.querySelector( "#accelFeedback" );
+				var ctx = el.getContext( "2d" );
+				
+				ctx.fillStyle = "white";
+				
+				ctx.fillRect( 0, 0, el.width, el.height );
+				
+				ctx.fillStyle = "black";
+				
+				ctx.beginPath();
+				ctx.arc( el.width/2, el.height/2, 15, 0, 2 * Math.PI );
+				ctx.fill();
+				
+				ctx.fillStyle = "white";
+				
+				ctx.beginPath();
+				ctx.arc( (el.width/2) + (event.beta) * 5, (el.height/2) + (event.gamma + 45) * 7, 10, 0, 2 * Math.PI );
+				ctx.fill();
+				
+				ctx.fillStyle = "black";
+				
+				ctx.beginPath();
+				ctx.arc( (el.width/2) + (event.beta) * 5, (el.height/2) + (event.gamma + 45) * 7, 10, 0, 2 * Math.PI );
+				ctx.stroke();
+			};
+		SnakeGameEngine.prototype.togglePause =
+			function ()
+			{
+				var now = performance.now();
+			
+				this.paused = !this.paused;
+				
+				if ( !this.usingKeys )
+					document.querySelector( "#accelFeedback" ).style.display = this.paused ? "block" : "none";
+				else if ( !this.paused && document.querySelector( "#accelFeedback" ).style.display == "block" )
+					document.querySelector( "#accelFeedback" ).style.display = "none";
+		
+				document.querySelector( "#pauseScreen" ).style.display = this.paused ? "block" : "none";
+				
+				if ( this.paused )
+				{
+					this.pauseGapStart = now;
+					if ( !this.usingKeys )
+						window.addEventListener( 'deviceorientation', this.updateAccelFeedback );
+				}
+				else
+				{
+					var delta = now - this.pauseGapStart;
+					
+					this.timePaused += delta;
+				
+					this.lastT += delta;
+					this.dt += delta;
+					this.debugT += delta;
+					
+					if ( !this.usingKeys )
+						window.removeEventListener( 'deviceorientation', this.updateAccelFeedback );
+				}
+			
+			};
+				
+		
+		var eng = new SnakeGameEngine();
 
-<div class="seg" style="top: 29vw; left: 72vw; transform: scale(0.65);"></div>
-<div class="seg" style="top: 21vw; left: 69vw; transform: scale(0.65);"></div>
-<div class="seg" style="top: 14.5vw; left: 63vw; transform: scale(0.7);"></div>
-<div class="seg" style="top: 10vw; left: 54vw; transform: scale(0.75);"></div>
-<div class="seg" style="top: 8vw; left: 44vw; transform: scale(0.8);"></div>
-<div class="seg" style="top: 7vw; left: 33vw; transform: scale(0.85);"></div>
-<div class="seg" style="top: 9vw; left: 22.5vw; transform: scale(0.9);"></div>
-<div class="seg" style="top: 12.5vw; left: 11vw; z-index: 1;"></div>
-
-<img src="headtilt.png" class="head">
-
-</div>
-
-<div class="title">Space Wyrm:</div>
-<div class="title2">3D Snake</div>
-
-</div>
-
-<div class="movie">
-<iframe class="movie" width="560" height="315" allow="autoplay" src="https://www.youtube.com/embed/BpRa4fyvtKA?autoplay=1" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
-
-<h1>Play Now!</h1>
-
-<div class="dlcontainer">
-
-<a href="https://itunes.apple.com/us/app/space-wyrm-3d-snake/id1457469987">
-<div class="dl">
-<div class="dlcontent">iOS</div>
-<div class="dlextra">View in the App Store</div>
-</div>
-</a>
-
-<a href="https://play.google.com/store/apps/details?id=com.grokprog.spacewyrm.scene">
-<div class="dl">
-<div class="dlcontent">Android</div>
-<div style="font-size: 0.8em; color: darkred;"><em>(pre-release)</em></div>
-<div class="dlextra">View in Google Play</div>
-</div>
-</a>
-
-</div>
-
-</div>
-
-</body>
+		</script>
+	</body>
 </html>
