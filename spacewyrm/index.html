@@ -1,0 +1,106 @@
+<html>
+<head>
+<style>
+
+body {
+	background-image: radial-gradient(circle at 50% 100%,
+		#0000f8 0%, #00005f 100%);
+	background-size: 100% 100vh;
+	background-attachment: fixed;
+	margin: 0;
+	padding: 0;
+}
+
+.header {
+	overflow: hidden;
+	height: 45vw;
+	position: relative;
+}
+
+.seg
+{
+	border-radius: 50%;
+	width: 175px;
+	height: 175px;
+	background-image: radial-gradient(farthest-corner at 25% 25%,
+		#76287a 0%, #2d062f 100%);
+	position: absolute;
+	width: 15vw;
+	height: 15vw;
+}
+
+.head {
+	position: absolute;
+	z-index: 1;
+	width: 32vw;
+	height: 38vw;
+}
+
+.outer {
+	position: relative;
+	width: 80%;
+	margin: 0 auto;
+}
+
+.title {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	font-size: 5vw; /*5em;*/
+	transform: perspective(4em) rotate3d( 0, -1, 0, 40deg );
+	top: 270px;
+	font-family: Impact;
+	background-image: linear-gradient(to right, rgb(255, 255, 75) 30%, rgba(255, 255, 75, 0.75) 80%);
+	z-index: 0;
+	top: 23vw;
+}
+
+.title2 {
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	font-size: 6vw; /*6em;*/
+	transform: perspective(2em) rotate3d( 0, 1, 0, 20deg );
+	top: 280px;
+	font-family: Impact;
+	background-image: linear-gradient(to left, rgb(255, 255, 75) 30%, rgba(255, 255, 75, 0.75) 80%);
+	top: 31vw;
+}
+
+.movie {
+	text-align: center;
+}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+
+<div class="outer">
+
+<div class="seg" style="top: 29vw; left: 72vw; transform: scale(0.65);"></div>
+<div class="seg" style="top: 21vw; left: 69vw; transform: scale(0.65);"></div>
+<div class="seg" style="top: 14.5vw; left: 63vw; transform: scale(0.7);"></div>
+<div class="seg" style="top: 10vw; left: 54vw; transform: scale(0.75);"></div>
+<div class="seg" style="top: 8vw; left: 44vw; transform: scale(0.8);"></div>
+<div class="seg" style="top: 7vw; left: 33vw; transform: scale(0.85);"></div>
+<div class="seg" style="top: 9vw; left: 22.5vw; transform: scale(0.9);"></div>
+<div class="seg" style="top: 12.5vw; left: 11vw; z-index: 1;"></div>
+
+<img src="headtilt.png" class="head">
+
+</div>
+
+<div class="title">Space Wyrm:</div>
+<div class="title2">3D Snake</div>
+
+</div>
+
+<div class="movie">
+<iframe class="movie" width="560" height="315" allow="autoplay" src="https://www.youtube.com/embed/BpRa4fyvtKA?autoplay=1" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+
+</body>
+</html>
