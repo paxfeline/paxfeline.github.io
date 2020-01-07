@@ -16,6 +16,9 @@ body {
     padding: 0.75em 0 0.5em;
     
     transform: perspective(10em) rotate3d(-0.5, 1, 0, 30deg);
+    
+    position: relative;
+    z-index: 1;
 }
 
 .cen {
@@ -31,6 +34,8 @@ body {
     transform: perspective(75em) translate3d(0,20em,0) rotate3d(-1, -1, 0, 15deg);
     position: relative;
     top: -15em;
+    
+    transform-style: preserve-3d;
 }
 
 .cenlow {
@@ -45,11 +50,13 @@ body {
     
     transform: perspective(75em) rotate3d(1, 1, 0, 15deg);
     position: relative;
+    
+    transform-style: preserve-3d;
 }
 
 .main {
 	border: 1px solid black;
-	border-radius: 2em;
+	/*border-radius: 2em;*/
 	padding: 1.5em;
 	margin-bottom: 2em;
 	background-color: white;
@@ -58,6 +65,21 @@ body {
 	background-color: black;
 	color: white;
 	font-family: Optima;
+	
+	position: relative;
+}
+.shadow {
+	position: absolute;
+	width: 100%;
+	height: 20em;
+	background-color: grey;
+	
+	top: 0;
+	left: 0;
+	
+    transform: rotateX(90deg) translate3d(0,-10em,10em);
+    
+    z-index: 0;
 }
 h1 {
 	font-size: 4em;
@@ -68,7 +90,7 @@ h1 {
 h2 {
     font-size: 1.6em;
     margin: 0 0 1em;
-    border-bottom: 1px solid gray;
+    border-bottom: 0.1em solid gray;
     font-weight: normal;
 }
 .em, .emf::first-line { font-weight: bold; font-variant: small-caps; font-style: italic; font-size: 2em; }
@@ -115,6 +137,9 @@ Grok Programming
 <div class="cen">
 
 <div class="main emf">
+
+<div class="shadow"></div>
+
 The power of programming is astounding. Programming is like a secret code: a language that only a few understand. But more than that, it's a language that actually brings about change in the world. In a very real sense, it's like magic.<br><br>
 The meaning of <span class="em">grok prog</span> is to get beyond a basic understanding. To <span class="em">grok</span> is to understand intuitively &mdash; in a way that leaves behind the need for words &mdash; while maintaining the ability to explain your reasoning.
 </div>
