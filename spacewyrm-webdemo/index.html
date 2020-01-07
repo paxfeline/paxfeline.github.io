@@ -102,8 +102,6 @@
 
 		<script>
 		
-		DeviceOrientationEvent.requestPermission()
-		
 			var aFew = 0;
 			function debugAFew()
 			{
@@ -869,7 +867,7 @@
 				
 					}).bind( this );
 			
-				document.querySelector( "#accelFeedback" ).addEventListener( 'click', this.togglePause.bind( this ), false );
+				document.querySelector( "#accelFeedback" ).addEventListener( 'click', () => { DeviceOrientationEvent.requestPermission(); this.togglePause(); } ); // .bind( this ), false );
 			
 				//window.addEventListener('deviceorientation', window.devorev);
 			
