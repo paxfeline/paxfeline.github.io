@@ -3,23 +3,58 @@
 <title>grok programming</title>
 <style>
 body {}
+.header
+{
+    text-align: center;
+    font-size: 7em;
+    background-color: black;
+    color: white;
+    font-family: Krungthep, monospace;
+    padding: 0.75em 0 0.5em;
+    
+    transform: perspective(10em) rotate3d(-0.5, 1, 0, 30deg);
+}
+
 .cen {
-    background-color: #6a848c;
+    /*background-color: #6a848c;*/
     font-family: sans-serif;
     padding: 2em;
     padding-top: 2em;
     font-size: 1.2em;
     line-height: 1.25em;
+	width: 66%;
+	margin: 0 auto;
+    
+    transform: perspective(75em) translate3d(0,20em,0) rotate3d(-1, -1, 0, 15deg);
+    position: relative;
+    top: -15em;
 }
+
+.cenlow {
+    /*background-color: #6a848c;*/
+    font-family: sans-serif;
+    padding: 2em;
+    padding-top: 2em;
+    font-size: 1.2em;
+    line-height: 1.25em;
+	width: 66%;
+	margin: 0 auto;
+    
+    transform: perspective(75em) rotate3d(1, 1, 0, 15deg);
+    position: relative;
+}
+
 .main {
 	border: 1px solid black;
 	border-radius: 10px;
 	padding: 1.5em;
-	width: 66%;
-	margin: 0 auto 2em;
+	margin-bottom: 2em;
 	background-color: white;
-	color: -moz-fieldtext;
 	text-align: justify;
+	
+	background-color: black;
+	color: white;
+	font-family: Optima;
 }
 h1 {
 	font-size: 4em;
@@ -33,17 +68,44 @@ h2 {
     border-bottom: 1px solid gray;
     font-weight: normal;
 }
-.em, .emf::first-line { font-weight: bold; font-variant: small-caps; font-style: italic; }
+.em, .emf::first-line { font-weight: bold; font-variant: small-caps; font-style: italic; font-size: 2em; }
 ul ul ul { line-height: 1.2em; }
 li, ul { margin-bottom: 1em; }
 ul { 
     padding-inline-end: 2em;
 }
+
+a {
+
+}
+
+
+a:link {
+	color: skyblue;
+	text-decoration: none;
+}
+
+a:visited {
+	color: darkgrey;
+}
+
+a:focus {
+	color: darkgrey;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:active {
+	color: magenta;
+}
+
 </style>
 </head>
 <body style="margin: 0">
 
-<div style="text-align: center; font-size: 7em; background-color: black; color: white; font-family: Krungthep, monospace; padding: 0.75em 0 0.5em;">
+<div class="header">
 Grok Programming
 </div>
 
@@ -78,14 +140,20 @@ The meaning of <span class="em">grok prog</span> is to get beyond a basic unders
 		</div>
 
 	</li>
-	
-	<li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="cenlow">
+
+<div class="main">
 
 		<div>
 		My earliest exposure to programming was through a language called Logo, which was designed especially for teaching children to code. The idea is that the commands manipulating a digital robot, which can draw lines on a canvas. The original actually used a <a href="https://en.wikipedia.org/wiki/Turtle_(robot)">physical robot</a> (link to WikiPedia). I've made several toy implementations in various languages; here are the two most recent:
 		</div>
-
-	</li>
 	
 	<ul>
 
@@ -102,25 +170,27 @@ The meaning of <span class="em">grok prog</span> is to get beyond a basic unders
 		</ul>
 	
 	</ul>
-	
-	<li>
 
-		<div>
-		<a href="https://paxfeline.github.io/PXSpriteEngine/">PXSpriteEngine</a> is a very bare-bones sprite engine that.<br>
-		<a href="">GitHub</a>
-		</div>
+</div>
 
-	</li>
-	
-	<li>
+</div>
 
-		<div>
-		Miscellaneous and sundry.
-		</div>
+</div>
 
-	</li>
+<div class="main" style="width: 50%; margin: 0 5em 2em auto;">
+	<div>
+	Miscellaneous and sundry.
+	</div>
 	
 	<ul>
+	
+		<li>
+
+			<div>
+			<a href="https://paxfeline.github.io/PXSpriteEngine/">PXSpriteEngine</a> is a very bare-bones sprite engine that. (<a href="https://github.com/paxfeline/PXSpriteEngine">GitHub</a>)
+			</div>
+
+		</li>
 
 		<li><a href="https://paxfeline.github.io/simplesnake/">Simple Snake</a> - A very simple implementation of Snake in JavaScript. (<a href="https://github.com/paxfeline/simplesnake">GitHub</a>)</li>
 
@@ -129,17 +199,9 @@ The meaning of <span class="em">grok prog</span> is to get beyond a basic unders
 		<li><a href="https://paxfeline.github.io/simplemathgames/">Simple Math Gmaes</a> - Some games a made while teaching introductory algebra (<a href="https://github.com/paxfeline/simplemathgames/">GitHub</a>)</li>
 		
 		<li><a href="https://paxfeline.github.io/lcars-code-builder/">LCARS code builder</a> - The beginnings of an interface to write code that looks kind of like the computers on Star Trek: TNG. (<a href="https://github.com/paxfeline/lcars-code-builder/">GitHub</a>)</li>
-
-
 	
 	</ul>
-
-</ul>
-
-</div>
-
-</div>
-
+	
 </div>
 
 </body>
