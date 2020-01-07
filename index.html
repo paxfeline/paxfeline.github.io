@@ -13,12 +13,17 @@ body {
     background-color: black;
     color: white;
     font-family: Krungthep, monospace;
-    padding: 0.75em 0 0.5em;
+    padding: 0.5em 0 0.5em 0.75em;
     
     transform: perspective(10em) rotate3d(-0.5, 1, 0, 30deg);
-    
+        
     position: relative;
     z-index: 1;
+}
+
+.title {
+	display: inline-block;
+	text-align: left;
 }
 
 .cen {
@@ -131,7 +136,9 @@ a:active {
 <body style="margin: 0">
 
 <div class="header">
+<div class="title">
 Grok Programming
+</div>
 </div>
 
 <div class="cen">
