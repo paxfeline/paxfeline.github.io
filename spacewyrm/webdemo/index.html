@@ -281,7 +281,7 @@
 					{
 						for ( var i = 0; i < this.tail.length - 1; i++ )
 						{
-							console.log( this.spineP.length, (i + 1) * 10 - 1 );
+							console.log( this.tail.length, this.spineP.length, (i + 1) * 10 - 1 );
 							this.tail[ i ].mesh.position.copy( this.spineP[ (i + 1) * 10 - 1 ] );
 							this.tail[ i ].mesh.rotation.copy( this.spineR[ (i + 1) * 10 - 1 ] );
 						}
