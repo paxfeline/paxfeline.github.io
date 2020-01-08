@@ -370,6 +370,8 @@
 					
 					//console.log( this.softHead );
 					
+					this.headBox.mesh.rotation.copy( this.camera.rotation );
+					
 					this.camera.position.copy( this.head );
 					
 					this.camera.translateZ( 50 );
