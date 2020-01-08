@@ -153,6 +153,7 @@
 			<div class="start-inner">
 				<div class="start-logo"></div>
 				<div onclick="if ( DeviceOrientationEvent.requestPermission ) DeviceOrientationEvent.requestPermission(); eng.start();">Start</div>
+				<div id="highscore"></div>
 			</div>
 		</div>
 
@@ -163,6 +164,15 @@
 		<script src='js/geometry.js'></script>
 
 		<script>
+		
+		
+			var hsdiv = document.querySelector( "#highscore" );				
+			if ( window.localStorage )
+			{
+				var ld = window.localStorage.PXSpaceWyrmWebDemoV1;
+				if ( ld )
+					hsdiv.innerHTML = `High score: ${ld.highScore}`
+			}
 		
 			var aFew = 0;
 			function debugAFew()
@@ -323,8 +333,21 @@
 					if ( this.engine.board.checkFood( this.head ) ); // action is taken in checkFood
 					else if ( this.engine.board.check( this.head ) )
 					{
-						this.collisions = this.collisions ? ++this.collisions : 1;
-						document.querySelector( "#collisions" ).innerHTML = `Collisions: ${this.collisions}`;
+						//this.collisions = this.collisions ? ++this.collisions : 1;
+						//document.querySelector( "#collisions" ).innerHTML = `Collisions: ${this.collisions}`;
+						
+						this.gameOver = true;
+						
+						if ( window.localStorage )
+						{
+							var ld = window.localStorage.PXSpaceWyrmWebDemoV1 || {};
+							ld.highScore = this.tail.length - 2;
+							window.localStorage.PXSpaceWyrmWebDemoV1 = ld;
+							
+							hsdiv.innerHTML = `High score: ${ld.highScore}`
+							
+							document.querySelector( ".start-screen").style.display = "block";
+						}
 					}
 					
 					if ( this.engine.gSnakeGrow )
@@ -633,7 +656,8 @@
 				
 					debugAFew( "render event" );
 
-					requestAnimationFrame( render.bind( this ) );
+					if ( !this.gameOver )
+						requestAnimationFrame( render.bind( this ) );
 				
 					if ( this.paused ) return;
 				
