@@ -1,0 +1,25 @@
+{
+  "name": "webdemo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paxfeline/spacewyrm-web.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paxfeline/spacewyrm-web/issues"
+  },
+  "homepage": "https://github.com/paxfeline/spacewyrm-web#readme",
+  "devDependencies": {
+    "eslint": "^6.8.0"
+  },
+  "dependencies": {
+    "eslint-plugin-html": "^6.0.0"
+  }
+}

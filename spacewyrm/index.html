@@ -364,26 +364,11 @@
 					
 					//document.body.innerHTML = `${amt}<br>${document.body.innerHTML}`;
 					
-					
 					//var d = Math.max( 10 / this.engine.stepN, distance3d( this.head, this.softHead ) / this.engine.stepN );
-					
-					var d = 10 / this.engine.stepN;
-					
-					const axes = [ "x", "y", "z" ];
-					
-					for ( var axis of axes )
-					{
-						var diff = this.softHead[ axis ] - this.head[ axis ];
-						var sign = diff / Math.abs( diff );
-						if ( Math.abs( diff ) < d * 2 ) // increased from const 1 in effort to reduce jiggle
-							this.softHead[ axis ] = this.head[ axis ];
-						else
-							this.softHead[ axis ] -= sign * d;
-					}
 					
 					//console.log( this.softHead );
 					
-					this.camera.position.copy( this.softHead );
+					this.camera.position.copy( this.head );
 					
 					this.camera.translateZ( 50 );
 					this.camera.translateY( 10 );
