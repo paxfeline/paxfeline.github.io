@@ -1013,6 +1013,11 @@
 				
 		
 		var eng = new SnakeGameEngine();
+		
+		document.addEventListener('touchmove', function (event) {
+		  if (event.scale !== 1) { event.preventDefault(); }
+		}, false);
+
 
 		</script>
 	</body>
