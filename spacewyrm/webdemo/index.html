@@ -243,14 +243,14 @@
 					
 					dir = dir ? dir : this.dir;
 					
-					this.spineP.push( this.head.clone() );
-					this.spineR.push( this.headBox.mesh.rotation.clone() );
+					this.spineP.unshift( this.head.clone() );
+					this.spineR.unshift( this.headBox.mesh.rotation.clone() );
 					
-					/*if ( this.spineP.length >= this.tail.length * 10 )
+					if ( this.spineP.length >= this.tail.length * 10 )
 					{
 						this.spineP = this.spineP.slice( 0, this.tail.length * 10 );
 						this.spineR = this.spineR.slice( 0, this.tail.length * 10 );
-					}*/
+					}
 					
 					// could be streamlined?
 					this.head.addScaledVector( dir, 1 );
