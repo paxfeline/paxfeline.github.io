@@ -278,7 +278,7 @@
 					}
 					else if ( this.tail.length > 0 )
 					{
-						for ( var i = 0; i < this.tail.length - 1; i++ )
+						for ( var i = 1; i < this.tail.length - 1; i++ )
 						{
 							console.log( this.spineP.length, i * 10 - 1 );
 							this.tail[ i ].mesh.position.copy( this.spineP[ i * 10 - 1 ] );
