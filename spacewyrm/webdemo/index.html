@@ -107,12 +107,12 @@
 			}
 			
 			#startbtn {
-				font-size: 7em;
+				font-size: 3.5vw;
+				height: 3.5vw;
 			}
 			
 			#highscore {
-				
-				font-size: 1em;
+				font-size: 2.5vw;
 			}
 			
 			.start-logo {
@@ -177,9 +177,10 @@
 			var hsdiv = document.querySelector( "#highscore" );				
 			if ( window.localStorage )
 			{
-				var ld = window.localStorage.PXSpaceWyrmWebDemoV1;
-				if ( ld )
-					hsdiv.innerHTML = `High score: ${ld.highScore}`
+
+					var ld =  window.localStorage.PXSpaceWyrmWebDemoV1 ? JSON.parse( window.localStorage.PXSpaceWyrmWebDemoV1 ) : {};
+					if ( ld && ld.highScore )
+						hsdiv.innerHTML = `High score: ${ld.highScore}`;
 			}
 		
 			var aFew = 0;
@@ -344,17 +345,22 @@
 						//this.collisions = this.collisions ? ++this.collisions : 1;
 						//document.querySelector( "#collisions" ).innerHTML = `Collisions: ${this.collisions}`;
 						
-						this.gameOver = true;
+						this.engine.gameOver = true;
 						
 						if ( window.localStorage )
 						{
-							var ld = window.localStorage.PXSpaceWyrmWebDemoV1 || {};
+							console.log( `game end at length ${this.tail.length}` );
+							var ld;
+							if ( window.localStorage.PXSpaceWyrmWebDemoV1 )
+								ld = JSON.parse( window.localStorage.PXSpaceWyrmWebDemoV1 )
+							if ( !ld )
+								ld = {};
 							ld.highScore = this.tail.length - 2;
-							window.localStorage.PXSpaceWyrmWebDemoV1 = ld;
+							window.localStorage.PXSpaceWyrmWebDemoV1 = JSON.stringify( ld );
 							
 							hsdiv.innerHTML = `High score: ${ld.highScore}`
 							
-							document.querySelector( ".start-screen").style.display = "block";
+							document.querySelector( ".start-screen").style.display = "flex";
 						}
 							
 						return; // stop it, now!
@@ -1001,6 +1007,8 @@
 		SnakeGameEngine.prototype.start =
 			function ()
 			{
+				this.gameOver = false;
+				
 				document.querySelector( ".start-screen").style.display = "none";
 				
 				if ( window.innerWidth < window.innerHeight  )
@@ -1137,6 +1145,8 @@
 				
 		
 		var eng = new SnakeGameEngine();
+		
+		console.log( "finished js" );
 
 		</script>
 	</body>
