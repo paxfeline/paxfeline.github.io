@@ -968,6 +968,9 @@
 			function ()
 			{
 				document.querySelector( ".start-screen").style.display = "none";
+				
+				if ( window.innerWidth < window.innerHeight  )
+					this.portraitPause = true;
 			
 				this.startGame();
 			
