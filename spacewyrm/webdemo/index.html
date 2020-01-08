@@ -632,7 +632,7 @@
 					
 				}).bind( this ), false );
 
-				this.renderer.domElement.addEventListener( 'click', this.togglePause.bind( this ), false );
+				//this.renderer.domElement.addEventListener( 'click', this.togglePause.bind( this ), false );
 
 				window.addEventListener( 'keydown', (function keydown( event ) {
 			
@@ -883,7 +883,7 @@
 				
 					}).bind( this );
 			
-				document.querySelector( "#accelFeedback" ).addEventListener( 'click', (function () { if ( DeviceOrientationEvent.requestPermission ) DeviceOrientationEvent.requestPermission(); this.togglePause(); }).bind( this ) ); // .bind( this ), false );
+				document.body.addEventListener( 'click', (function () { if ( DeviceOrientationEvent.requestPermission ) DeviceOrientationEvent.requestPermission(); this.togglePause(); }).bind( this ) ); // .bind( this ), false );
 			
 				//window.addEventListener('deviceorientation', window.devorev);
 			
