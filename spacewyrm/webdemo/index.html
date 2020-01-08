@@ -210,12 +210,16 @@
 						new SnakeTail( vec3( 0, 0, -20 ) )
 					];
 				
-				// change to pass in and save ref
-				/*board.place( this.head, SnakeBoard.snakeType );
-				board.place( this.tail[0].mesh.position, SnakeBoard.snakeType );
-				board.place( this.tail[1].mesh.position, SnakeBoard.snakeType );*/
+				this.spineP = []; // spine position
+				this.spineR = []; // spine rotation
 				
-				this.softHead = this.head.clone();
+				for ( var i = 1; i >= -20; i-- )
+				{
+					spineP.push( vec3( 0, 0, i ) );
+					spineR.push( eng.camera.rotation.clone() );
+				}
+				
+				//this.softHead = this.head.clone();
 
 				this.headBox = new SnakeHead();
 				
@@ -234,33 +238,22 @@
 				function ( t, dir )
 				{
 					t = t ? t : performance.now();
+					
 					// can override dir to scootch
 					
 					dir = dir ? dir : this.dir;
 					
-					if ( this.engine.gSnakeGrow )
+					this.spineP.push( this.head.clone() );
+					this.spineR.push( this.headBox.mesh.rotation.clone() );
+					
+					if ( this.spineP.length >= this.tail.length * 10 )
 					{
-						var n = new SnakeTail( this.head );
-						n.mesh.rotation.copy( this.headBox.mesh.rotation );
-						this.tail.unshift( n );
-						this.group.add( n.mesh );
-						this.engine.gSnakeGrow = false;
-						
-						document.querySelector( "#score" ).innerHTML = `Score: ${this.tail.length}`;
-					}
-					else if ( this.tail.length > 0 )
-					{
-						var tip = this.tail.pop();
-						
-						//board.clear( tip.mesh.position );
-						
-						tip.mesh.position.copy( this.head );
-						tip.mesh.rotation.copy( this.headBox.mesh.rotation );
-						this.tail.unshift( tip );
+						this.spineP = this.spineP.slice( 0, this.tail.length * 10 );
+						this.spineR = this.spineR.slice( 0, this.tail.length * 10 );
 					}
 					
 					// could be streamlined?
-					this.head.addScaledVector( dir, 10 );
+					this.head.addScaledVector( dir, 1 );
 					this.headBox.mesh.position.copy( this.head );
 					
 					this.headBox.mesh.rotation.copy( this.engine.camera.rotation );
@@ -272,8 +265,29 @@
 						document.querySelector( "#collisions" ).innerHTML = `Collisions: ${this.collisions}`;
 					}
 					
-					//board.place( this.head, SnakeBoard.snakeType );
-					
+					if ( this.engine.gSnakeGrow )
+					{
+						var curTail = this.tail( this.tail.length - 1 ).mesh;
+						var n = new SnakeTail( curTail.position );
+						n.mesh.rotation.copy( curTail.rotation );
+						this.tail.push( n );
+						this.group.add( n.mesh );
+						this.engine.gSnakeGrow = false;
+						
+						document.querySelector( "#score" ).innerHTML = `Score: ${this.tail.length}`;
+					}
+					else if ( this.tail.length > 0 )
+					{
+						for ( var i = 0; i < this.tail.length - 1; i++ )
+						{
+							this.tail[ i ].mesh.position.copy( this.spineP[ i * 10 - 1 ] );
+							this.tail[ i ].mesh.rotation.copy( this.spineR[ i * 10 - 1 ] );
+						}
+						
+						i = this.tail.length;
+						this.tail[ i ].mesh.position.copy( this.spineP[ this.spineP.length - 1 ] );
+						this.tail[ i ].mesh.rotation.copy( this.spineR[ this.spineR.length - 1 ] );
+					}					
 					
 					this.engine.lastT = t;
 				};
@@ -350,26 +364,11 @@
 					
 					//document.body.innerHTML = `${amt}<br>${document.body.innerHTML}`;
 					
-					
 					//var d = Math.max( 10 / this.engine.stepN, distance3d( this.head, this.softHead ) / this.engine.stepN );
-					
-					var d = 10 / this.engine.stepN;
-					
-					const axes = [ "x", "y", "z" ];
-					
-					for ( var axis of axes )
-					{
-						var diff = this.softHead[ axis ] - this.head[ axis ];
-						var sign = diff / Math.abs( diff );
-						if ( Math.abs( diff ) < d * 2 ) // increased from const 1 in effort to reduce jiggle
-							this.softHead[ axis ] = this.head[ axis ];
-						else
-							this.softHead[ axis ] -= sign * d;
-					}
 					
 					//console.log( this.softHead );
 					
-					this.camera.position.copy( this.softHead );
+					this.camera.position.copy( this.head );
 					
 					this.camera.translateZ( 50 );
 					this.camera.translateY( 10 );
@@ -531,8 +530,6 @@
 				bluegeometry.rotateY( Math.PI / 2 );
 				bluemesh = new THREE.Mesh( bluegeometry, material );
 				this.scene.add( bluemesh );
-			
-				this.tHist = [];
 			
 				this.renderStart =
 					function ()
@@ -907,6 +904,7 @@
 				
 				this.timePaused = 0;
 			
+				this.tHist = [];
 				this.tAvg;
 			
 				this.stepN = -1;
