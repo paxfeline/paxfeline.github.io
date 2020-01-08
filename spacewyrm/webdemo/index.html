@@ -152,7 +152,7 @@
 		<div class="start-screen">
 			<div class="start-inner">
 				<div class="start-logo"></div>
-				<div onclick="eng.start();">Start</div>
+				<div onclick="if ( DeviceOrientationEvent.requestPermission ) DeviceOrientationEvent.requestPermission(); eng.start();">Start</div>
 			</div>
 		</div>
 
@@ -685,9 +685,9 @@
 					}
 					else if ( this.portraitPause )
 					{
-						this.portraitPause = false;
-						if ( this.paused )
+						if ( this.paused ) // should always be true
 							this.togglePause();
+						this.portraitPause = false;
 					}
 				
 					if ( ! this.camera ) return;
@@ -958,7 +958,7 @@
 				
 					}).bind( this );
 			
-				document.body.addEventListener( 'click', (function () { if ( DeviceOrientationEvent.requestPermission ) DeviceOrientationEvent.requestPermission(); this.togglePause(); }).bind( this ) ); // .bind( this ), false );
+				document.body.addEventListener( 'click', (function () { if ( !this.portraitPause ) this.togglePause(); }).bind( this ) ); // .bind( this ), false );
 			
 				//window.addEventListener('deviceorientation', window.devorev);
 			
