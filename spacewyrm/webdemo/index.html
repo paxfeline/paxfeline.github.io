@@ -267,7 +267,7 @@
 					
 					if ( this.engine.gSnakeGrow )
 					{
-						var curTail = this.tail( this.tail.length - 1 ).mesh;
+						var curTail = this.tail[ this.tail.length - 1 ].mesh;
 						var n = new SnakeTail( curTail.position );
 						n.mesh.rotation.copy( curTail.rotation );
 						this.tail.push( n );
@@ -278,11 +278,11 @@
 					}
 					else if ( this.tail.length > 0 )
 					{
-						for ( var i = 1; i < this.tail.length - 1; i++ )
+						for ( var i = 0; i < this.tail.length - 1; i++ )
 						{
-							console.log( this.spineP.length, i * 10 - 1 );
-							this.tail[ i ].mesh.position.copy( this.spineP[ i * 10 - 1 ] );
-							this.tail[ i ].mesh.rotation.copy( this.spineR[ i * 10 - 1 ] );
+							console.log( this.spineP.length, (i + 1) * 10 - 1 );
+							this.tail[ i ].mesh.position.copy( this.spineP[ (i + 1) * 10 - 1 ] );
+							this.tail[ i ].mesh.rotation.copy( this.spineR[ (i + 1) * 10 - 1 ] );
 						}
 						
 						i = this.tail.length - 1;
