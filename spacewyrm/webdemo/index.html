@@ -104,7 +104,17 @@
 				position: relative;
 				display: block;
 				margin-bottom: 10vw;
+			}
+			
+			#startbtn {
 				font-size: 7em;
+				line-height: 7em;
+			}
+			
+			#highscore {
+				
+				font-size: 1em;
+				line-height: 1em;
 			}
 			
 			.start-logo {
@@ -152,7 +162,7 @@
 		<div class="start-screen">
 			<div class="start-inner">
 				<div class="start-logo"></div>
-				<div onclick="if ( DeviceOrientationEvent.requestPermission ) DeviceOrientationEvent.requestPermission(); eng.start();">Start</div>
+				<div id="startbtn" onclick="if ( DeviceOrientationEvent.requestPermission ) DeviceOrientationEvent.requestPermission(); eng.start();">Start</div>
 				<div id="highscore"></div>
 			</div>
 		</div>
