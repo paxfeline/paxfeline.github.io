@@ -51,6 +51,7 @@
 				width: 100%;
 				height: 100%;
 				position: absolute;
+				z-index: 0;
 			}
 			
 			#pauseTop
@@ -81,6 +82,37 @@
 			}
 
 			.gameCanvas { width: 100%; height: 100%; z-index: 0 }
+			
+			.start-screen
+			{
+				position: absolute;
+				height: 100%;
+				width: 100%;
+				text-align: center;
+				background-image: url('lilblue.png');
+				color: red;
+				z-index: 1;
+				background-size: 100% 150%;
+				background-position: top;
+				
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+			}
+			
+			.start-inner {
+				position: relative;
+				display: block;
+				margin-bottom: 10vw;
+				font-size: 7em;
+			}
+			
+			.start-logo {
+				background-image: url('sw_logo@2x.png');
+				background-size: 100%;
+				width: 100vw;
+				height: 37.5vw;
+			}
 		</style>
 	</head>
 	<body>
@@ -96,6 +128,13 @@
 		<div id="pauseScreen">
 			<div id="pauseTop">Paused</div>
 			<div id="pauseBottom">Tap or Press Enter to Resume</div>
+		</div>
+	
+		<div class="start-screen">
+			<div class="start-inner">
+				<div class="start-logo"></div>
+				<div onclick="eng.start();">Start</div>
+			</div>
 		</div>
 
 		<script src="js/three.min.js"></script>
@@ -903,6 +942,11 @@
 				//window.addEventListener('deviceorientation', window.devorev);
 			
 				//setTimeout( devorev.bind( window.screen.orientation ), 5000 );
+			};
+		SnakeGameEngine.prototype.start =
+			function ()
+			{
+				document.querySelector( ".start-screen").style.display = "none";
 			
 				this.startGame();
 			
