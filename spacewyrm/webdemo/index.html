@@ -289,7 +289,14 @@
 						i = this.tail.length - 1;
 						this.tail[ i ].mesh.position.copy( this.spineP[ this.spineP.length - 1 ] );
 						this.tail[ i ].mesh.rotation.copy( this.spineR[ this.spineR.length - 1 ] );
-					}					
+					}
+					
+					// move camera
+					
+					this.camera.position.copy( this.head );
+					
+					this.camera.translateZ( 50 );
+					this.camera.translateY( 10 );
 					
 					this.engine.lastT = t;
 				};
@@ -371,11 +378,6 @@
 					//console.log( this.softHead );
 					
 					this.headBox.mesh.rotation.copy( this.camera.rotation );
-					
-					this.camera.position.copy( this.head );
-					
-					this.camera.translateZ( 50 );
-					this.camera.translateY( 10 );
 				};
 			Snake.prototype.scootchX =
 				function ( m )
