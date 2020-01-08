@@ -883,7 +883,7 @@
 				
 					}).bind( this );
 			
-				document.querySelector( "#accelFeedback" ).addEventListener( 'click', () => { DeviceOrientationEvent.requestPermission(); this.togglePause(); } ); // .bind( this ), false );
+				document.querySelector( "#accelFeedback" ).addEventListener( 'click', function () { DeviceOrientationEvent.requestPermission(); this.togglePause(); } ); // .bind( this ), false );
 			
 				//window.addEventListener('deviceorientation', window.devorev);
 			
@@ -1013,11 +1013,6 @@
 				
 		
 		var eng = new SnakeGameEngine();
-		
-		document.addEventListener('touchmove', function (event) {
-		  if (event.scale !== 1) { event.preventDefault(); }
-		}, false);
-
 
 		</script>
 	</body>
