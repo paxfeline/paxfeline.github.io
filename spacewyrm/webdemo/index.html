@@ -616,6 +616,21 @@
 				window.addEventListener( 'resize', (function resize() {
 			
 					//debugAFew( "resize event" );
+					
+					if ( window.innerWidth < winder.innerHeight  )
+					{
+						if ( !this.paused )
+						{
+							this.portraitPause = true;
+							this.togglePause();
+						}
+					}
+					else if ( this.portraitPause )
+					{
+						if ( this.paused )
+							this.togglePause();
+						this.portraitPause = false;
+					}
 				
 					if ( ! this.camera ) return;
 					this.camera.aspect = window.innerWidth / window.innerHeight;
