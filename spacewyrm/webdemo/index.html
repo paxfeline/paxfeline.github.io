@@ -113,6 +113,21 @@
 				width: 100vw;
 				height: 37.5vw;
 			}
+			
+			.portrait-pause {
+				position: absolute;
+				height: 100%;
+				width: 100%;
+				color: red;
+				z-index: 1;
+				background-position: top;
+				
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				
+				visibility: hidden;
+			}
 		</style>
 	</head>
 	<body>
@@ -128,6 +143,10 @@
 		<div id="pauseScreen">
 			<div id="pauseTop">Paused</div>
 			<div id="pauseBottom">Tap or Press Enter to Resume</div>
+		</div>
+	
+		<div class="portrait-pause">
+			Rotate your device CCW to landscape orientation.
 		</div>
 	
 		<div class="start-screen">
@@ -666,9 +685,9 @@
 					}
 					else if ( this.portraitPause )
 					{
+						this.portraitPause = false;
 						if ( this.paused )
 							this.togglePause();
-						this.portraitPause = false;
 					}
 				
 					if ( ! this.camera ) return;
@@ -683,6 +702,8 @@
 					
 					el.style.width = s;
 					el.style.height = s;
+					
+					window.scroll(0,0); // usually not needed but hopefully will prevent issue of canvas being partially scrolled offscreen
 					
 				}).bind( this ), false );
 
@@ -1041,12 +1062,19 @@
 			
 				this.paused = !this.paused;
 				
-				if ( !this.usingKeys )
-					document.querySelector( "#accelFeedback" ).style.display = this.paused ? "block" : "none";
-				else if ( !this.paused && document.querySelector( "#accelFeedback" ).style.display == "block" )
-					document.querySelector( "#accelFeedback" ).style.display = "none";
+				if ( this.portraitPause )
+				{
+					document.querySelector( ".portrait-pause" ).style.visibility = this.paused ? "visible" : "hidden";
+				}
+				else
+				{
+					if ( !this.usingKeys )
+						document.querySelector( "#accelFeedback" ).style.display = this.paused ? "block" : "none";
+					else if ( !this.paused && document.querySelector( "#accelFeedback" ).style.display == "block" )
+						document.querySelector( "#accelFeedback" ).style.display = "none";
 		
-				document.querySelector( "#pauseScreen" ).style.display = this.paused ? "block" : "none";
+					document.querySelector( "#pauseScreen" ).style.display = this.paused ? "block" : "none";
+				}
 				
 				if ( this.paused )
 				{
