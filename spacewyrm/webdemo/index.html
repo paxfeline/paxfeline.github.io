@@ -883,7 +883,7 @@
 				
 					}).bind( this );
 			
-				document.querySelector( "#accelFeedback" ).addEventListener( 'click', function () { DeviceOrientationEvent.requestPermission(); this.togglePause(); } ); // .bind( this ), false );
+				document.querySelector( "#accelFeedback" ).addEventListener( 'click', (function () { DeviceOrientationEvent.requestPermission(); this.togglePause(); }).bind( this ) ); // .bind( this ), false );
 			
 				//window.addEventListener('deviceorientation', window.devorev);
 			
