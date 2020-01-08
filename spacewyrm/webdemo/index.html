@@ -108,13 +108,11 @@
 			
 			#startbtn {
 				font-size: 7em;
-				line-height: 7em;
 			}
 			
 			#highscore {
 				
 				font-size: 1em;
-				line-height: 1em;
 			}
 			
 			.start-logo {
@@ -358,6 +356,8 @@
 							
 							document.querySelector( ".start-screen").style.display = "block";
 						}
+							
+						return; // stop it, now!
 					}
 					
 					if ( this.engine.gSnakeGrow )
