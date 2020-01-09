@@ -174,7 +174,7 @@
 		<div class="start-screen">
 			<div class="start-logo"></div>
 			<div id="highscore"></div>
-			<div id="startbtn" onclick="if ( DeviceOrientationEvent.requestPermission ) DeviceOrientationEvent.requestPermission(); eng.start();">Start</div>
+			<div id="startbtn">Start</div>
 		</div>
 
 		<script src="js/three.min.js"></script>
@@ -185,6 +185,14 @@
 
 		<script>
 		
+			document.querySelector( "#startbtn" ).addEventListener( 'click',
+				function (e)
+				{
+					if ( DeviceOrientationEvent.requestPermission )
+						DeviceOrientationEvent.requestPermission();
+					eng.start();
+					e.stopPropagation();
+				} );
 		
 			var hsdiv = document.querySelector( "#highscore" );				
 			if ( window.localStorage )
