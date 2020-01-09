@@ -729,17 +729,22 @@
 					
 					if ( window.innerWidth < window.innerHeight  )
 					{
-						this.portraitPause = true;
+						this.portraitFlag = true;
 						if ( !this.paused )
 						{
+							this.portraitPause = true;
 							this.togglePause();
 						}
 					}
-					else if ( this.portraitPause )
+					else
 					{
-						if ( this.paused ) // should always be true
-							this.togglePause();
-						this.portraitPause = false;
+						this.portraitFlag = false;
+						if ( this.portraitPause )
+						{
+							if ( this.paused ) // should always be true
+								this.togglePause();
+							this.portraitPause = false;
+						}
 					}
 				
 					if ( ! this.camera ) return;
@@ -1010,7 +1015,12 @@
 				
 					}).bind( this );
 			
-				document.body.addEventListener( 'click', (function () { if ( !this.portraitPause ) this.togglePause(); }).bind( this ) ); // .bind( this ), false );
+				document.body.addEventListener( 'click',
+					(function ()
+					{
+						if ( !this.portraitFlag )
+							this.togglePause();
+					}).bind( this ) ); // .bind( this ), false );
 			
 				//window.addEventListener('deviceorientation', window.devorev);
 			
