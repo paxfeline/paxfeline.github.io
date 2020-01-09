@@ -148,6 +148,25 @@
 				background-image: url('turndevice.gif');
 				background-size: cover;
 			}
+			
+			#end-screen {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				
+				font-size: 15vw;
+				
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				
+				text-align: center;
+				
+				display: none;
+			}
 		</style>
 	</head>
 	<body>
@@ -177,6 +196,10 @@
 			<div id="highscore"></div>
 			<div id="startbtn">Start</div>
 		</div>
+		
+		<div id="end-screen">
+			<div>Game Over</div>
+		</div>
 
 		<script src="js/three.min.js"></script>
 		<script src="js/OrbitControls.js"></script>
@@ -192,6 +215,15 @@
 					if ( DeviceOrientationEvent.requestPermission )
 						DeviceOrientationEvent.requestPermission();
 					eng.start();
+					e.stopPropagation();
+				} );
+		
+			document.querySelector( "#end-screen" ).addEventListener( 'click',
+				function (e)
+				{
+					console.log( "hide", this );
+					this.style.display = "none";
+					document.querySelector( ".start-screen").style.display = "flex";
 					e.stopPropagation();
 				} );
 		
@@ -376,13 +408,16 @@
 								ld = JSON.parse( window.localStorage.PXSpaceWyrmWebDemoV1 )
 							if ( !ld )
 								ld = {};
-							ld.highScore = this.tail.length - 2;
+							ld.highScore = Math.max( this.tail.length - 2, ld.highScore ? ld.highScore : 0 );
 							window.localStorage.PXSpaceWyrmWebDemoV1 = JSON.stringify( ld );
 							
-							hsdiv.innerHTML = `High score: ${ld.highScore}`
-							
-							document.querySelector( ".start-screen").style.display = "flex";
+							hsdiv.innerHTML = `High score: ${ld.highScore} | Last score: ${this.tail.length - 2}`
 						}
+						else
+							hsdiv.innerHTML = `Last score: ${this.tail.length - 2}`
+						
+						
+						document.querySelector( "#end-screen").style.display = "block";
 							
 						return; // stop it, now!
 					}
@@ -396,7 +431,7 @@
 						this.group.add( n.mesh );
 						this.engine.gSnakeGrow = false;
 						
-						document.querySelector( "#score" ).innerHTML = `Score: ${this.tail.length}`;
+						document.querySelector( "#score" ).innerHTML = `Score: ${this.tail.length - 2}`;
 					}
 					
 					if ( this.tail.length > 0 )
