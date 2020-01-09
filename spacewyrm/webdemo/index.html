@@ -36,10 +36,11 @@
 			
 			#accelFeedback
 			{
-				position: fixed;
+				position: absolute;
 				top: 5vw;
 				left: 5vw;
-				width: 30%;
+				width: 30vw;
+				height: 30vw;
 				z-index: 1;
 				display: none;
 			}
@@ -763,10 +764,10 @@
 					
 					var el = document.querySelector( "#accelFeedback" );
 					
-					var s = Math.min( window.innerWidth, window.innerHeight ) + "px";
+					/*var s = Math.min( window.innerWidth, window.innerHeight ) + "px";
 					
 					el.style.width = s;
-					el.style.height = s;
+					el.style.height = s;*/
 					
 					window.scroll(0,0); // usually not needed but hopefully will prevent issue of canvas being partially scrolled offscreen
 					
