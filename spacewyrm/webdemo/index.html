@@ -156,6 +156,8 @@
 				width: 100%;
 				height: 100%;
 				
+				color: white;
+				
 				font-size: 15vw;
 				
 				display: flex;
@@ -411,13 +413,13 @@
 							ld.highScore = Math.max( this.tail.length - 2, ld.highScore ? ld.highScore : 0 );
 							window.localStorage.PXSpaceWyrmWebDemoV1 = JSON.stringify( ld );
 							
-							hsdiv.innerHTML = `High score: ${ld.highScore} | Last score: ${this.tail.length - 2}`
+							hsdiv.innerHTML = `High score: ${ld.highScore} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Last score: ${this.tail.length - 2}`
 						}
 						else
 							hsdiv.innerHTML = `Last score: ${this.tail.length - 2}`
 						
 						
-						document.querySelector( "#end-screen").style.display = "block";
+						document.querySelector( "#end-screen").style.display = "flex";
 							
 						return; // stop it, now!
 					}
