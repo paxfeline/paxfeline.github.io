@@ -124,7 +124,7 @@ body {
 }
 
 a:link {
-	color: darkblue;
+	color: blue;
 	text-decoration: none;
 }
 
@@ -141,6 +141,56 @@ a:active {
 }
 
 h1 { color: red; font-size: 5em; text-align: center; }
+
+.expo {
+    background-color: black;
+    color: lightgoldenrodyellow;
+	font-family: monospace;
+}
+
+.expo-content {
+	width: 60%;
+	margin: 0 auto;
+	padding: 3vw;
+	font-size: 2.3vw;
+	line-height: 3vw;
+	text-align: justify;
+	position: relative;
+}
+
+.expo-content a:link {
+	font-weight: bold;
+}
+
+.footer {
+	text-align: center;
+	font-size: 2vw;
+	padding: 2vw;
+	font-family: serif;
+}
+
+.footer a:link {
+	color: red;
+	text-shadow: #fff 0 0 0.5em;
+}
+
+.footer a:visited {
+	color: darkred;
+}
+
+.footer a:hover {
+	text-shadow: #fff 0 0 0.5em, #fff 0 0 0.25em;
+}
+
+.footer a:active {
+	color: magenta;
+}
+
+.mimg {
+	max-width: 171px;
+	max-height: 171px;
+	width: 20%;
+}
 
 </style>
 </head>
@@ -195,7 +245,7 @@ h1 { color: red; font-size: 5em; text-align: center; }
 </div>
 </a>
 
-<a href="https://grokprogramming.com/webdemo/">
+<a href="/webdemo">
 <div class="dl">
 <div class="dlcontent">Web</div>
 <div class="dlextra">Mobile + Desktop</div>
@@ -204,7 +254,28 @@ h1 { color: red; font-size: 5em; text-align: center; }
 
 </div>
 
+<div class="expo"">
+<div class="expo-content">
+<img src="nokia-snake.jpg" style="float: right; margin: 0 0 2vw 2vw;" class="mimg">
+Space Wyrm&apos;s origins trace back to the 8-bit game Snake &mdash; now upgraded to a dragon flying through space.<br><br>
+Along with the upgraded playing field and character is an upgraded steering system.
+Instead of pressing buttons, or even using a joystick, you steer your dragon simply by tilting your device.
+The system is designed after airplane steering. Check out the <a href="/blog/help">Help&nbsp;page</a> to read more,
+and watch a video that demonstrates the game&apos;s steering.
+
+<div style="display: flex; flex-direction: row; justify-content: space-around;">
+<img src="squarewyrm.jpeg" style="margin-top: 2vw;" class="mimg">
+<img src="icon.png" style="margin-top: 2vw;" class="mimg">
 </div>
+
+</div>
+</div>
+
+<div class="footer">
+<a href="/">Home</a> | <a href="/blog/help">Help</a> | <a href="/blog/privacy">Privacy Policy</a> | <a href="/blog/">Blog</a>
+</div>
+
+</div> <!-- .all -->
 
 
 </body></html>
