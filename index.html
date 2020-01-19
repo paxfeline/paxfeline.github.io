@@ -3,8 +3,9 @@
 <title>grok programming</title>
 <style>
 body {
-	background-image: url("back.png");
-	background-size: cover;
+	background-image: url("back2.png");
+	background-size: 100%;
+	background-attachment: fixed;
 }
 .header
 {
@@ -258,14 +259,15 @@ The meaning of <span class="em">grok prog</span> is to get beyond a basic unders
 
 window.onscroll = () =>
 {
-	var n = window.innerWidth * 0.094;
+	var n = window.innerWidth * 0.188;
 	var y = window.scrollY / n;
-	y = Math.round( y ); y *= n;
-	//console.log( window.scrollY, y );
-	document.body.style.backgroundPositionY = window.scrollY - y + "px";
+	y = Math.round( y );
+	y *= n;
+	console.log( y );
+	document.body.style.backgroundPositionY = -y + "px";
 };
 
-// -9.4vw
+// -9.525vw
 
 </script>
 
