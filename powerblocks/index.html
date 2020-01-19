@@ -14,6 +14,63 @@
 			margin: 0px;
 			overflow: hidden;
 		}
+		
+		#help-btn {
+			border-radius: 50%;
+			width: 10vw;
+			height: 10vw;
+			position: absolute;
+			bottom: 5vw;
+			right: 5vw;
+			font-size: 7vw;
+			line-height: 10vw;
+			background-color: black;
+			color: white;
+			text-align: center;
+		}
+		
+		#help-div {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			
+			box-sizing: border-box;
+			
+			padding: 2em;
+			
+			background-color: white;
+			
+			display: none;
+			
+			z-index: 100;
+			
+			overflow-y: scroll;
+							
+			font-size: 2vw;
+			line-height: 2.2vw;
+		}
+		
+		#help-close-btn {
+			position: absolute;
+			right: 2vw;
+		}
+		
+		#help-nav {
+			font-size: 5vw;
+		}
+		
+		.help-type-btn {
+			border: 0.1em solid black;
+			border-bottom-width: 0;
+			display: inline-block;
+			padding: 0.5em;
+		}
+		
+		#help-desktop-div {
+			display: block;
+		}
 	</style>
 </head>
 <body>
@@ -471,6 +528,20 @@
 		cmesh.owner.move( 0,0,0 ); //2.5, 0, 0 );
 		
 		physObjs.push( cmesh );
+	}
+	
+	function addPhysics( obj, vx, vy, vz )
+	{
+		var o = obj;
+		o.Vx = vx ? vx : 0;
+		o.Vy = vy ? vy : 0;
+		o.Vz = vz ? vz : 0;
+		
+		o.atRest = {};
+		
+		obj.move( 0,0,0 );
+		
+		physObjs.push( obj.mesh );
 	}
 	
 	/*************/
@@ -990,9 +1061,49 @@
 		///////
 
 	</script>
+
+<div id="help-div">
+		
+	<div id="help-nav">
+		<div class="help-type-btn" id="help-desktop-btn">Desktop</div>
 	
+		<div class="help-type-btn" id="help-close-btn">Close Help</div>
+	</div>
+
+	<div id="help-desktop-div">
+
+		<p>User w/a/s/d to move, click and drag the mouse to turn, and q/e to go up, down.</p>
+		
+		<p>Opt-Click (Alt-Click) to remove blocks. Ctrl- or Right-Click to add blocks. Note that one block is un-removable.</p>
+		
+		<p>There is also a placeBlock function, designed to be easily called from the console. makePhysTest() will generate a block that responds to simple physics.</p>
+
+	</div>
+
+	</div>
 	
+	<div id="help-btn">?</div>
 
+	<script>
 
+var helpCloseBtn = document.querySelector( "#help-close-btn" );
+helpCloseBtn.addEventListener( 'click',
+function ()
+{
+	document.querySelector( "#help-div" ).style.display = "none";
+} );
 
-</body></html>
+var helpDiv = document.querySelector( "#help-div" );
+
+var helpbtn = document.querySelector( "#help-btn" );
+helpbtn.addEventListener( 'click',
+function ()
+{
+	helpDiv.style.display = "block";
+} );
+
+</script>
+	
+</body>
+
+</html>
