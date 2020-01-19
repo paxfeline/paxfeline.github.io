@@ -256,11 +256,14 @@ The meaning of <span class="em">grok prog</span> is to get beyond a basic unders
 
 <script>
 
-document.body.addEventListener( 'scroll' function () {
-		console.log( )
-		var b = document.body.style.backgroundPositionY = 
-	});
-
+window.onscroll = () =>
+{
+	var n = window.innerWidth * 0.094;
+	var y = window.scrollY / n;
+	y = Math.round( y ); y *= n;
+	//console.log( window.scrollY, y );
+	document.body.style.backgroundPositionY = window.scrollY - y + "px";
+};
 
 // -9.4vw
 
