@@ -6,6 +6,7 @@
 	background-image: url("back2.png");
 	background-size: 100%;
 	/*background-attachment: fixed;*/
+	background-position: left top; /* changed by JS */
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -275,9 +276,15 @@ window.onscroll = () =>
 	var y = window.scrollY / n;
 	y = Math.round( y );
 	y *= n;
-	console.log( y );
-	document.querySelector( "#backdiv" ).style.backgroundPositionY = - 3400 + document.querySelector("#alldiv").clientHeight - window.innerHeight - y + "px"; // -y + "px";
+	var m = window.innerWidth / 514;
+	console.log( window.scrollY, y );
+	console.log( "left 0 bottom " + ((- document.querySelector("#alldiv").clientHeight - window.innerHeight) - y) + "px" );
+	document.querySelector( "#backdiv" ).style.backgroundPosition = "left 0 bottom " + ((- document.querySelector("#alldiv").clientHeight - window.innerHeight) - y) + "px";
+	// Math.min( y, window.innerHeight ) + "px"; // -y + "px";
+	console.log( document.querySelector( "#backdiv" ).style.backgroundPosition );
 };
+
+document.querySelector( "#backdiv" ).style.backgroundPosition = "left 0 bottom " + (- document.querySelector("#alldiv").clientHeight - window.innerHeight) + "px";
 
 // -9.525vw
 
