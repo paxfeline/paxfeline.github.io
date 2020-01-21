@@ -284,6 +284,8 @@ window.onscroll = () =>
 	console.log( document.querySelector( "#backdiv" ).style.backgroundPosition );
 };
 
+window.onresize = window.onscroll;
+
 document.querySelector( "#backdiv" ).style.backgroundPosition = "left 0 bottom " + (- document.querySelector("#alldiv").clientHeight - window.innerHeight) + "px";
 
 // -9.525vw
