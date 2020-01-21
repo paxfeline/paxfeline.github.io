@@ -276,7 +276,7 @@ window.onscroll = () =>
 	y = Math.round( y );
 	y *= n;
 	console.log( y );
-	document.querySelector( "#backdiv" ).style.backgroundPositionY = -y + "px";
+	document.querySelector( "#backdiv" ).style.backgroundPositionY = - 3400 + document.querySelector("#alldiv").clientHeight - window.innerHeight - y + "px"; // -y + "px";
 };
 
 // -9.525vw
