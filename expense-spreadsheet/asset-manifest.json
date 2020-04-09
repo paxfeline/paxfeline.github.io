@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/expense-spreadsheet/static/css/main.775be228.chunk.css",
+    "main.js": "/expense-spreadsheet/static/js/main.b6330502.chunk.js",
+    "main.js.map": "/expense-spreadsheet/static/js/main.b6330502.chunk.js.map",
+    "runtime-main.js": "/expense-spreadsheet/static/js/runtime-main.8ebec876.js",
+    "runtime-main.js.map": "/expense-spreadsheet/static/js/runtime-main.8ebec876.js.map",
+    "static/js/2.b3cf3782.chunk.js": "/expense-spreadsheet/static/js/2.b3cf3782.chunk.js",
+    "static/js/2.b3cf3782.chunk.js.map": "/expense-spreadsheet/static/js/2.b3cf3782.chunk.js.map",
+    "index.html": "/expense-spreadsheet/index.html",
+    "precache-manifest.bae02d3575ccc609e9b204215053d675.js": "/expense-spreadsheet/precache-manifest.bae02d3575ccc609e9b204215053d675.js",
+    "service-worker.js": "/expense-spreadsheet/service-worker.js",
+    "static/css/main.775be228.chunk.css.map": "/expense-spreadsheet/static/css/main.775be228.chunk.css.map",
+    "static/js/2.b3cf3782.chunk.js.LICENSE.txt": "/expense-spreadsheet/static/js/2.b3cf3782.chunk.js.LICENSE.txt",
+    "static/media/logo.svg": "/expense-spreadsheet/static/media/logo.5d5d9eef.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.8ebec876.js",
+    "static/js/2.b3cf3782.chunk.js",
+    "static/css/main.775be228.chunk.css",
+    "static/js/main.b6330502.chunk.js"
+  ]
+}
