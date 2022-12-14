@@ -62,7 +62,7 @@ function getPixel( d, x, y )
 
 function getRawPixelRed( d, x, y )
 {
-	return	d.data[ ((y * (d.width * 4)) + (x * 4)) ];
+	return d.data[ ((y * (d.width * 4)) + (x * 4)) ];
 }
 
 function makeit()
@@ -148,7 +148,7 @@ function makeit()
 	
 		for ( var y = 0; y < imgHeight; y++ )
 		{
-			for ( var x = patWidth; x >= 0; x-- )
+			for ( var x = patWidth - 1; x >= 0; x-- )
 			{
 				if ( x + (sec * patWidth) <= imgWidth )
 				{
@@ -160,7 +160,7 @@ function makeit()
 						var c = getPixel( lastData, x, y );
 						nextCx.fillStyle = c;
 					
-						if ( x + offset >= patWidth - 1 )
+						if ( x + offset >= patWidth )
 						{
 							nextCx.fillRect( x + offset - patWidth, y, 1, 1 );
 						}
