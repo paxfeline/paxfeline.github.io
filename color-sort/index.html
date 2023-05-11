@@ -201,8 +201,42 @@ game.addEventListener("pointerup",
         d.append(t);
 
         d.classList.remove("dropzone-active");
+
+        showFeedback();
     }
 );
+
+function showFeedback()
+{
+    let zones = document.querySelectorAll(".dropzone");
+
+    zones.forEach(
+        zone =>
+        {
+            let jewels = zone.querySelectorAll(".dropitem");
+            let low = Number(jewels[0]?.dataset.h);
+            let high = Number(jewels[0]?.dataset.h);
+            jewels.forEach(
+                jewel =>
+                {
+                    console.log("found h", jewel.dataset.h);
+                    let h = Number(jewel.dataset.h);
+                    if (h < low)
+                    {
+                        low = h;
+                    }
+                    else if (h > high)
+                    {
+                        high = h;
+                    }
+                }
+            );
+            range = 255 - ((high - low) * (255/360));
+            zone.style.outline = `1em solid rgb(${range},${range},${range})`;
+            console.log(high - low, high, low, zone);
+        }
+    );
+}
 
 function scatter()
 {
@@ -218,6 +252,8 @@ function scatter()
         let y = Math.random() * (main.offsetHeight - main.offsetHeight * 0.15); // 20em - 3em
         item.dataset.x = x;
         item.dataset.y = y;
+        item.dataset.h = h;
+        console.log("h", h);
         item.style.left = `${x}px`;
         item.style.top = `${y}px`;
         item.removeAttribute("id");
@@ -228,6 +264,8 @@ function scatter()
 }
 
 scatter();
+
+showFeedback();
 
         </script>
 
