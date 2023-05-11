@@ -2,12 +2,19 @@
     <head>
         <style>
 
+#game
+{
+    touch-action: none;
+}
+
 .dropitem
 {
     width: 3em;
     height: 3em;
     background-color: pink;
     position: absolute;
+    border-radius: 50%;
+    opacity: 80%;
 }
 
 .dropzone
@@ -19,154 +26,205 @@
     display: inline-block;
 }
 
+#main
+{
+    width: 40em;
+}
+
 .dropzone-active
 {
     outline: 0.3em solid rgba(255, 100, 100, 0.5);
 }
+
+/*
+.dragitem-dragging
+{
+    opacity: 0.5;
+}
+*/
 
         </style>
     </head>
 
     <body>
 
-        <div>
+        <div id="game">
+            <div>
+            
+                <div class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                </div>
+                
+                <div class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                </div>
+    
+            </div> 
 
-            <div id="main" class="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
-                <div id="first" class="dropitem" draggable="true" ondragstart="dragstart_move_handler(event)">
+            <div id="main" class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                <div id="first" class="dropitem"  data-role="dragitem" draggable="true" ondragstart="dragstart_move_handler(event)">
                 </div>
             </div>
+
+            <div>
             
-            <div class="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                <div class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                </div>
+                
+                <div class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                </div>
+
             </div>
 
         </div>
 
-        <div>
-        
-            <div class="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
-            </div>
-            
-            <div class="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
-            </div>
-
-        </div> 
-
         <script>
-            
-            builder_globals = {};
 
- // TODO: in this handler, set the value attribute explicitly so that it's copied
- function dragstart_move_handler(ev)
+let game = document.querySelector("#game");
+
+let gameState = {};
+
+game.addEventListener("pointerdown",
+    e =>
+    {
+        //console.log("pd", e);
+
+        let role = e.target.dataset.role;
+
+        if (role == "dragitem")
+        {
+            e.preventDefault();
+            game.setPointerCapture(e.pointerId);
+            // move to top / end of parent
+            e.target.parentElement.append(e.target);
+            //gameState.original = e.target;
+            gameState.dragging = e.target; //.cloneNode();
+            //main.append(gameState.dragging);
+            //gameState.dragging.classList.add("dragitem-dragging");
+            gameState.offset = {x: e.offsetX, y: e.offsetY};
+            gameState.start = {x: e.pageX, y: e.pageY};
+        }
+    }
+);
+
+game.addEventListener("pointermove",
+    e =>
+    {
+        if (!gameState.dragging) return;
+
+        //console.log("pm", e.target.dataset.role, e);
+
+        let hits = document.elementsFromPoint(e.clientX, e.clientY);
+
+        let hit;
+        while ( hit = hits.pop() )
+        {
+            if (hit.dataset.role == "dropzone")
+            {
+                //console.log("hit", hit);
+                hit.classList.add("dropzone-active");
+                if (gameState.hot != hit)
+                {
+                    if (gameState.hot)
+                        gameState.hot.classList.remove("dropzone-active");
+                    gameState.hot = hit;
+                }
+                break;
+            }
+        }
+
+        let t = gameState.dragging;
+
+        //console.log(`${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px\n${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`);
+
+        t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
+        t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
+    }
+);
+
+function getTop(elem)
 {
-	console.log(ev);
-	
-	//ev.target.firstElementChild.innerHTML = ev.target.firstElementChild.value;
-	ev.dataTransfer.setData("application/hexfield-element", ev.target.outerHTML);
-	ev.dataTransfer.dropEffect = "move";
-	builder_globals.dragged = ev.target;
-    builder_globals.offset = {x: ev.offsetX, y: ev.offsetY};
-
-    console.log(ev.offsetX, ev.offsetY);
-	
-	ev.stopPropagation();
+    let rect = elem.getBoundingClientRect();
+    return rect.top + window.scrollY;
 }
 
-function onDragLeave(event)
+function getLeft(elem)
 {
-    console.log(event);
-    let found = getDropzone(event);
-    //if (event.target == found)
-        //found.classList.remove("dropzone-active");
- event.preventDefault();
+    let rect = elem.getBoundingClientRect();
+    return rect.left + window.scrollX;
 }
 
+game.addEventListener("pointerup",
+    e =>
+    {
+        //console.log("pu", e.target.dataset.role, e);
 
-function drop_handler(ev) {
-// if (!drop_ok(ev)) return;
- ev.preventDefault();
- // Get the id of the target and add the moved element to the target's DOM
- const data = ev.dataTransfer.getData("application/hexfield-element");
- //ev.target.style.backgroundColor = '';
- const temp = document.createElement("div");
+        game.releasePointerCapture(e.pointerId);
 
+        //let role = e.target.dataset.role;
 
-	 temp.innerHTML = data;
+        let hits = document.elementsFromPoint(e.clientX, e.clientY);
 
+        //console.log(hits);
 
-     let found = getDropzone(ev);
+        let hit;
+        while ( hit = hits.pop() )
+        {
+            if (hit.dataset.role == "dropzone")
+            {
+                //console.log("hit", hit);
+                break;
+            }
+        }
 
-    temp.firstElementChild.style.left = `${ev.clientX - found.offsetLeft - builder_globals.offset.x}px`;
-    temp.firstElementChild.style.top = `${ev.clientY - found.offsetTop - builder_globals.offset.y}px`;
- 
-	found.append( temp.firstElementChild );
+        let t = gameState.dragging;
+        let d = hit;
 
-    found.classList.remove("dropzone-active");
-	  
-    builder_globals.dragged.remove();
+        if (!t || !d) return;
 
+        gameState.dragging = null;
 
+        //debugger;
 
-    console.log(ev);
-    console.log(ev.pageX - ev.target.offsetLeft - builder_globals.offset.x, ev.pageY - ev.target.offsetTop - builder_globals.offset.y);
-}
+        //let x = t.offsetLeft - d.offsetLeft;
+        //let y = t.offsetTop - d.offsetTop;
 
-function dragover_handler(ev)
-{
-	console.log('doh', ev);
-	
-    let found = getDropzone(ev);
-    
-	if (builder_globals.dragged)
-		//&& drop_ok(ev))
-	{
+        let x = getLeft(t) - d.offsetLeft;
+        let y = getTop(t) - d.offsetTop;
 
-        ev.preventDefault();
-	}
-}
+        //console.log(Number(t.dataset.y) + (e.pageY - gameState.start.y));
 
-function getDropzone(ev)
-{
-    if (ev.target.classList.contains("dropzone"))
-        return ev.target;
-    else if (ev.target.parentElement.classList.contains("dropzone"))
-        return ev.target.parentElement;
-}
+        t.dataset.x = x;
+        t.dataset.y = y;
 
-function dragenter_handler(ev)
-{
-	console.log('deh', ev);
+        t.style.left = `${x}px`;
+        t.style.top = `${y}px`;
 
-    let found = getDropzone(ev);
-	
-	if (found && builder_globals.dragged)
-		//&& drop_ok(ev))
-	{
-        ev.dataTransfer.dropEffect = "move";
-			
-		found.classList.add("dropzone-active");
-        //console.log("active", ev.target);
+        d.append(t);
 
-        ev.preventDefault();
-	}
-}
+        d.classList.remove("dropzone-active");
+    }
+);
 
 function scatter()
 {
     let main = document.querySelector("#main");
     let first = document.querySelector("#first");
 
-    for ( let i = 0; i < 50; i++ )
+    for ( let i = 0; i < 500; i++ )
     {
         let item = first.cloneNode(false);
         let h = Math.random() * 360;
         item.style.backgroundColor = `hsl(${h}deg, 100%, 75%)`;
-        let x = Math.random() * 20;
-        let y = Math.random() * 20;
-        item.style.left = `${x}em`;
-        item.style.top = `${y}em`;
+        let x = Math.random() * (main.offsetWidth - main.offsetWidth * 0.075); // 40em - 3em
+        let y = Math.random() * (main.offsetHeight - main.offsetHeight * 0.15); // 20em - 3em
+        item.dataset.x = x;
+        item.dataset.y = y;
+        item.style.left = `${x}px`;
+        item.style.top = `${y}px`;
         item.removeAttribute("id");
         main.append(item);
     }
+
+    first.remove();
 }
 
 scatter();
