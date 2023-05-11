@@ -7,8 +7,10 @@
     touch-action: none;
 }
 
-.dropitem
+.dragitem
 {
+    transition: transform 0.25s;
+    transform: scale(100%);
     width: 3em;
     height: 3em;
     background-color: pink;
@@ -36,12 +38,11 @@
     outline: 0.3em solid rgba(255, 100, 100, 0.5);
 }
 
-/*
 .dragitem-dragging
 {
-    opacity: 0.5;
+    transform: scale(300%);
+    z-index: 10;
 }
-*/
 
         </style>
     </head>
@@ -51,25 +52,25 @@
         <div id="game">
             <div>
             
-                <div class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                <div class="dropzone" data-role="dropzone">
                 </div>
                 
-                <div class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                <div class="dropzone" data-role="dropzone">
                 </div>
     
             </div> 
 
-            <div id="main" class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
-                <div id="first" class="dropitem"  data-role="dragitem" draggable="true" ondragstart="dragstart_move_handler(event)">
+            <div id="main" class="dropzone" data-role="dropzone">
+                <div id="first" class="dragitem"  data-role="dragitem">
                 </div>
             </div>
 
             <div>
             
-                <div class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                <div class="dropzone" data-role="dropzone">
                 </div>
                 
-                <div class="dropzone" data-role="dropzone" ondragleave="onDragLeave(event)" ondrop="drop_handler(event)" ondragover="dragover_handler(event)" ondragenter="dragenter_handler(event)">
+                <div class="dropzone" data-role="dropzone">
                 </div>
 
             </div>
@@ -93,12 +94,9 @@ game.addEventListener("pointerdown",
         {
             e.preventDefault();
             game.setPointerCapture(e.pointerId);
-            // move to top / end of parent
-            e.target.parentElement.append(e.target);
-            //gameState.original = e.target;
-            gameState.dragging = e.target; //.cloneNode();
-            //main.append(gameState.dragging);
-            //gameState.dragging.classList.add("dragitem-dragging");
+            gameState.dragging = e.target;
+            console.log(gameState.dragging.classList);
+            gameState.dragging.classList.add("dragitem-dragging");
             gameState.offset = {x: e.offsetX, y: e.offsetY};
             gameState.start = {x: e.pageX, y: e.pageY};
         }
@@ -185,24 +183,32 @@ game.addEventListener("pointerup",
         //debugger;
 
         //let x = t.offsetLeft - d.offsetLeft;
-        //let y = t.offsetTop - d.offsetTop;
-
-        let x = getLeft(t) - d.offsetLeft;
-        let y = getTop(t) - d.offsetTop;
-
-        //console.log(Number(t.dataset.y) + (e.pageY - gameState.start.y));
-
-        t.dataset.x = x;
-        t.dataset.y = y;
-
-        t.style.left = `${x}px`;
-        t.style.top = `${y}px`;
-
-        d.append(t);
-
+        
         d.classList.remove("dropzone-active");
+        t.classList.remove("dragitem-dragging");
+        t.addEventListener("transitionend",
+            function tee(e)
+            {
+                //let y = t.offsetTop - d.offsetTop;
+        
+                let x = getLeft(t) - d.offsetLeft;
+                let y = getTop(t) - d.offsetTop;
+        
+                //console.log(Number(t.dataset.y) + (e.pageY - gameState.start.y));
+        
+                t.dataset.x = x;
+                t.dataset.y = y;
+        
+                t.style.left = `${x}px`;
+                t.style.top = `${y}px`;
+        
+                d.append(t);
 
-        showFeedback();
+                t.removeEventListener("transitionend", tee);
+            }
+        );
+
+        //showFeedback();
     }
 );
 
@@ -213,13 +219,13 @@ function showFeedback()
     zones.forEach(
         zone =>
         {
-            let jewels = zone.querySelectorAll(".dropitem");
+            let jewels = zone.querySelectorAll(".dragitem");
             let low = Number(jewels[0]?.dataset.h);
             let high = Number(jewels[0]?.dataset.h);
             jewels.forEach(
                 jewel =>
                 {
-                    console.log("found h", jewel.dataset.h);
+                    //console.log("found h", jewel.dataset.h);
                     let h = Number(jewel.dataset.h);
                     if (h < low)
                     {
@@ -233,7 +239,7 @@ function showFeedback()
             );
             range = 255 - ((high - low) * (255/360));
             zone.style.outline = `1em solid rgb(${range},${range},${range})`;
-            console.log(high - low, high, low, zone);
+            //console.log(high - low, high, low, zone);
         }
     );
 }
@@ -243,7 +249,7 @@ function scatter()
     let main = document.querySelector("#main");
     let first = document.querySelector("#first");
 
-    for ( let i = 0; i < 500; i++ )
+    for ( let i = 0; i < 250; i++ )
     {
         let item = first.cloneNode(false);
         let h = Math.random() * 360;
@@ -253,7 +259,7 @@ function scatter()
         item.dataset.x = x;
         item.dataset.y = y;
         item.dataset.h = h;
-        console.log("h", h);
+        //console.log("h", h);
         item.style.left = `${x}px`;
         item.style.top = `${y}px`;
         item.removeAttribute("id");
@@ -265,7 +271,7 @@ function scatter()
 
 scatter();
 
-showFeedback();
+//showFeedback();
 
         </script>
 
