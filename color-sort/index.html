@@ -2,17 +2,42 @@
     <head>
         <style>
 
+*
+{
+    box-sizing: border-box;
+}
+
+body
+{
+    margin: 0;
+    overflow: hidden;
+}
+
 #game
 {
     touch-action: none;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+}
+
+#game > div
+{
+    display: flex;
+    flex-direction: row;
+    flex: 1; /* => grow: 1 shrink: 1 basis: 0 */
+    align-items: stretch;
+    outline: 1px solid black;
+    justify-content: stretch;
 }
 
 .dragitem
 {
     transition: transform 0.25s;
-    transform: scale(100%);
-    width: 3em;
-    height: 3em;
+    width: 10vmin;
+    height: 10vmin;
     background-color: pink;
     position: absolute;
     border-radius: 50%;
@@ -21,16 +46,19 @@
 
 .dropzone
 {
-    width: 20em;
-    height: 20em;
+    /*
+    width: 50vmin;
+    height: 35vmax;
+    */
     position: relative;
-    margin: 1em;
     display: inline-block;
+    outline: 1px solid black;
+    flex: 1; /* => grow: 1 shrink: 1 basis: 0 */
 }
 
-#main
+#main > .dragitem
 {
-    width: 40em;
+
 }
 
 .dropzone-active
@@ -44,6 +72,19 @@
     z-index: 10;
 }
 
+@media (orientation: landscape)
+{
+    #game
+    {
+        flex-direction: row;
+    }
+
+    #game > div
+    {
+        flex-direction: column;
+    }
+}
+
         </style>
     </head>
 
@@ -51,30 +92,21 @@
 
         <div id="game">
             <div>
-            
                 <div class="dropzone" data-role="dropzone">
+                </div><!-- 
+            ---><div class="dropzone" data-role="dropzone">
                 </div>
-                
-                <div class="dropzone" data-role="dropzone">
-                </div>
-    
-            </div> 
-
+            </div>
             <div id="main" class="dropzone" data-role="dropzone">
                 <div id="first" class="dragitem"  data-role="dragitem">
                 </div>
             </div>
-
             <div>
-            
                 <div class="dropzone" data-role="dropzone">
+                </div><!-- 
+            ---><div class="dropzone" data-role="dropzone">
                 </div>
-                
-                <div class="dropzone" data-role="dropzone">
-                </div>
-
             </div>
-
         </div>
 
         <script>
@@ -97,8 +129,9 @@ game.addEventListener("pointerdown",
             gameState.dragging = e.target;
             console.log(gameState.dragging.classList);
             gameState.dragging.classList.add("dragitem-dragging");
-            gameState.offset = {x: e.offsetX, y: e.offsetY};
             gameState.start = {x: e.pageX, y: e.pageY};
+            e.target.dataset.x = e.target.offsetLeft;
+            e.target.dataset.y = e.target.offsetTop;
         }
     }
 );
@@ -193,14 +226,19 @@ game.addEventListener("pointerup",
         
                 let x = getLeft(t) - d.offsetLeft;
                 let y = getTop(t) - d.offsetTop;
+
+                let left = x / (d.offsetWidth - t.offsetWidth);
+                let top = y / (d.offsetHeight - t.offsetHeight);
         
                 //console.log(Number(t.dataset.y) + (e.pageY - gameState.start.y));
+                
+                t.dataset.left = left;
+                t.dataset.top = top;
         
-                t.dataset.x = x;
-                t.dataset.y = y;
-        
-                t.style.left = `${x}px`;
-                t.style.top = `${y}px`;
+                t.style.left = `${left}%`;
+                t.style.top = `${top}%`;
+                t.style.left = `calc((100% - 10vmin) * ${left})`;
+                t.style.top = `calc((100% - 10vmin) * ${top})`;
         
                 d.append(t);
 
@@ -253,15 +291,15 @@ function scatter()
     {
         let item = first.cloneNode(false);
         let h = Math.random() * 360;
-        item.style.backgroundColor = `hsl(${h}deg, 100%, 75%)`;
-        let x = Math.random() * (main.offsetWidth - main.offsetWidth * 0.075); // 40em - 3em
-        let y = Math.random() * (main.offsetHeight - main.offsetHeight * 0.15); // 20em - 3em
-        item.dataset.x = x;
-        item.dataset.y = y;
         item.dataset.h = h;
+        item.style.backgroundColor = `hsl(${h}deg, 100%, 75%)`;
+        let left = Math.random();
+        let top = Math.random();
+        item.dataset.left = left;
+        item.dataset.top = top;
         //console.log("h", h);
-        item.style.left = `${x}px`;
-        item.style.top = `${y}px`;
+        item.style.left = `calc((100% - 10vmin) * ${left})`;
+        item.style.top = `calc((100% - 10vmin) * ${top})`;
         item.removeAttribute("id");
         main.append(item);
     }
