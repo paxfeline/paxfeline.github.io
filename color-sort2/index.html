@@ -1,0 +1,510 @@
+<html>
+    <head>
+        <link rel="manifest" href="manifest.json" />
+        <style>
+
+*
+{
+    box-sizing: border-box;
+}
+
+body
+{
+    margin: 0;
+    overflow: hidden;
+}
+
+#game
+{
+    --width-unit: 1px;
+    touch-action: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#game > div
+{
+    outline: 1px solid black;
+}
+
+#main
+{
+    position: relative;
+    width: calc(var(--width-unit) * 1000);
+    height: calc(var(--width-unit) * 500);
+    margin: auto;
+    background-image: linear-gradient(black, white);
+}
+
+#effects-overlay
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#tray
+{
+    flex: 1;
+}
+
+.bordered
+{
+    filter: 
+        drop-shadow( var(--width-unit)  0px 0px black) 
+        drop-shadow( calc(var(--width-unit) * -1)  0px 0px black)
+        drop-shadow( 0px  var(--width-unit) 0px black) 
+        drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
+}
+
+.dragitem
+{
+    transition: transform 0.25s;
+    position: absolute;
+}
+
+.dropzone
+{
+    position: relative;
+    display: inline-block;
+    outline: 1px solid black;
+}
+
+#main > .dragitem
+{
+;
+}
+
+.dropzone-active
+{
+    outline: 0.3em solid rgba(255, 100, 100, 0.5);
+}
+
+.dragitem-dragging
+{
+    /*
+    transform: scale(300%);
+    */
+    z-index: 10;
+}
+
+@media (max-width: 999px)
+{
+    #game
+    {
+        --width-unit: 0.1vw
+    }
+}
+
+        </style>
+    </head>
+
+    <body>
+
+        <div id="game">
+            <div id="main" class="dropzone" data-role="dropzone">
+                <canvas id="effects-overlay" width="1000" height="500"></canvas>
+                <canvas id="first" class="dragitem bordered"  data-role="dragitem"></canvas>
+            </div>
+            <div id="tray" class="dropzone" data-role="dropzone">
+            </div>
+        </div>
+
+        <script>
+
+let game = document.querySelector("#game");
+
+let gameState = {};
+
+game.addEventListener("pointerdown",
+    e =>
+    {
+        //console.log("pd", e);
+
+        let role = e.target.dataset.role;
+
+        if (role == "dragitem")
+        {
+            const x = e.offsetX;
+            const y = e.offsetY;
+
+            var alphaVal;
+
+            try
+            {
+                const pixel = e.target.getContext("2d").getImageData(x, y, 1, 1);
+                alphaVal = pixel.data[3];
+            }
+            catch
+            {
+                alphaVal = 255;
+            }
+
+            if ( alphaVal > 200 )
+            {
+                e.preventDefault();
+                game.setPointerCapture(e.pointerId);
+                gameState.dragging = e.target;
+                console.log(gameState.dragging.classList);
+                gameState.dragging.classList.add("dragitem-dragging");
+                gameState.start = {x: e.pageX, y: e.pageY};
+                e.target.dataset.x = e.target.offsetLeft;
+                e.target.dataset.y = e.target.offsetTop;
+            }
+        }
+    }
+);
+
+game.addEventListener("pointermove",
+    e =>
+    {
+        if (!gameState.dragging) return;
+
+        //console.log("pm", e.target.dataset.role, e);
+
+        let hits = document.elementsFromPoint(e.clientX, e.clientY);
+
+        let hit;
+        while ( hit = hits.pop() )
+        {
+            if (hit.dataset.role == "dropzone")
+            {
+                //console.log("hit", hit);
+                hit.classList.add("dropzone-active");
+
+                if (hit.id == "main")
+                {
+                    gameState.dragging.classList.remove("bordered");
+
+                    let x = getLeft(gameState.dragging) - hit.offsetLeft;
+                    let y = getTop(gameState.dragging) - hit.offsetTop;
+
+                    let drag_x = (x / hit.offsetWidth) * 1000;
+                    let drag_y = (y / hit.offsetHeight) * 500;
+
+                    const overlay = document.querySelector("#effects-overlay");
+                    const ctx = overlay.getContext("2d");
+
+                    if (Math.abs(drag_x - gameState.dragging.x1) < 50
+                            && Math.abs(drag_y - gameState.dragging.y1) < 50)
+                    {
+                        //console.log(gameState.dragging);
+                        if (!gameState.snap_to)
+                        {
+                            
+                            console.log(gameState.dragging.ul.x, gameState.dragging.ul.y,
+                                gameState.dragging.ur.x, gameState.dragging.ur.y,
+                                gameState.dragging.lr.x, gameState.dragging.lr.y,
+                                gameState.dragging.ll.x, gameState.dragging.ll.y);
+                                
+                            ctx.lineWidth = 5;
+                            ctx.strokeStyle = "red";
+                            ctx.beginPath();
+                            ctx.moveTo(gameState.dragging.ul.x, gameState.dragging.ul.y);
+                            ctx.lineTo(gameState.dragging.ur.x, gameState.dragging.ur.y);
+                            ctx.lineTo(gameState.dragging.lr.x, gameState.dragging.lr.y);
+                            ctx.lineTo(gameState.dragging.ll.x, gameState.dragging.ll.y);
+                            ctx.closePath();
+                            ctx.stroke();
+
+                            gameState.snap_to = gameState.dragging;
+                        }
+                    }
+                    else if (gameState.snap_to)
+                    {
+                        console.log("clearing", ctx.clearRect);
+
+                        
+                        ctx.fillStyle = "rgba(0, 0, 255, 1)";
+                        // both of these are needed!?!?!?!?!?!? by FF
+                        ctx.fillRect(0, 0, overlay.width, overlay.height);
+                        ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+                        gameState.snap_to = null;
+                    }
+
+                }
+                else if (hit.id == "tray")
+                    gameState.dragging.classList.add("bordered")
+
+                if (gameState.hot != hit)
+                {
+                    if (gameState.hot)
+                        gameState.hot.classList.remove("dropzone-active");
+                    gameState.hot = hit;
+                }
+                break;
+            }
+        }
+
+        let t = gameState.dragging;
+
+        //console.log(`${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px\n${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`);
+
+        t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
+        t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
+    }
+);
+
+function getTop(elem)
+{
+    let rect = elem.getBoundingClientRect();
+    return rect.top + window.scrollY;
+}
+
+function getLeft(elem)
+{
+    let rect = elem.getBoundingClientRect();
+    return rect.left + window.scrollX;
+}
+
+game.addEventListener("pointerup",
+    e =>
+    {
+        //console.log("pu", e.target.dataset.role, e);
+
+        game.releasePointerCapture(e.pointerId);
+
+        //let role = e.target.dataset.role;
+
+        let hits = document.elementsFromPoint(e.clientX, e.clientY);
+
+        //console.log(hits);
+
+        let hit;
+        while ( hit = hits.pop() )
+        {
+            if (hit.dataset.role == "dropzone")
+            {
+                //console.log("hit", hit);
+                break;
+            }
+        }
+
+        let t = gameState.dragging;
+        let d = hit;
+
+        if (!t || !d) return;
+
+        gameState.dragging = null;
+
+        //debugger;
+
+        //let x = t.offsetLeft - d.offsetLeft;
+        
+        d.classList.remove("dropzone-active");
+        t.classList.remove("dragitem-dragging");
+
+        /*
+        t.addEventListener("transitionend",
+            function tee(e)
+            */
+            {
+                let x = getLeft(t) - d.offsetLeft;
+                let y = getTop(t) - d.offsetTop;
+
+                t.style.left = `${x}px`;
+                t.style.top = `${y}px`;
+                
+                /*
+                t.style.left = `calc(${x}% / 10)`;
+                t.style.top = `calc(${y}% / 5)`;
+                */
+                
+                //console.log(d.offsetWidth, d.offsetHeight);
+
+                if (gameState.snap_to)
+                {
+                    x = t.x1 * (d.offsetWidth / 1000);
+                    y = t.y1 * (d.offsetHeight / 500);
+                    gameState.snap_to = null;
+                }
+                
+                t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
+                t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
+
+                d.append(t);
+
+                //t.removeEventListener("transitionend", tee);
+            }
+        //);
+
+        //showFeedback();
+    }
+);
+
+const puzzleImg = new Image();
+puzzleImg.src = "color_gradient.png";
+puzzleImg.onload =
+    e =>
+    {
+    let main = document.querySelector("#tray");
+    let first = document.querySelector("#first");
+
+        var pointCols = [];
+
+        var pointCol = [];
+
+        // fixed top-left point
+        pointCol.push({x: 0, y: 0});
+
+        for (var y = 50; y < 500; y += 100)
+        {
+            var yd = Math.random() * 50 - 20;
+
+            var point = {x: 0, y: y + yd};
+
+            pointCol.push(point);
+
+            //ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+        }
+
+        // fixed bottom-left point
+        pointCol.push({x: 0, y: 500});
+
+        pointCols.push(pointCol);
+
+        for (var x = 50; x < 1000; x += 100)
+        {
+            var pointCol = [];
+
+            // fixed top point
+            {
+                var xd = Math.random() * 50 - 20;
+
+                var point = {x: x + xd, y: 0};
+
+                pointCol.push(point);
+
+                //ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+            }
+
+            for (var y = 50; y < 500; y += 100)
+            {
+                var xd = Math.random() * 50 - 20;
+                var yd = Math.random() * 50 - 20;
+
+                var point = {x: x + xd, y: y + yd};
+
+                pointCol.push(point);
+
+                //ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+            }
+
+            // fixed bottom point
+            {
+                var xd = Math.random() * 50 - 20;
+
+                var point = {x: x + xd, y: 500};
+
+                pointCol.push(point);
+
+                //ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+            }
+
+            pointCols.push(pointCol);
+        }
+
+        var pointCol = [];
+
+        // fixed top-right point
+        pointCol.push({x: 1000, y: 0});
+
+        for (var y = 50; y < 500; y += 100)
+        {
+            var yd = Math.random() * 50 - 20;
+
+            var point = {x: 1000, y: y + yd};
+
+            pointCol.push(point);
+
+            //ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+        }
+
+        // fixed bottom-right point
+        pointCol.push({x: 1000, y: 500});
+
+        pointCols.push(pointCol);
+
+        // go rects
+
+        for (var x = 0; x < pointCols.length - 1; x++)
+        {
+            var leftCol = pointCols[x];
+            var rightCol = pointCols[x + 1];
+
+            for (var y = 0; y < pointCol.length - 1; y++)
+            {
+                var ul = leftCol[y];
+                var ur = rightCol[y];
+                var ll = leftCol[y + 1];
+                var lr = rightCol[y + 1];
+
+                var x1 = Math.min(ul.x, ll.x);
+                var y1 = Math.min(ul.y, ur.y);
+
+                var x2 = Math.max(ur.x, lr.x);
+                var y2 = Math.max(lr.y, ll.y);
+
+                var width = x2 - x1 + 1;
+                var height = y2 - y1 + 1;
+
+                let item = first.cloneNode(false);
+
+                item.x1 = x1;
+                item.y1 = y1;
+
+                item.ul = ul;
+                item.ur = ur;
+                item.ll = ll;
+                item.lr = lr;
+
+                item.width = width;
+                item.height = height;
+
+                let left = Math.random();
+                let top = Math.random();
+
+                /*
+                item.style.left = `calc((100% - ${width}px) * ${left})`;
+                item.style.top = `calc((100% - ${height}px) * ${top})`;
+                */
+
+                item.style.left = `calc((100% - ${width} * var(--width-unit)) * ${left})`;
+                item.style.top = `calc((100% - ${height} * var(--width-unit)) * ${top})`;
+
+                item.style.width = `calc(${width} * var(--width-unit))`;
+                item.style.height = `calc(${height} * var(--width-unit))`;
+
+                item.removeAttribute("id");
+                main.append(item);
+
+                var ctx = item.getContext("2d");
+                ctx.beginPath();
+                ctx.moveTo(ul.x - x1, ul.y - y1);
+                ctx.lineTo(ur.x - x1 + 1, ur.y - y1);
+                ctx.lineTo(lr.x - x1 + 1, lr.y - y1 + 1);
+                ctx.lineTo(ll.x - x1, ll.y - y1 + 1);
+                ctx.clip()
+                ctx.drawImage(puzzleImg, x1, y1, width, height, 0, 0, width, height);
+            }
+        }
+
+        first.remove();
+    };
+
+//scatter();
+
+//showFeedback();
+
+        </script>
+
+        <script type="module" src="app.js"></script>
+
+    </body>
+</html>
