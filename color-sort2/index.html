@@ -101,24 +101,26 @@ body
     }
 }
 
-        </style>
-    </head>
+</style>
+</head>
 
-    <body>
-
-        <div id="game">
-            <div id="main" class="dropzone" data-role="dropzone">
-                <canvas id="effects-overlay" width="1000" height="500"></canvas>
-                <canvas id="first" class="dragitem bordered"  data-role="dragitem"></canvas>
-            </div>
-            <div id="tray" class="dropzone" data-role="dropzone">
-            </div>
+<body>
+    
+    <div id="game">
+        <div id="main" class="dropzone" data-role="dropzone">
+            <canvas id="effects-overlay" width="1000" height="500"></canvas>
+            <canvas id="first" class="dragitem bordered"  data-role="dragitem"></canvas>
         </div>
-
-        <script>
-
+        <div id="tray" class="dropzone" data-role="dropzone">
+        </div>
+    </div>
+    
+    <script>
+        
 let game = document.querySelector("#game");
-
+const overlay = document.querySelector("#effects-overlay");
+const overlay_ctx = overlay.getContext("2d");
+        
 let gameState = {};
 
 game.addEventListener("pointerdown",
@@ -187,8 +189,6 @@ game.addEventListener("pointermove",
                     let drag_x = (x / hit.offsetWidth) * 1000;
                     let drag_y = (y / hit.offsetHeight) * 500;
 
-                    const overlay = document.querySelector("#effects-overlay");
-                    const ctx = overlay.getContext("2d");
 
                     if (Math.abs(drag_x - gameState.dragging.x1) < 50
                             && Math.abs(drag_y - gameState.dragging.y1) < 50)
@@ -202,28 +202,31 @@ game.addEventListener("pointermove",
                                 gameState.dragging.lr.x, gameState.dragging.lr.y,
                                 gameState.dragging.ll.x, gameState.dragging.ll.y);
                                 
-                            ctx.lineWidth = 5;
-                            ctx.strokeStyle = "red";
-                            ctx.beginPath();
-                            ctx.moveTo(gameState.dragging.ul.x, gameState.dragging.ul.y);
-                            ctx.lineTo(gameState.dragging.ur.x, gameState.dragging.ur.y);
-                            ctx.lineTo(gameState.dragging.lr.x, gameState.dragging.lr.y);
-                            ctx.lineTo(gameState.dragging.ll.x, gameState.dragging.ll.y);
-                            ctx.closePath();
-                            ctx.stroke();
+                            overlay_ctx.lineWidth = 5;
+                            overlay_ctx.strokeStyle = "red";
+                            overlay_ctx.beginPath();
+                            overlay_ctx.moveTo(gameState.dragging.ul.x, gameState.dragging.ul.y);
+                            overlay_ctx.lineTo(gameState.dragging.ur.x, gameState.dragging.ur.y);
+                            overlay_ctx.lineTo(gameState.dragging.lr.x, gameState.dragging.lr.y);
+                            overlay_ctx.lineTo(gameState.dragging.ll.x, gameState.dragging.ll.y);
+                            overlay_ctx.closePath();
+                            overlay_ctx.stroke();
 
                             gameState.snap_to = gameState.dragging;
                         }
                     }
                     else if (gameState.snap_to)
                     {
-                        console.log("clearing", ctx.clearRect);
+                        console.log("clearing", overlay_ctx.clearRect);
 
-                        
-                        ctx.fillStyle = "rgba(0, 0, 255, 1)";
+                        // why why why is this needed?
+                        overlay_ctx.reset();
+                        //overlay_ctx.fillStyle = "rgba(0, 0, 255, 1)";
                         // both of these are needed!?!?!?!?!?!? by FF
-                        ctx.fillRect(0, 0, overlay.width, overlay.height);
-                        ctx.clearRect(0, 0, overlay.width, overlay.height);
+                        //overlay_ctx.fillRect(0, 0, overlay.width, overlay.height);
+                        //overlay_ctx.fillStyle = "red";
+                        //overlay_ctx.fillRect(50, 50, 500, 400);
+                        overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
 
                         gameState.snap_to = null;
                     }
@@ -485,6 +488,7 @@ puzzleImg.onload =
                 main.append(item);
 
                 var ctx = item.getContext("2d");
+                ctx.save();
                 ctx.beginPath();
                 ctx.moveTo(ul.x - x1, ul.y - y1);
                 ctx.lineTo(ur.x - x1 + 1, ur.y - y1);
@@ -492,6 +496,7 @@ puzzleImg.onload =
                 ctx.lineTo(ll.x - x1, ll.y - y1 + 1);
                 ctx.clip()
                 ctx.drawImage(puzzleImg, x1, y1, width, height, 0, 0, width, height);
+                ctx.restore();
             }
         }
 
