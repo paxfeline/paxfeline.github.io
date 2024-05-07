@@ -221,11 +221,6 @@ game.addEventListener("pointermove",
 
                         // why why why is this needed?
                         overlay_ctx.reset();
-                        //overlay_ctx.fillStyle = "rgba(0, 0, 255, 1)";
-                        // both of these are needed!?!?!?!?!?!? by FF
-                        //overlay_ctx.fillRect(0, 0, overlay.width, overlay.height);
-                        //overlay_ctx.fillStyle = "red";
-                        //overlay_ctx.fillRect(50, 50, 500, 400);
                         overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
 
                         gameState.snap_to = null;
@@ -326,6 +321,9 @@ game.addEventListener("pointerup",
                     x = t.x1 * (d.offsetWidth / 1000);
                     y = t.y1 * (d.offsetHeight / 500);
                     gameState.snap_to = null;
+
+                    overlay_ctx.reset();
+                    overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
                 }
                 
                 t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
