@@ -38,6 +38,16 @@ body
     background-image: linear-gradient(black, white);
 }
 
+#main::before {
+  content: '';
+  background-image: url(color_gradient.png);
+  background-size: cover;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  filter: sepia(50%) opacity(50%);
+}
+
 #effects-overlay
 {
     position: absolute;
