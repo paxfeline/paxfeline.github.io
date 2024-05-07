@@ -46,6 +46,7 @@ body
     width: 100%;
     height: 100%;
     pointer-events: none;
+    z-index: 2;
 }
 
 #tray
@@ -56,10 +57,10 @@ body
 .bordered
 {
     filter: 
-        drop-shadow( var(--width-unit)  0px 0px black) 
-        drop-shadow( calc(var(--width-unit) * -1)  0px 0px black)
-        drop-shadow( 0px  var(--width-unit) 0px black) 
-        drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
+        drop-shadow( calc(var(--width-unit) * 5)  0px 0px black) 
+        drop-shadow( calc(var(--width-unit) * -5)  0px 0px black)
+        drop-shadow( 0px  calc(var(--width-unit) * 5) 0px black) 
+        drop-shadow( 0px calc(var(--width-unit) * -5) 0px black);
 }
 
 .dragitem
@@ -73,11 +74,6 @@ body
     position: relative;
     display: inline-block;
     outline: 1px solid black;
-}
-
-#main > .dragitem
-{
-;
 }
 
 .dropzone-active
