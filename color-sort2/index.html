@@ -354,7 +354,9 @@ puzzleImg.onload =
         // fixed top-left point
         pointCol.push({x: 0, y: 0});
 
-        for (var y = 50; y < 500; y += 100)
+        const offset = 100;
+
+        for (var y = offset; y < 500; y += 100)
         {
             var yd = Math.random() * 50 - 20;
 
@@ -370,7 +372,7 @@ puzzleImg.onload =
 
         pointCols.push(pointCol);
 
-        for (var x = 50; x < 1000; x += 100)
+        for (var x = offset; x < 1000; x += 100)
         {
             var pointCol = [];
 
@@ -385,7 +387,7 @@ puzzleImg.onload =
                 //ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
             }
 
-            for (var y = 50; y < 500; y += 100)
+            for (var y = offset; y < 500; y += 100)
             {
                 var xd = Math.random() * 50 - 20;
                 var yd = Math.random() * 50 - 20;
@@ -416,7 +418,7 @@ puzzleImg.onload =
         // fixed top-right point
         pointCol.push({x: 1000, y: 0});
 
-        for (var y = 50; y < 500; y += 100)
+        for (var y = offset; y < 500; y += 100)
         {
             var yd = Math.random() * 50 - 20;
 
