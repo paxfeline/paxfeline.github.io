@@ -221,7 +221,6 @@ game.addEventListener("pointermove",
                     let drag_x = (x / hit.offsetWidth) * 1000;
                     let drag_y = (y / hit.offsetHeight) * 500;
 
-
                     let t = gameState.dragging;
                     let td = t.dataset;
                     if (Math.abs(drag_x - td.x1) < 50
@@ -271,6 +270,9 @@ game.addEventListener("pointermove",
         let t = gameState.dragging;
 
         //console.log(`${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px\n${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`);
+
+        // stop weird bug on ios chrome?
+        if (e.pageX < 0) e.pageX = 0
 
         t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
         t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
@@ -342,8 +344,10 @@ game.addEventListener("pointerup",
                 let x = getLeft(t) - d.offsetLeft;
                 let y = getTop(t) - d.offsetTop;
 
+                /*
                 t.style.left = `${x}px`;
                 t.style.top = `${y}px`;
+                */
                 
                 /*
                 t.style.left = `calc(${x}% / 10)`;
