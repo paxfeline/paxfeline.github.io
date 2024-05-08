@@ -271,9 +271,10 @@ game.addEventListener("pointermove",
 
         //console.log(`${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px\n${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`);
 
-        console.log(e.pageX, e);
-
-        t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
+        if (Number(t.dataset.x) + (e.pageX - gameState.start.x) < 0)
+            t.style.left = "0px";
+        else
+            t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
         t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
     }
 );
