@@ -16,7 +16,10 @@ body
 
 #game
 {
+    /*
     --width-unit: 1px;
+    */
+    --width-unit: 0.1vw;
     touch-action: none;
     width: 100%;
     height: 100%;
@@ -55,7 +58,7 @@ body
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100%;    
     height: 100%;
     pointer-events: none;
     z-index: 11;
@@ -101,19 +104,21 @@ body
     z-index: 10;
 }
 
+/*
 @media (max-width: 999px)
 {
     #game
     {
-        --width-unit: 0.1vw
+        --width-unit: 0.1vw;
     }
 }
+*/
 
-@media (max-height: 66vw)
+@media (max-height: 75vw)
 {
     #game
     {
-        --width-unit: 0.132vh
+        --width-unit: 0.132vh;
     }
 }
 
