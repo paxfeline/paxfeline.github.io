@@ -187,7 +187,7 @@ game.addEventListener("pointerdown",
                 e.target.dataset.x = e.target.offsetLeft;
                 e.target.dataset.y = e.target.offsetTop;
 
-                e.target.cached_style = e.target.style;
+                e.target.cached_style = e.target.getAttribute("style");
             }
         }
     }
@@ -292,7 +292,7 @@ game.addEventListener("pointercancel",
     e =>
     {
         game.releasePointerCapture(e.pointerId);
-        gameState.dragging.style = gameState.dragging.cached_style;
+        gameState.dragging.setAttribute("style", gameState.dragging.cached_style);
         gameState.dragging = null;
     });
 
