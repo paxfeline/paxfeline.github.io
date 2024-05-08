@@ -217,19 +217,15 @@ game.addEventListener("pointermove",
                         //console.log(gameState.dragging);
                         if (!gameState.snap_to)
                         {
-                            
-                            console.log(gameState.dragging.ul.x, gameState.dragging.ul.y,
-                                gameState.dragging.ur.x, gameState.dragging.ur.y,
-                                gameState.dragging.lr.x, gameState.dragging.lr.y,
-                                gameState.dragging.ll.x, gameState.dragging.ll.y);
-                                
+                            let t = gameState.dragging;
+                            let td = t.dataset;
                             overlay_ctx.lineWidth = 5;
                             overlay_ctx.strokeStyle = "red";
                             overlay_ctx.beginPath();
-                            overlay_ctx.moveTo(gameState.dragging.ul.x, gameState.dragging.ul.y);
-                            overlay_ctx.lineTo(gameState.dragging.ur.x, gameState.dragging.ur.y);
-                            overlay_ctx.lineTo(gameState.dragging.lr.x, gameState.dragging.lr.y);
-                            overlay_ctx.lineTo(gameState.dragging.ll.x, gameState.dragging.ll.y);
+                            overlay_ctx.moveTo(td.ulx, td.uly);
+                            overlay_ctx.lineTo(td.urx, td.ury);
+                            overlay_ctx.lineTo(td.lrx, td.lry);
+                            overlay_ctx.lineTo(td.llx, td.lly);
                             overlay_ctx.closePath();
                             overlay_ctx.stroke();
 
@@ -480,14 +476,19 @@ puzzleImg.onload =
 
                 let item = first.cloneNode(false);
 
-                item.x1 = x1;
-                item.y1 = y1;
+                item.dataset.x1 = x1;
+                item.dataset.y1 = y1;
 
-                item.ul = ul;
-                item.ur = ur;
-                item.ll = ll;
-                item.lr = lr;
+                item.dataset.ulx = ul.x;
+                item.dataset.urx = ur.x;
+                item.dataset.llx = ll.x;
+                item.dataset.lrx = lr.x;
 
+                item.dataset.uly = ul.y;
+                item.dataset.ury = ur.y;
+                item.dataset.lly = ll.y;
+                item.dataset.lry = lr.y;
+                
                 item.width = width;
                 item.height = height;
 
