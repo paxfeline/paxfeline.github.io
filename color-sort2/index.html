@@ -271,9 +271,6 @@ game.addEventListener("pointermove",
 
         //console.log(`${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px\n${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`);
 
-        // stop weird bug on ios chrome?
-        if (e.pageX < 0) e.pageX = 0
-
         t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
         t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
     }
@@ -365,6 +362,9 @@ game.addEventListener("pointerup",
                     overlay_ctx.reset();
                     overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
                 }
+
+                // stop weird bug on ios chrome?
+                if (x < 0) x = 0
                 
                 t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
                 t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
