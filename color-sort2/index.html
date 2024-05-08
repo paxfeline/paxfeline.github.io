@@ -194,6 +194,8 @@ game.addEventListener("pointerdown",
 );
 
 game.addEventListener("pointermove",
+    e =>
+    {
         if (!gameState.dragging) return;
 
         //console.log("pm", e.target.dataset.role, e);
