@@ -32,36 +32,43 @@ body
     outline: 1px solid black;
 }
 
-#main
+div#main
+{
+    outline: none;
+}
+
+#main, #effects-overlay, #main-backdrop
 {
     position: relative;
     width: calc(var(--width-unit) * 1000);
     height: calc(var(--width-unit) * 500);
     margin: auto;
+    z-index: 2; /* for main */
     /*
     background-image: linear-gradient(black, white);
     */
 }
 
-#main::before {
-  content: '';
-  background-image: url(color_gradient.png);
-  background-size: cover;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  filter: sepia(50%) opacity(50%);
-}
-
-#effects-overlay
+#effects-overlay, #main-backdrop
 {
-    position: absolute;
-    top: 0;
-    left: 0;
+    /*
     width: 100%;    
     height: 100%;
+    */
+    position: absolute; /* overwrites above rule shared with #main */
+    top: 0;
+    left: calc(50% - var(--width-unit) * 1000 / 2); /* width / 2 */
     pointer-events: none;
-    z-index: 11;
+    z-index: 11; /* for effects-overlay */
+}
+
+#main-backdrop
+{
+    z-index: 1;
+  background-image: url(color_gradient.png);
+  background-size: cover;
+  position: absolute;
+  filter: sepia(50%) opacity(50%);
 }
 
 #tray
@@ -69,7 +76,7 @@ body
     flex: 1;
 }
 
-.bordered
+.bordered, #main
 {
     filter: 
         drop-shadow( calc(var(--width-unit) * 5)  0px 0px black) 
@@ -128,10 +135,11 @@ body
 <body>
     
     <div id="game">
+        <div id="main-backdrop"></div>
         <div id="main" class="dropzone" data-role="dropzone">
-            <canvas id="effects-overlay" width="1000" height="500"></canvas>
             <canvas id="first" class="dragitem bordered"  data-role="dragitem"></canvas>
         </div>
+        <canvas id="effects-overlay" width="1000" height="500"></canvas>
         <div id="tray" class="dropzone" data-role="dropzone">
         </div>
     </div>
@@ -178,14 +186,14 @@ game.addEventListener("pointerdown",
                 gameState.start = {x: e.pageX, y: e.pageY};
                 e.target.dataset.x = e.target.offsetLeft;
                 e.target.dataset.y = e.target.offsetTop;
+
+                e.target.cached_style = e.target.style;
             }
         }
     }
 );
 
 game.addEventListener("pointermove",
-    e =>
-    {
         if (!gameState.dragging) return;
 
         //console.log("pm", e.target.dataset.role, e);
@@ -211,14 +219,14 @@ game.addEventListener("pointermove",
                     let drag_y = (y / hit.offsetHeight) * 500;
 
 
-                    if (Math.abs(drag_x - gameState.dragging.x1) < 50
-                            && Math.abs(drag_y - gameState.dragging.y1) < 50)
+                    let t = gameState.dragging;
+                    let td = t.dataset;
+                    if (Math.abs(drag_x - td.x1) < 50
+                            && Math.abs(drag_y - td.y1) < 50)
                     {
                         //console.log(gameState.dragging);
                         if (!gameState.snap_to)
                         {
-                            let t = gameState.dragging;
-                            let td = t.dataset;
                             overlay_ctx.lineWidth = 5;
                             overlay_ctx.strokeStyle = "red";
                             overlay_ctx.beginPath();
@@ -278,6 +286,14 @@ function getLeft(elem)
     return rect.left + window.scrollX;
 }
 
+game.addEventListener("pointercancel",
+    e =>
+    {
+        game.releasePointerCapture(e.pointerId);
+        gameState.dragging.style = gameState.dragging.cached_style;
+        gameState.dragging = null;
+    });
+
 game.addEventListener("pointerup",
     e =>
     {
@@ -335,8 +351,8 @@ game.addEventListener("pointerup",
 
                 if (gameState.snap_to)
                 {
-                    x = t.x1 * (d.offsetWidth / 1000);
-                    y = t.y1 * (d.offsetHeight / 500);
+                    x = t.dataset.x1 * (d.offsetWidth / 1000);
+                    y = t.dataset.y1 * (d.offsetHeight / 500);
                     gameState.snap_to = null;
 
                     overlay_ctx.reset();
