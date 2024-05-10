@@ -89,7 +89,6 @@ div#main
 
 .dragitem
 {
-    transition: transform 0.25s;
     position: absolute;
 }
 
@@ -247,8 +246,9 @@ game.addEventListener("pointermove",
                     {
                         console.log("clearing", overlay_ctx.clearRect);
 
-                        // why why why is this needed?
-                        overlay_ctx.reset();
+                        // why why why is this needed? (also older safari doesn't have it)
+                        if (overlay_ctx.reset)
+                            overlay_ctx.reset();
                         overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
 
                         gameState.snap_to = null;
@@ -363,7 +363,8 @@ game.addEventListener("pointerup",
                     y = t.dataset.y1 * (d.offsetHeight / 500);
                     gameState.snap_to = null;
 
-                    overlay_ctx.reset();
+                    if (overlay_ctx.reset)
+                        overlay_ctx.reset();
                     overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
                 }
                 
