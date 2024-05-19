@@ -80,11 +80,13 @@ div#main
 
 .bordered, #main
 {
+    --shadow-width: 1px;
     filter: 
-        drop-shadow( calc(var(--width-unit) * 5)  0px 0px black) 
-        drop-shadow( calc(var(--width-unit) * -5)  0px 0px black)
-        drop-shadow( 0px  calc(var(--width-unit) * 5) 0px black) 
-        drop-shadow( 0px calc(var(--width-unit) * -5) 0px black);
+        drop-shadow( var(--shadow-width) var(--shadow-width) calc(var(--shadow-width) * 2) black) 
+        drop-shadow( calc(var(--width-unit) * 1) 0px 0px black) 
+        drop-shadow( calc(var(--width-unit) * -1)  0px 0px black)
+        drop-shadow( 0px calc(var(--width-unit) * 1) 0px black) 
+        drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
 }
 
 .dragitem
@@ -547,7 +549,7 @@ puzzleImg.onload =
             }
         }
 
-        first.remove();
+        //first.remove();
     };
 
 //scatter();
