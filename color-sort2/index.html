@@ -70,7 +70,14 @@ div#main
   background-image: url(color_gradient.png);
   background-size: cover;
   position: absolute;
+  /*
   filter: sepia(50%) opacity(50%);
+  */
+}
+
+.in-place
+{
+    filter: sepia(50%) opacity(50%);
 }
 
 #tray
@@ -368,7 +375,11 @@ game.addEventListener("pointerup",
                     if (overlay_ctx.reset)
                         overlay_ctx.reset();
                     overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+                    t.classList.add("in-place");
                 }
+                else
+                    t.classList.remove("in-place");
                 
                 t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
                 t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
