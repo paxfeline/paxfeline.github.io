@@ -75,9 +75,24 @@ div#main
   */
 }
 
+@keyframes pulse
+{
+    from
+    {
+        filter: sepia(50%) brightness(100%);
+    }
+    to
+    {
+        filter: sepia(50%) brightness(133%);
+    }
+}
+
 .in-place
 {
+    /*
     filter: sepia(50%);
+    */
+    animation: 1s pulse ease-in-out alternate infinite;
 }
 
 #tray
