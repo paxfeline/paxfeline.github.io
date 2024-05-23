@@ -91,8 +91,10 @@ div#main
 {
     /*
     filter: sepia(50%);
-    */
     animation: 1s pulse ease-in-out alternate infinite;
+    */
+
+    filter: brightness(var(--brightness));
 }
 
 #tray
@@ -109,6 +111,23 @@ div#main
         drop-shadow( calc(var(--width-unit) * -1)  0px 0px black)
         drop-shadow( 0px calc(var(--width-unit) * 1) 0px black) 
         drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
+}
+
+@property --sweep
+{
+  syntax: '<number>'; /* <- defined as type number for the transition to work */
+  initial-value: 0;
+  inherits: true;
+}
+
+@keyframes inPlaceFlash {
+  from {--sweep: 0.0;}
+  to {--sweep: 1.0;}
+}
+
+#main
+{
+    animation: 3s infinite inPlaceFlash;
 }
 
 .dragitem
@@ -541,6 +560,10 @@ puzzleImg.onload =
                 item.dataset.ury = ur.y;
                 item.dataset.lly = ll.y;
                 item.dataset.lry = lr.y;
+
+                item.dataset.b = (ul.x + ul.y) / 1500;
+                item.style.setProperty("--b", item.dataset.b);
+                item.style.setProperty("--brightness", "calc(1 + exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
                 
                 item.width = width;
                 item.height = height;
