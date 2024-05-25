@@ -102,8 +102,14 @@ div#main
 #tray
 {
     flex: 1;
+
+    /* thanks to https://stackoverflow.com/a/35362074 for this so I didn't have to think about it */
+    background-image: linear-gradient(45deg, #CCCCCC 25%, transparent 25%), linear-gradient(-45deg, #CCCCCC 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #CCCCCC 75%), linear-gradient(-45deg, transparent 75%, #CCCCCC 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
+/*
 .bordered, #main
 {
     --shadow-width: 1px;
@@ -114,6 +120,7 @@ div#main
         drop-shadow( 0px calc(var(--width-unit) * 1) 0px black) 
         drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
 }
+*/
 
 @property --sweep
 {
@@ -565,7 +572,9 @@ puzzleImg.onload =
 
                 item.dataset.b = (ul.x + ul.y) / 1500;
                 item.style.setProperty("--b", item.dataset.b);
-                item.style.setProperty("--brightness", "calc(1 + exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
+                //item.style.setProperty("--brightness", "calc(1 + exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
+                item.style.setProperty("--brightness", "calc(0.8 + 1.2 * exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
+                
                 
                 item.width = width;
                 item.height = height;
