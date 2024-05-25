@@ -102,9 +102,17 @@ div#main
 #tray
 {
     flex: 1;
+
+    /* thanks to https://stackoverflow.com/a/35362074 for this so I didn't have to think about it */
+    background-image: linear-gradient(45deg, #CCCCCC 25%, transparent 25%), linear-gradient(-45deg, #CCCCCC 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #CCCCCC 75%), linear-gradient(-45deg, transparent 75%, #CCCCCC 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+
 }
 
-.bordered, #main
+/* removed for debugging
+.bordered,
+#main
 {
     --shadow-width: 1px;
     filter: 
@@ -113,7 +121,9 @@ div#main
         drop-shadow( calc(var(--width-unit) * -1)  0px 0px black)
         drop-shadow( 0px calc(var(--width-unit) * 1) 0px black) 
         drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
-}
+    }
+    */
+
 
 @property --sweep
 {
@@ -190,11 +200,16 @@ div#main
         </div>
     </div>
     
+    <script src="beforeAndAfterFrame.js"></script>
     <script>
         
 let game = document.querySelector("#game");
 const overlay = document.querySelector("#effects-overlay");
 const overlay_ctx = overlay.getContext("2d");
+
+let tray = document.querySelector("#tray");
+let main = document.querySelector("#main");
+let first = document.querySelector("#first");
         
 let gameState = {};
 
@@ -225,7 +240,7 @@ game.addEventListener("pointerdown",
             if ( alphaVal > 200 )
             {
                 e.preventDefault();
-                game.setPointerCapture(e.pointerId);
+                //game.setPointerCapture(e.pointerId);
                 gameState.dragging = e.target;
                 console.log(gameState.dragging.classList);
                 gameState.dragging.classList.add("dragitem-dragging");
@@ -239,91 +254,125 @@ game.addEventListener("pointerdown",
     }
 );
 
-game.addEventListener("pointermove",
+function throttleRAF () {
+  let queuedCallback
+  return callback => {
+    if (!queuedCallback) {
+      requestAnimationFrame(() => {
+        const cb = queuedCallback
+        queuedCallback = null
+        cb()
+      })
+    }
+    queuedCallback = callback
+  }
+}
+
+var throttledRAF = throttleRAF();
+
+var pointerMoveFunc =
     e =>
     {
         if (!gameState.dragging) return;
-
-        //console.log("pm", e.target.dataset.role, e);
-
-        let hits = document.elementsFromPoint(e.clientX, e.clientY);
-
-        let hit;
-        while ( hit = hits.pop() )
+        
+        var before_cb =
+        () =>
         {
-            if (hit.dataset.role == "dropzone")
+            if (!gameState.dragging) return;
+
+            let t = gameState.dragging;
+
+            //console.log(`${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px\n${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`);
+
+            if (Number(t.dataset.x) + (e.pageX - gameState.start.x) < 0)
+                t.style.left = "0px";
+            else
+                t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
+            t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
+        };
+    
+        var after_cb =
+        () =>
+        {
+            if (!gameState.dragging) return;
+
+            //console.log("pm", e.target, e);
+            
+            /* removed for debugging
+            */
+            let hits = document.elementsFromPoint(e.clientX, e.clientY);
+            let match = hits.find(el => el.dataset.role == "dropzone");
+            
+            //match = tray; // debugging
+            
+            if (match == main)
             {
-                //console.log("hit", hit);
-                hit.classList.add("dropzone-active");
+                gameState.dragging.classList.remove("bordered");
+                
+                /* removed for debugging
+                */
+                let x = getLeft(gameState.dragging) - main.offsetLeft;
+                let y = getTop(gameState.dragging) - main.offsetTop;
 
-                if (hit.id == "main")
+                let drag_x = (x / main.offsetWidth) * 1000;
+                let drag_y = (y / main.offsetHeight) * 500;
+
+                //console.log( drag_x, drag_y )
+
+                let t = gameState.dragging;
+                let td = t.dataset;
+                if (Math.abs(drag_x - td.x1) < 50
+                        && Math.abs(drag_y - td.y1) < 50)
                 {
-                    gameState.dragging.classList.remove("bordered");
-
-                    let x = getLeft(gameState.dragging) - hit.offsetLeft;
-                    let y = getTop(gameState.dragging) - hit.offsetTop;
-
-                    let drag_x = (x / hit.offsetWidth) * 1000;
-                    let drag_y = (y / hit.offsetHeight) * 500;
-
-                    let t = gameState.dragging;
-                    let td = t.dataset;
-                    if (Math.abs(drag_x - td.x1) < 50
-                            && Math.abs(drag_y - td.y1) < 50)
+                    //console.log(gameState.dragging);
+                    if (!gameState.snap_to)
                     {
-                        //console.log(gameState.dragging);
-                        if (!gameState.snap_to)
-                        {
-                            overlay_ctx.lineWidth = 5;
-                            overlay_ctx.strokeStyle = "red";
-                            overlay_ctx.beginPath();
-                            overlay_ctx.moveTo(td.ulx, td.uly);
-                            overlay_ctx.lineTo(td.urx, td.ury);
-                            overlay_ctx.lineTo(td.lrx, td.lry);
-                            overlay_ctx.lineTo(td.llx, td.lly);
-                            overlay_ctx.closePath();
-                            overlay_ctx.stroke();
+                        overlay_ctx.lineWidth = 5;
+                        overlay_ctx.strokeStyle = "red";
+                        overlay_ctx.beginPath();
+                        overlay_ctx.moveTo(td.ulx, td.uly);
+                        overlay_ctx.lineTo(td.urx, td.ury);
+                        overlay_ctx.lineTo(td.lrx, td.lry);
+                        overlay_ctx.lineTo(td.llx, td.lly);
+                        overlay_ctx.closePath();
+                        overlay_ctx.stroke();
 
-                            gameState.snap_to = gameState.dragging;
-                        }
+                        gameState.snap_to = gameState.dragging;
                     }
-                    else if (gameState.snap_to)
-                    {
-                        console.log("clearing", overlay_ctx.clearRect);
-
-                        // why why why is this needed? (also older safari doesn't have it)
-                        if (overlay_ctx.reset)
-                            overlay_ctx.reset();
-                        overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-                        gameState.snap_to = null;
-                    }
-
                 }
-                else if (hit.id == "tray")
-                    gameState.dragging.classList.add("bordered")
-
-                if (gameState.hot != hit)
+                else if (gameState.snap_to)
                 {
-                    if (gameState.hot)
-                        gameState.hot.classList.remove("dropzone-active");
-                    gameState.hot = hit;
+                    console.log("clearing", overlay_ctx.clearRect);
+
+                    // why why why is this needed? (also older safari doesn't have it)
+                    if (overlay_ctx.reset)
+                        overlay_ctx.reset();
+                    overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+                    gameState.snap_to = null;
                 }
-                break;
+
             }
-        }
+            else if (match == tray)
+            {
+                gameState.dragging.classList.add("bordered")
+            }
 
-        let t = gameState.dragging;
+            console.log(match);
 
-        //console.log(`${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px\n${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`);
+            if (match && gameState.hot != match)
+            {
+                /* removed for debugging
+                */
+                if (gameState.hot)
+                    gameState.hot.classList.remove("dropzone-active");
+                gameState.hot = match;
+            }
+        };
 
-        if (Number(t.dataset.x) + (e.pageX - gameState.start.x) < 0)
-            t.style.left = "0px";
-        else
-            t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
-        t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
-    }
-);
+        beforeAndAfterFrame(before_cb, after_cb);
+    };
+game.addEventListener("pointermove", pointerMoveFunc);
 
 function getTop(elem)
 {
@@ -424,7 +473,9 @@ game.addEventListener("pointerup",
 
                 //t.removeEventListener("transitionend", tee);
             }
-        //);
+        /*
+        );
+        */
 
         //showFeedback();
     }
@@ -435,9 +486,6 @@ puzzleImg.src = "color_gradient.png";
 puzzleImg.onload =
     e =>
     {
-    let main = document.querySelector("#tray");
-    let first = document.querySelector("#first");
-
         var pointCols = [];
 
         var pointCol = [];
@@ -565,7 +613,8 @@ puzzleImg.onload =
 
                 item.dataset.b = (ul.x + ul.y) / 1500;
                 item.style.setProperty("--b", item.dataset.b);
-                item.style.setProperty("--brightness", "calc(1 + exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
+                //item.style.setProperty("--brightness", "calc(1 + exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
+                item.style.setProperty("--brightness", "calc(0.8 + 1.2 * exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
                 
                 item.width = width;
                 item.height = height;
@@ -585,7 +634,7 @@ puzzleImg.onload =
                 item.style.height = `calc(${height} * var(--width-unit))`;
 
                 item.removeAttribute("id");
-                main.append(item);
+                tray.append(item);
 
                 var ctx = item.getContext("2d");
                 ctx.save();
