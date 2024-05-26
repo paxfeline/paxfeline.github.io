@@ -482,7 +482,7 @@ puzzleImg.src = "color_gradient.png";
 puzzleImg.onload =
     e =>
     {
-    let main = document.querySelector("#tray");
+    let tray = document.querySelector("#tray");
     let first = document.querySelector("#first");
 
         var pointCols = [];
@@ -634,7 +634,7 @@ puzzleImg.onload =
                 item.style.height = `calc(${height} * var(--width-unit))`;
 
                 item.removeAttribute("id");
-                main.append(item);
+                tray.append(item);
 
                 var ctx = item.getContext("2d");
                 ctx.save();
@@ -648,8 +648,18 @@ puzzleImg.onload =
                 ctx.restore();
             }
         }
+        
+        // remove base item that got cloned
+        first.remove();
 
-        //first.remove();
+        // shuffle
+        for (var i = 0; i < tray.children.length; i++)
+        {
+            var ind = Math.random() * tray.children.length;
+
+            tray.append(tray.children.item(ind));
+        }
+
     };
 
 //scatter();
