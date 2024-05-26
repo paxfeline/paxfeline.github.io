@@ -109,16 +109,17 @@ div#main
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
+
 /*
 .bordered, #main
 {
     --shadow-width: 1px;
     filter: 
-        drop-shadow( var(--shadow-width) var(--shadow-width) calc(var(--shadow-width) * 2) black) 
-        drop-shadow( calc(var(--width-unit) * 1) 0px 0px black) 
-        drop-shadow( calc(var(--width-unit) * -1)  0px 0px black)
-        drop-shadow( 0px calc(var(--width-unit) * 1) 0px black) 
-        drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
+    drop-shadow( var(--shadow-width) var(--shadow-width) calc(var(--shadow-width) * 2) black) 
+    drop-shadow( calc(var(--width-unit) * 1) 0px 0px black) 
+    drop-shadow( calc(var(--width-unit) * -1)  0px 0px black)
+    drop-shadow( 0px calc(var(--width-unit) * 1) 0px black) 
+    drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
 }
 */
 
@@ -162,6 +163,18 @@ div#main
     transform: scale(300%);
     */
     z-index: 10;
+}
+
+#tray .dragitem
+{
+    background-color: rgba(255, 255, 255, 0.75);
+    outline: calc(var(--width-unit)* 10) solid rgba(255, 255, 255, 0.75);
+}
+
+#tray .dragitem.dragitem-dragging
+{
+    background-color: initial;
+    outline: initial;
 }
 
 /*
@@ -234,8 +247,9 @@ game.addEventListener("pointerdown",
                 e.preventDefault();
                 game.setPointerCapture(e.pointerId);
                 gameState.dragging = e.target;
-                console.log(gameState.dragging.classList);
+                //console.log(gameState.dragging.classList);
                 gameState.dragging.classList.add("dragitem-dragging");
+                gameState.dragging.classList.remove("in-place");
                 gameState.start = {x: e.pageX, y: e.pageY};
                 e.target.dataset.x = e.target.offsetLeft;
                 e.target.dataset.y = e.target.offsetTop;
@@ -259,9 +273,13 @@ game.addEventListener("pointermove",
         while ( hit = hits.pop() )
         {
             if (hit.dataset.role == "dropzone")
-            {
-                //console.log("hit", hit);
+            {                
                 hit.classList.add("dropzone-active");
+
+                var drawSnap = false;
+                
+                let t = gameState.dragging;
+                let td = t.dataset;
 
                 if (hit.id == "main")
                 {
@@ -273,45 +291,50 @@ game.addEventListener("pointermove",
                     let drag_x = (x / hit.offsetWidth) * 1000;
                     let drag_y = (y / hit.offsetHeight) * 500;
 
-                    let t = gameState.dragging;
-                    let td = t.dataset;
                     if (Math.abs(drag_x - td.x1) < 50
                             && Math.abs(drag_y - td.y1) < 50)
                     {
-                        //console.log(gameState.dragging);
-                        if (!gameState.snap_to)
-                        {
-                            overlay_ctx.lineWidth = 5;
-                            overlay_ctx.strokeStyle = "red";
-                            overlay_ctx.beginPath();
-                            overlay_ctx.moveTo(td.ulx, td.uly);
-                            overlay_ctx.lineTo(td.urx, td.ury);
-                            overlay_ctx.lineTo(td.lrx, td.lry);
-                            overlay_ctx.lineTo(td.llx, td.lly);
-                            overlay_ctx.closePath();
-                            overlay_ctx.stroke();
-
-                            gameState.snap_to = gameState.dragging;
-                        }
+                        drawSnap = true;
                     }
-                    else if (gameState.snap_to)
-                    {
-                        console.log("clearing", overlay_ctx.clearRect);
-
-                        // why why why is this needed? (also older safari doesn't have it)
-                        if (overlay_ctx.reset)
-                            overlay_ctx.reset();
-                        overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-                        gameState.snap_to = null;
-                    }
-
                 }
                 else if (hit.id == "tray")
+                {
                     gameState.dragging.classList.add("bordered")
+                }
+                
+                if (drawSnap)
+                {
+                    if (!gameState.snap_to)
+                    {
+                        overlay_ctx.lineWidth = 5;
+                        overlay_ctx.strokeStyle = "red";
+                        overlay_ctx.beginPath();
+                        overlay_ctx.moveTo(td.ulx, td.uly);
+                        overlay_ctx.lineTo(td.urx, td.ury);
+                        overlay_ctx.lineTo(td.lrx, td.lry);
+                        overlay_ctx.lineTo(td.llx, td.lly);
+                        overlay_ctx.closePath();
+                        overlay_ctx.stroke();
+
+                        gameState.snap_to = gameState.dragging;
+                    }
+                }
+                else if (gameState.snap_to)
+                {
+                    console.log("clearing", overlay_ctx.clearRect);
+
+                    // why why why is this needed? (also older safari doesn't have it)
+                    if (overlay_ctx.reset)
+                        overlay_ctx.reset();
+                    overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+                    gameState.snap_to = null;
+                }
 
                 if (gameState.hot != hit)
                 {
+                    console.log("hit hot change", hit, gameState.hot);
+
                     if (gameState.hot)
                         gameState.hot.classList.remove("dropzone-active");
                     gameState.hot = hit;
@@ -421,8 +444,10 @@ game.addEventListener("pointerup",
 
                     t.classList.add("in-place");
                 }
+                /* moved to pointerdown
                 else
                     t.classList.remove("in-place");
+                    */
                 
                 t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
                 t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
@@ -431,9 +456,11 @@ game.addEventListener("pointerup",
 
                 //t.removeEventListener("transitionend", tee);
             }
-        //);
-
+        /*
+        );
+        
         //showFeedback();
+        */
     }
 );
 
