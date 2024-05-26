@@ -25,6 +25,7 @@ body
     */
     --width-unit: 0.1vw;
     --c: 0.08;
+    --min-flash: 0;
 
     touch-action: none;
     width: 100%;
@@ -97,7 +98,15 @@ div#main
     filter: sepia(50%);
     animation: 1s pulse ease-in-out alternate infinite;
     */
+    filter: brightness(25%);
+}
 
+/*
+https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-children-an-element-has
+*/
+.in-place:first-child:nth-last-child(50),
+.in-place:first-child:nth-last-child(50) ~ .in-place
+{
     filter: brightness(var(--brightness));
 }
 
@@ -616,7 +625,7 @@ puzzleImg.onload =
                 item.dataset.b = (ul.x + ul.y) / 1500;
                 item.style.setProperty("--b", item.dataset.b);
                 //item.style.setProperty("--brightness", "calc(1 + exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
-                item.style.setProperty("--brightness", "calc(0.5 + 1.5 * exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
+                item.style.setProperty("--brightness", "calc(1 - var(--min-flash, 0.5) + (1 + var(--min-flash, .5)) * exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
                 
                 
                 item.width = width;
