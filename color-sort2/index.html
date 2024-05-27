@@ -260,7 +260,7 @@ function start_sweep()
                 setInterval( () =>
                 {
                     sweep += 0.01;
-                    if (sweep > 1.2)
+                    if (sweep > 4) //1.2) // 4 adds a little delay
                         sweep = start_sweep
                     sweep_el.style.setProperty("--sweep", sweep);
                 }, 13);
