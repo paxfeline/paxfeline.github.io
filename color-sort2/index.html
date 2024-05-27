@@ -20,18 +20,25 @@ body
 
 #game
 {
-    /*
-    --width-unit: 1px;
-    */
     --width-unit: 0.1vw;
-    --c: 0.08;
-    --min-flash: 0;
 
+    --min-bright: 0.25;
+    --c: 0.08;
+    
     touch-action: none;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
+}
+
+/*
+https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-children-an-element-has
+*/
+.in-place:first-child:nth-last-child(2),
+.in-place:first-child:nth-last-child(2) ~ .in-place
+{
+    filter: brightness(var(--brightness));
 }
 
 #game > div
@@ -98,16 +105,7 @@ div#main
     filter: sepia(50%);
     animation: 1s pulse ease-in-out alternate infinite;
     */
-    filter: brightness(25%);
-}
-
-/*
-https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-children-an-element-has
-*/
-.in-place:first-child:nth-last-child(50),
-.in-place:first-child:nth-last-child(50) ~ .in-place
-{
-    filter: brightness(var(--brightness));
+    filter: brightness(var(--min-bright));
 }
 
 #tray
@@ -231,17 +229,28 @@ const overlay_ctx = overlay.getContext("2d");
         
 let gameState = {};
 
-let start_sweep = -0.2;
-let sweep = start_sweep;
+let inplace_count = 0;
 
-/* set up sweep animation */
-setInterval( () =>
-    {
-        sweep += 0.01;
-        if (sweep > 1.2) sweep = start_sweep;
+let sweep_el = game;
+//let sweep_el = document.body;
 
-        game.style.setProperty("--sweep", sweep);
-    }, 13);
+function start_sweep()
+{
+    /* set up sweep animation */
+    let start_sweep = -0.2;
+    let sweep = start_sweep;
+    setInterval( () =>
+        {
+            sweep += 0.01;
+            if (sweep > 1.2)
+            {
+                sweep = start_sweep;
+                sweep_el.style.removeProperty("--D");
+            }
+
+            sweep_el.style.setProperty("--sweep", sweep);
+        }, 1000); //13);
+}
 
 game.addEventListener("pointerdown",
     e =>
@@ -274,7 +283,11 @@ game.addEventListener("pointerdown",
                 gameState.dragging = e.target;
                 //console.log(gameState.dragging.classList);
                 gameState.dragging.classList.add("dragitem-dragging");
-                gameState.dragging.classList.remove("in-place");
+                if (gameState.dragging.classList.contains("in-place"))
+                {
+                    gameState.dragging.classList.remove("in-place");
+                    inplace_count--;
+                }
                 gameState.start = {x: e.pageX, y: e.pageY};
                 e.target.dataset.x = e.target.offsetLeft;
                 e.target.dataset.y = e.target.offsetTop;
@@ -468,6 +481,12 @@ game.addEventListener("pointerup",
                     overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
 
                     t.classList.add("in-place");
+                    inplace_count++;
+
+                    if (inplace_count == 2)
+                    {
+                        start_sweep();
+                    }
                 }
                 /* moved to pointerdown
                 else
@@ -624,8 +643,15 @@ puzzleImg.onload =
 
                 item.dataset.b = (ul.x + ul.y) / 1500;
                 item.style.setProperty("--b", item.dataset.b);
+
+                /*
                 //item.style.setProperty("--brightness", "calc(1 + exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(0.04, 2))))");
-                item.style.setProperty("--brightness", "calc(1 - var(--min-flash, 0.5) + (1 + var(--min-flash, .5)) * exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
+                //item.style.setProperty("--brightness", "calc(1 - var(--min-flash, 0.5) + (1 + var(--min-flash, .5)) * exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
+                */
+
+                item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
+                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep), 0) / abs(var(--sweep))) + 1)");
+                item.style.setProperty("--brightness", "calc(1 + var(--Dx, 1) * (var(--fx) - 1) + 1)");
                 
                 
                 item.width = width;
