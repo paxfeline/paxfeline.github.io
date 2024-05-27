@@ -35,8 +35,8 @@ body
 /*
 https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-children-an-element-has
 */
-.in-place:first-child:nth-last-child(2),
-.in-place:first-child:nth-last-child(2) ~ .in-place
+.in-place:first-child:nth-last-child(50),
+.in-place:first-child:nth-last-child(50) ~ .in-place
 {
     filter: brightness(var(--brightness));
 }
@@ -239,17 +239,25 @@ function start_sweep()
     /* set up sweep animation */
     let start_sweep = -0.2;
     let sweep = start_sweep;
-    setInterval( () =>
+    const firstInt = setInterval( () =>
         {
             sweep += 0.01;
             if (sweep > 1.2)
             {
                 sweep = start_sweep;
-                sweep_el.style.removeProperty("--D");
+                //sweep_el.style.removeProperty("--D");
+                document.querySelectorAll(".in-place").forEach( el => el.style.removeProperty("--Dx") );
+                setInterval( () =>
+                {
+                    sweep += 0.01;
+                    if (sweep > 1.2)
+                        sweep = start_sweep
+                    sweep_el.style.setProperty("--sweep", sweep);
+                }, 13);
+                clearInterval(firstInt);
             }
-
             sweep_el.style.setProperty("--sweep", sweep);
-        }, 1000); //13);
+        }, 13);
 }
 
 game.addEventListener("pointerdown",
@@ -359,7 +367,7 @@ game.addEventListener("pointermove",
                 }
                 else if (gameState.snap_to)
                 {
-                    console.log("clearing", overlay_ctx.clearRect);
+                    //console.log("clearing", overlay_ctx.clearRect);
 
                     // why why why is this needed? (also older safari doesn't have it)
                     if (overlay_ctx.reset)
@@ -371,7 +379,7 @@ game.addEventListener("pointermove",
 
                 if (gameState.hot != hit)
                 {
-                    console.log("hit hot change", hit, gameState.hot);
+                    //console.log("hit hot change", hit, gameState.hot);
 
                     if (gameState.hot)
                         gameState.hot.classList.remove("dropzone-active");
@@ -483,7 +491,7 @@ game.addEventListener("pointerup",
                     t.classList.add("in-place");
                     inplace_count++;
 
-                    if (inplace_count == 2)
+                    if (inplace_count == 50)
                     {
                         start_sweep();
                     }
@@ -649,8 +657,8 @@ puzzleImg.onload =
                 //item.style.setProperty("--brightness", "calc(1 - var(--min-flash, 0.5) + (1 + var(--min-flash, .5)) * exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
                 */
 
-                item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
-                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep), 0) / abs(var(--sweep))) + 1)");
+                item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep, 0) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
+                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep, 0), 0) / abs(var(--sweep, 0))) + 1)");
                 item.style.setProperty("--brightness", "calc(1 + var(--Dx, 1) * (var(--fx) - 1) + 1)");
                 
                 
