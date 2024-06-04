@@ -678,7 +678,8 @@ puzzleImg.onload =
                 */
                 item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep, -0.2) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
                 item.style.setProperty("--Dx_abs", "max(var(--b) - var(--sweep, -0.2), -1 * (var(--b) - var(--sweep, -0.2)))");
-                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep, -0.2), 0) / var(--Dx_abs)) + 1)");
+                //item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep, -0.2), 0) / var(--Dx_abs)) + 1)");
+                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (min(var(--sweep, -0.2) - var(--b), 0) / (var(--sweep, -0.2) - var(--b))) + 1)");
                 item.style.setProperty("--brightness", "calc(2 + var(--Dx, 1) * (var(--fx) - 1))");
                 
                 
