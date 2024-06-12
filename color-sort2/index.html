@@ -33,7 +33,13 @@ body
 
     --min-bright: 0.25;
     --c: 0.08;
-    
+
+    /*
+    --fx: calc(exp(-1 * pow(var(--sweep, -0.2) - var(--b, -0.2), 2) / (2 * pow(var(--c, 0.04), 2))));
+    --Dx: calc((1 - var(--min-bright)) * (min(var(--sweep, -0.2) - var(--b, -0.2), 0) / (var(--sweep, -0.2) - var(--b, -0.2))) + 1);
+    --brightness: calc(2 + var(--Dx, 1) * (var(--fx) - 1));
+    */
+
     touch-action: none;
     width: 100%;
     height: 100%;
@@ -265,7 +271,8 @@ function start_sweep()
             {
                 sweep = start_sweep;
                 //sweep_el.style.removeProperty("--D");
-                document.querySelectorAll(".in-place").forEach( el => el.style.removeProperty("--Dx") );
+                document.querySelectorAll(".in-place").forEach(
+                    el => el.style.removeProperty("--Dx") );
                 setInterval( () =>
                 {
                     sweep += 0.01;
@@ -277,7 +284,6 @@ function start_sweep()
             }
             sweep_el.style.setProperty("--sweep", sweep);
         }, 13);
-
 }
 
 game.addEventListener("pointerdown",
@@ -668,20 +674,22 @@ puzzleImg.onload =
                 item.dataset.ury = ur.y;
                 item.dataset.lly = ll.y;
                 item.dataset.lry = lr.y;
-
-                item.dataset.b = (ul.x + ul.y) / 1500;
-                item.style.setProperty("--b", item.dataset.b);
-
+                
                 /*
                 thanks to https://stackoverflow.com/questions/77688427/css-calc-with-abs-and-var-does-not-work-in-chrome-but-firefox-and-safari
                 for giving me a solution when I finally figured out (looked up) that abs() is not supported by Chrome
-                */
-                item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep, -0.2) - var(--b), 2) / (2 * pow(var(--c, 0.04), 2))))");
-                item.style.setProperty("--Dx_abs", "max(var(--b) - var(--sweep, -0.2), -1 * (var(--b) - var(--sweep, -0.2)))");
-                //item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep, -0.2), 0) / var(--Dx_abs)) + 1)");
-                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (min(var(--sweep, -0.2) - var(--b), 0) / (var(--sweep, -0.2) - var(--b))) + 1)");
-                item.style.setProperty("--brightness", "calc(2 + var(--Dx, 1) * (var(--fx) - 1))");
                 
+                worked in a round-about way, but required abs(), which FF doesn't support at press time
+                item.style.setProperty("--Dx_abs", "max(var(--b) - var(--sweep, -0.2), -1 * (var(--b) - var(--sweep, -0.2)))");
+                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep, -0.2), 0) / var(--Dx_abs)) + 1)");
+                */
+               
+                item.dataset.b = (ul.x + ul.y) / 1500;
+                item.style.setProperty("--b", item.dataset.b);
+
+                item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep, -0.2) - var(--b, -0.2), 2) / (2 * pow(var(--c, 0.04), 2))))");
+                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (min(var(--sweep, -0.2) - var(--b, -0.2), 0) / (var(--sweep, -0.2) - var(--b, -0.2))) + 1)");
+                item.style.setProperty("--brightness", "calc(2 + var(--Dx, 1) * (var(--fx) - 1))");
                 
                 item.width = width;
                 item.height = height;
