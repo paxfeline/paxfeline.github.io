@@ -94,8 +94,10 @@ div#main
 #main-backdrop
 {
     z-index: 1;
+  /*
   background-image: url(color_gradient.png);
   background-size: cover;
+  */
   position: absolute;
   /*
   filter: sepia(50%) opacity(50%);
@@ -114,14 +116,14 @@ div#main
     }
 }
 
+/*
 .in-place
 {
-    /*
     filter: sepia(50%);
     animation: 1s pulse ease-in-out alternate infinite;
-    */
     filter: brightness(var(--min-bright));
 }
+*/
 
 #tray
 {
@@ -318,12 +320,14 @@ game.addEventListener("pointerdown",
 
             var alphaVal;
 
+            /*
             try
             {
                 const pixel = e.target.getContext("2d").getImageData(x, y, 1, 1);
                 alphaVal = pixel.data[3];
             }
             catch
+            */
             {
                 alphaVal = 255;
             }
