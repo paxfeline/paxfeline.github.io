@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>My test page</title>
+  </head>
+  <body>
+    <canvas width="1000" height="500"></canvas>
+
+<img src="color gradient.png">
+
+<script>
+var canvas = document.querySelector("canvas");
+var ctx = canvas.getContext("2d");
+
+var pointCols = [];
+
+var pointCol = [];
+
+// fixed top-left point
+pointCol.push({x: 0, y: 0});
+
+for (var y = 50; y < 500; y += 100)
+{
+  var yd = Math.random() * 50 - 20;
+
+  var point = {x: 0, y: y + yd};
+
+  pointCol.push(point);
+
+  ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+}
+
+// fixed bottom-left point
+pointCol.push({x: 0, y: 500});
+
+pointCols.push(pointCol);
+
+for (var x = 50; x < 1000; x += 100)
+{
+  var pointCol = [];
+
+  // fixed top point
+  {
+    var xd = Math.random() * 50 - 20;
+
+    var point = {x: x + xd, y: 0};
+
+    pointCol.push(point);
+
+    ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+  }
+
+  for (var y = 50; y < 500; y += 100)
+  {
+    var xd = Math.random() * 50 - 20;
+    var yd = Math.random() * 50 - 20;
+
+    var point = {x: x + xd, y: y + yd};
+
+    pointCol.push(point);
+
+    ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+  }
+
+  // fixed bottom point
+  {
+    var xd = Math.random() * 50 - 20;
+
+    var point = {x: x + xd, y: 500};
+
+    pointCol.push(point);
+
+    ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+  }
+
+  pointCols.push(pointCol);
+}
+
+
+var pointCol = [];
+
+// fixed top-right point
+pointCol.push({x: 1000, y: 0});
+
+for (var y = 50; y < 500; y += 100)
+{
+  var yd = Math.random() * 50 - 20;
+
+  var point = {x: 1000, y: y + yd};
+
+  pointCol.push(point);
+
+  ctx.fillRect(point.x - 2, point.y - 2, 4, 4);
+}
+
+// fixed bottom-right point
+pointCol.push({x: 1000, y: 500});
+
+pointCols.push(pointCol);
+</script>
+
+  </body>
+</html>
