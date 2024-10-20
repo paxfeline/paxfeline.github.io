@@ -194,6 +194,16 @@ div#main
     z-index: 10;
 }
 
+#tray
+{
+    --dragging: drop-shadow(black 0 0 5px) drop-shadow(black 0 0 5px);
+}
+
+#tray:has(.dragitem.dragitem-dragging)
+{
+    --dragging: initial;
+}
+
 #tray .dragitem
 {
     /*
@@ -210,8 +220,7 @@ div#main
     background-size: calc(var(--width-unit) * 30) calc(var(--width-unit) * 30);
     */
 
-    filter: drop-shadow(black 0 0 5px)
-                    drop-shadow(black 0 0 5px);
+    filter: var(--dragging);
 }
 
 #tray .dragitem.dragitem-dragging
