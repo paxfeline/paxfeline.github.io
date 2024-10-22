@@ -356,8 +356,12 @@ game.addEventListener("pointerdown",
                 e.preventDefault();
                 //game.setPointerCapture(e.pointerId);
                 gameState.dragging = e.target;
+
+                gameState.mainPointerId = e.pointerId;
+
                 //console.log(gameState.dragging.classList);
                 gameState.dragging.classList.add("dragitem-dragging");
+                
                 if (gameState.dragging.classList.contains("in-place"))
                 {
                     gameState.dragging.classList.remove("in-place");
@@ -478,6 +482,9 @@ game.addEventListener("pointerup",
         //game.releasePointerCapture(e.pointerId);
 
         //let role = e.target.dataset.role;
+
+        // only do anything if this was the first touch point
+        if (e.pointerId != gameState.mainPointerId) return;
 
         let hits = document.elementsFromPoint(e.clientX, e.clientY);
 
