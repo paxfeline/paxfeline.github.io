@@ -753,6 +753,9 @@ puzzleImg.onload =
                     knobPos.E_edge.y += knob_d;
                     knobPos.S_edge.y += knob_d;
                     knobPos.W_edge.y += knob_d;
+
+                    // adjust transform origin
+                    toy += knob_d;
                 }
 
                 if (item.edges.W_edge && item.edges.W_edge < 0)
@@ -761,7 +764,12 @@ puzzleImg.onload =
                     knobPos.E_edge.x += knob_d;
                     knobPos.S_edge.x += knob_d;
                     knobPos.W_edge.x += knob_d;
+
+                    // adjust transform origin
+                    tox += knob_d;
                 }
+
+                item.style.transformOrigin = `${tox*100/width}% ${toy*100/height}%`;
 
                 var ctx = item.getContext("2d");
                 ctx.save();
