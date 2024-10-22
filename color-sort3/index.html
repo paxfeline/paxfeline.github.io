@@ -321,10 +321,11 @@ game.addEventListener("pointerdown",
 
         if (gameState.dragging)
         {
-            let curRot = e.target.dataset.rot ? Number(e.target.dataset.rot) : 0;
+            let t = gameState.dragging;
+            let curRot = t.dataset.rot ? Number(t.dataset.rot) : 0;
             curRot = (curRot + 90) % 360;
-            e.target.dataset.rot = curRot;
-            e.target.style.transform = `rotate(${curRot}deg)`;
+            t.dataset.rot = curRot;
+            t.style.transform = `rotate(${curRot}deg)`;
             e.preventDefault();
             return;
         }
