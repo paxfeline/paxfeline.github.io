@@ -301,7 +301,6 @@ function start_sweep()
 game.addEventListener("contextmenu",
     e =>
     {
-        debugger;
         if (e.target.classList.contains("dragitem"))
         {
             let curRot = e.target.dataset.rot ? Number(e.target.dataset.rot) : 0;
@@ -309,14 +308,26 @@ game.addEventListener("contextmenu",
             e.target.dataset.rot = curRot;
             e.target.style.transform = `rotate(${curRot}deg)`;
             e.preventDefault();
-            return false;
+            //return false;
         }
     });
 
 game.addEventListener("pointerdown",
     e =>
     {
-        console.log("pd", e);
+        //console.log("pd", e);
+
+        // rotate on hold and tap
+
+        if (gameState.dragging)
+        {
+            let curRot = e.target.dataset.rot ? Number(e.target.dataset.rot) : 0;
+            curRot = (curRot + 90) % 360;
+            e.target.dataset.rot = curRot;
+            e.target.style.transform = `rotate(${curRot}deg)`;
+            e.preventDefault();
+            return;
+        }
 
         let role = e.target.dataset.role;
 
