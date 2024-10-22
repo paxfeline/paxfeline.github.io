@@ -394,7 +394,7 @@ game.addEventListener("pointerdown",
 game.addEventListener("pointermove",
     e =>
     {
-        if (!gameState.dragging || e.pointId != gameState.mainPointerId) return;
+        if (!gameState.dragging || e.pointerId != gameState.mainPointerId) return;
 
         //console.log("pm", e.target.dataset.role, e);
 
