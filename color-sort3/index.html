@@ -1,7 +1,7 @@
 <html>
     <head>
         <link rel="manifest" href="manifest.json" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <style>
 
 *
@@ -63,15 +63,17 @@ https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-childre
 
 div#main
 {
-    outline: none;
+    outline: 2em solid black;
 }
 
 #main, #effects-overlay, #main-backdrop
 {
-    position: relative;
+    position: absolute;
     width: calc(var(--width-unit) * 1000);
     height: calc(var(--width-unit) * 500);
     margin: auto;
+    left: calc(50vw - var(--width-unit) * 500);
+    top: calc(50vh - var(--width-unit) * 250);
     z-index: 2; /* for main */
     /*
     background-image: linear-gradient(black, white);
@@ -83,10 +85,10 @@ div#main
     /*
     width: 100%;    
     height: 100%;
-    */
-    position: absolute; /* overwrites above rule shared with #main */
+    position: absolute; /* overwrites above rule shared with #main 
     top: 0;
-    left: calc(50% - var(--width-unit) * 1000 / 2); /* width / 2 */
+    left: calc(50% - var(--width-unit) * 1000 / 2); /* width / 2 
+    */
     pointer-events: none;
     z-index: 11; /* for effects-overlay */
 }
@@ -198,7 +200,7 @@ div#main
 
 #tray
 {
-    --dragging: drop-shadow(black 0 0 5px) drop-shadow(black 0 0 5px);
+    --dragging: drop-shadow(black 0 0 .3em)
 }
 
 #tray:has(.dragitem.dragitem-dragging)
@@ -255,22 +257,30 @@ div#main
 
 <body>
     
+    <canvas id="first" class="dragitem bordered"  data-role="dragitem"></canvas>
+
     <div id="game">
-        <div id="main-backdrop"></div>
-        <div id="main" class="dropzone" data-role="dropzone">
-            <canvas id="first" class="dragitem bordered"  data-role="dragitem"></canvas>
-        </div>
-        <canvas id="effects-overlay" width="1000" height="500"></canvas>
         <div id="tray" class="dropzone" data-role="dropzone">
+            <div id="main-backdrop"></div>
+            <div id="main" class="dropzone" data-role="dropzone">
+            </div>
+            <canvas id="effects-overlay" width="1000" height="500"></canvas>
         </div>
     </div>
     
     <script>
+
+// get options from URL
+
+options = new URLSearchParams(document.location.search);
         
 let game = document.querySelector("#game");
 const overlay = document.querySelector("#effects-overlay");
 const overlay_ctx = overlay.getContext("2d");
-        
+
+let mainDiv = document.querySelector("#main");
+let tray = document.querySelector("#tray");
+
 let gameState = {};
 
 let inplace_count = 0;
@@ -290,9 +300,6 @@ function start_sweep()
             if (sweep > 1.2)
             {
                 sweep = start_sweep;
-                //sweep_el.style.removeProperty("--D");
-                document.querySelectorAll(".in-place").forEach(
-                    el => el.style.removeProperty("--Dx") );
                 setInterval( () =>
                 {
                     sweep += 0.01;
@@ -309,7 +316,7 @@ function start_sweep()
 game.addEventListener("pointerdown",
     e =>
     {
-        //console.log("pd", e);
+        console.log("pd", e);
 
         let role = e.target.dataset.role;
 
@@ -335,7 +342,7 @@ game.addEventListener("pointerdown",
             if ( alphaVal > 200 )
             {
                 e.preventDefault();
-                game.setPointerCapture(e.pointerId);
+                //game.setPointerCapture(e.pointerId);
                 gameState.dragging = e.target;
                 //console.log(gameState.dragging.classList);
                 gameState.dragging.classList.add("dragitem-dragging");
@@ -361,85 +368,57 @@ game.addEventListener("pointermove",
 
         //console.log("pm", e.target.dataset.role, e);
 
+        var drawSnap = false;
+                
+        let t = gameState.dragging;
+        let td = t.dataset;
+
         let hits = document.elementsFromPoint(e.clientX, e.clientY);
-
-        let hit;
-        while ( hit = hits.pop() )
+        
+        if (hits.includes(mainDiv))
         {
-            if (hit.dataset.role == "dropzone")
-            {                
-                hit.classList.add("dropzone-active");
+            gameState.dragging.classList.remove("bordered");
 
-                var drawSnap = false;
-                
-                let t = gameState.dragging;
-                let td = t.dataset;
+            let x = getLeft(gameState.dragging) - mainDiv.offsetLeft;
+            let y = getTop(gameState.dragging) - mainDiv.offsetTop;
 
-                if (hit.id == "main")
-                {
-                    gameState.dragging.classList.remove("bordered");
+            let drag_x = (x / mainDiv.offsetWidth) * 1000;
+            let drag_y = (y / mainDiv.offsetHeight) * 500;
 
-                    let x = getLeft(gameState.dragging) - hit.offsetLeft;
-                    let y = getTop(gameState.dragging) - hit.offsetTop;
-
-                    let drag_x = (x / hit.offsetWidth) * 1000;
-                    let drag_y = (y / hit.offsetHeight) * 500;
-
-                    if (Math.abs(drag_x - td.x1) < 50
-                            && Math.abs(drag_y - td.y1) < 50)
-                    {
-                        drawSnap = true;
-                    }
-                }
-                else if (hit.id == "tray")
-                {
-                    gameState.dragging.classList.add("bordered")
-                }
-                
-                if (drawSnap)
-                {
-                    if (!gameState.snap_to)
-                    {
-                        overlay_ctx.lineWidth = 5;
-                        overlay_ctx.strokeStyle = "red";
-                        overlay_ctx.beginPath();
-                        overlay_ctx.moveTo(td.ulx, td.uly);
-                        overlay_ctx.lineTo(td.urx, td.ury);
-                        overlay_ctx.lineTo(td.lrx, td.lry);
-                        overlay_ctx.lineTo(td.llx, td.lly);
-                        overlay_ctx.closePath();
-                        overlay_ctx.stroke();
-
-                        gameState.snap_to = gameState.dragging;
-                    }
-                }
-                else if (gameState.snap_to)
-                {
-                    //console.log("clearing", overlay_ctx.clearRect);
-
-                    // why why why is this needed? (also older safari doesn't have it)
-                    if (overlay_ctx.reset)
-                        overlay_ctx.reset();
-                    overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-                    gameState.snap_to = null;
-                }
-
-                if (gameState.hot != hit)
-                {
-                    //console.log("hit hot change", hit, gameState.hot);
-
-                    if (gameState.hot)
-                        gameState.hot.classList.remove("dropzone-active");
-                    gameState.hot = hit;
-                }
-                break;
+            if (Math.abs(drag_x - td.x1) < 50 && Math.abs(drag_y - td.y1) < 50)
+            {
+                drawSnap = true;
             }
         }
 
-        let t = gameState.dragging;
+        if (drawSnap)
+        {
+            if (!gameState.snap_to)
+            {
+                overlay_ctx.lineWidth = 5;
+                overlay_ctx.strokeStyle = "red";
+                overlay_ctx.beginPath();
+                overlay_ctx.moveTo(td.ulx, td.uly);
+                overlay_ctx.lineTo(td.urx, td.ury);
+                overlay_ctx.lineTo(td.lrx, td.lry);
+                overlay_ctx.lineTo(td.llx, td.lly);
+                overlay_ctx.closePath();
+                overlay_ctx.stroke();
 
-        //console.log(`${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px\n${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`);
+                gameState.snap_to = gameState.dragging;
+            }
+        }
+        else if (gameState.snap_to)
+        {
+            //console.log("clearing", overlay_ctx.clearRect);
+
+            // why why why is this needed? (also older safari doesn't have it)
+            if (overlay_ctx.reset)
+                overlay_ctx.reset();
+            overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+            gameState.snap_to = null;
+        }
 
         if (Number(t.dataset.x) + (e.pageX - gameState.start.x) < 0)
             t.style.left = "0px";
@@ -464,7 +443,7 @@ function getLeft(elem)
 game.addEventListener("pointercancel",
     e =>
     {
-        game.releasePointerCapture(e.pointerId);
+        //game.releasePointerCapture(e.pointerId);
         gameState.dragging.setAttribute("style", gameState.dragging.cached_style);
         gameState.dragging = null;
     });
@@ -474,28 +453,21 @@ game.addEventListener("pointerup",
     {
         //console.log("pu", e.target.dataset.role, e);
 
-        game.releasePointerCapture(e.pointerId);
+        //game.releasePointerCapture(e.pointerId);
 
         //let role = e.target.dataset.role;
 
         let hits = document.elementsFromPoint(e.clientX, e.clientY);
 
-        //console.log(hits);
-
-        let hit;
-        while ( hit = hits.pop() )
-        {
-            if (hit.dataset.role == "dropzone")
-            {
-                //console.log("hit", hit);
-                break;
-            }
-        }
-
         let t = gameState.dragging;
-        let d = hit;
 
-        if (!t || !d) return;
+        
+        if (hits.includes(mainDiv))
+            var d = mainDiv;
+        else
+            var d = tray;
+
+        if (!t) return;
 
         gameState.dragging = null;
 
@@ -503,64 +475,40 @@ game.addEventListener("pointerup",
 
         //let x = t.offsetLeft - d.offsetLeft;
         
-        d.classList.remove("dropzone-active");
         t.classList.remove("dragitem-dragging");
 
-        /*
-        t.addEventListener("transitionend",
-            function tee(e)
-            */
-            {
-                let x = getLeft(t) - d.offsetLeft;
-                let y = getTop(t) - d.offsetTop;
-
-                /*
-                t.style.left = `${x}px`;
-                t.style.top = `${y}px`;
-                */
-                
-                /*
-                t.style.left = `calc(${x}% / 10)`;
-                t.style.top = `calc(${y}% / 5)`;
-                */
-                
-                //console.log(d.offsetWidth, d.offsetHeight);
-
-                if (gameState.snap_to)
-                {
-                    x = t.dataset.x1 * (d.offsetWidth / 1000);
-                    y = t.dataset.y1 * (d.offsetHeight / 500);
-                    gameState.snap_to = null;
-
-                    if (overlay_ctx.reset)
-                        overlay_ctx.reset();
-                    overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-                    t.classList.add("in-place");
-                    inplace_count++;
-
-                    if (inplace_count == 50)
-                    {
-                        start_sweep();
-                    }
-                }
-                /* moved to pointerdown
-                else
-                    t.classList.remove("in-place");
-                    */
-                
-                t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
-                t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
-
-                d.append(t);
-
-                //t.removeEventListener("transitionend", tee);
-            }
-        /*
-        );
+        let x = getLeft(t) - d.offsetLeft;
+        let y = getTop(t) - d.offsetTop;
         
-        //showFeedback();
-        */
+        //console.log(d.offsetWidth, d.offsetHeight);
+
+        if (gameState.snap_to)
+        {
+            x = t.dataset.x1 * (d.offsetWidth / 1000);
+            y = t.dataset.y1 * (d.offsetHeight / 500);
+            gameState.snap_to = null;
+
+            if (overlay_ctx.reset)
+                overlay_ctx.reset();
+            overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+            t.classList.add("in-place");
+            inplace_count++;
+
+            if (inplace_count == 50)
+            {
+                start_sweep();
+            }
+        }
+        /* moved to pointerdown
+        else
+            t.classList.remove("in-place");
+            */
+        
+        t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
+        t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
+
+        d.append(t);
     }
 );
 
@@ -571,7 +519,6 @@ puzzleImg.src = "color_gradient.png";
 puzzleImg.onload =
     e =>
     {
-    let tray = document.querySelector("#tray");
     let first = document.querySelector("#first");
 
         var pointCols = [];
@@ -696,28 +643,38 @@ puzzleImg.onload =
                 item.style.setProperty("--b", item.dataset.b);
 
                 item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep, -0.2) - var(--b, -0.2), 2) / (2 * pow(var(--c, 0.04), 2))))");
-                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (min(var(--sweep, -0.2) - var(--b, -0.2), 0) / (var(--sweep, -0.2) - var(--b, -0.2))) + 1)");
-                item.style.setProperty("--brightness", "calc(2 + var(--Dx, 1) * (var(--fx) - 1))");
+                item.style.setProperty("--brightness", "calc(2 + (var(--fx) - 1))");
 
                 item.width = width;
                 item.height = height;
-
-                let left = Math.random();
-                let top = Math.random();
 
                 /*
                 item.style.left = `calc((100% - ${width}px) * ${left})`;
                 item.style.top = `calc((100% - ${height}px) * ${top})`;
                 */
 
-                item.style.left = `calc((100% - ${width} * var(--width-unit)) * ${left})`;
-                item.style.top = `calc((100% - ${height} * var(--width-unit)) * ${top})`;
 
                 item.style.width = `calc(${width} * var(--width-unit))`;
                 item.style.height = `calc(${height} * var(--width-unit))`;
 
                 item.removeAttribute("id");
                 tray.append(item);
+
+                let mbr = mainDiv.getBoundingClientRect();
+
+                do
+                {
+                    let left = Math.random();
+                    let top = Math.random();
+
+                    item.style.left = `calc((100% - ${width} * var(--width-unit)) * ${left})`;
+                    item.style.top = `calc((100% - ${height} * var(--width-unit)) * ${top})`;
+                    var ibr = item.getBoundingClientRect();
+                }
+                while (!(mbr.right < ibr.left || 
+                    mbr.left > ibr.right || 
+                    mbr.bottom < ibr.top || 
+                    mbr.top > ibr.bottom));
 
                 // alignment problem
                 // want to shift E and S over and down 1
@@ -753,10 +710,12 @@ puzzleImg.onload =
                 ctx.save();
                 ctx.beginPath();
 
+                /*
                 console.log(ul.x - x1, ul.y - y1);
                 console.log(lr.x - x1 + 1, lr.y - y1 + 1);
                 console.log(ur.x - x1 + 1, ur.y - y1);
                 console.log(ll.x - x1, ll.y - y1 + 1);
+                */
 
                 ctx.moveTo(ul.x - x1, ul.y - y1);
                 ctx.lineTo(ur.x - x1 + 1, ur.y - y1);

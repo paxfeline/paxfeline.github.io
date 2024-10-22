@@ -3,9 +3,9 @@ const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register(
-        '/color-sort2/sw.js',
+        '/color-sort3/sw.js',
         {
-          scope: './color-sort2/',
+          scope: './color-sort3/',
         }
       );
       if (registration.installing) {
