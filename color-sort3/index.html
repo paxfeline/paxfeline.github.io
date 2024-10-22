@@ -9,6 +9,9 @@
     box-sizing: border-box;
     user-select: none;
     -webkit-user-select: none;
+
+    /* can I do this? */
+    touch-action: none;
 }
 
 html
@@ -101,6 +104,8 @@ https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-childre
   */
 }
 
+/*
+
 @keyframes pulse
 {
     from
@@ -113,13 +118,12 @@ https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-childre
     }
 }
 
-/*
+
 .in-place
 {
-    filter: sepia(50%);
     animation: 1s pulse ease-in-out alternate infinite;
-    filter: brightness(var(--min-bright));
 }
+
 */
 
 #tray
@@ -294,6 +298,21 @@ function start_sweep()
         }, 13);
 }
 
+game.addEventListener("contextmenu",
+    e =>
+    {
+        debugger;
+        if (e.target.classList.contains("dragitem"))
+        {
+            let curRot = e.target.dataset.rot ? Number(e.target.dataset.rot) : 0;
+            curRot = (curRot + 90) % 360;
+            e.target.dataset.rot = curRot;
+            e.target.style.transform = `rotate(${curRot}deg)`;
+            e.preventDefault();
+            return false;
+        }
+    });
+
 game.addEventListener("pointerdown",
     e =>
     {
@@ -333,8 +352,15 @@ game.addEventListener("pointerdown",
                     inplace_count--;
                 }
                 gameState.start = {x: e.pageX, y: e.pageY};
+                
+                // find the difference between the actual offset and the transformed offset
+                
+                let br = e.target.getBoundingClientRect();
+                
                 e.target.dataset.x = e.target.offsetLeft;
                 e.target.dataset.y = e.target.offsetTop;
+
+
 
                 e.target.cached_style = e.target.getAttribute("style");
             }
@@ -401,9 +427,12 @@ game.addEventListener("pointermove",
             gameState.snap_to = null;
         }
 
+        /*
         if (Number(t.dataset.x) + (e.pageX - gameState.start.x) < 0)
             t.style.left = "0px";
         else
+        */
+
             t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
         t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
     }
@@ -458,8 +487,14 @@ game.addEventListener("pointerup",
         
         t.classList.remove("dragitem-dragging");
 
+        // untransform to get real position
+        let rc = t.style.transform;
+        t.style.transform = "";
+
         let x = getLeft(t) - d.offsetLeft;
         let y = getTop(t) - d.offsetTop;
+
+        t.style.transform = rc;
         
         //console.log(d.offsetWidth, d.offsetHeight);
 
@@ -699,6 +734,10 @@ puzzleImg.onload =
                 // but this doesn't match up with
                 // the other piece
 
+                // transform origin x and y
+                let tox = puzzle_piece_size / 2;
+                let toy = puzzle_piece_size / 2;
+
                 const half_size = puzzle_piece_size / 2;
                 const knobPos = {
                     N_edge: {x: half_size, y: 0},
@@ -709,6 +748,7 @@ puzzleImg.onload =
 
                 if (item.edges.N_edge && item.edges.N_edge < 0)
                 {
+                    // TODO: use foreach instead?
                     knobPos.N_edge.y += knob_d;
                     knobPos.E_edge.y += knob_d;
                     knobPos.S_edge.y += knob_d;
