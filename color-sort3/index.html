@@ -512,6 +512,38 @@ game.addEventListener("pointerup",
     }
 );
 
+window.addEventListener("resize",
+    e =>
+    {
+        let mbr = mainDiv.getBoundingClientRect();
+        mbr.top -= 20;
+        mbr.left -= 20;
+        mbr.bottom += 20;
+        mbr.right += 20;
+
+        Array.from(tray.children).forEach(
+         item =>
+         {
+            if (item.classList.contains("dragitem"))
+            {
+                var ibr = item.getBoundingClientRect();
+
+                while (!(mbr.right < ibr.left || 
+                    mbr.left > ibr.right || 
+                    mbr.bottom < ibr.top || 
+                    mbr.top > ibr.bottom))
+                {
+                    let left = Math.random();
+                    let top = Math.random();
+
+                    item.style.left = `calc((100% - ${item.width} * var(--width-unit)) * ${left})`;
+                    item.style.top = `calc((100% - ${item.height} * var(--width-unit)) * ${top})`;
+                    ibr = item.getBoundingClientRect();
+                }
+            }
+        });
+    });
+
 const puzzle_piece_size = 100;
 
 const puzzleImg = new Image();
@@ -661,6 +693,10 @@ puzzleImg.onload =
                 tray.append(item);
 
                 let mbr = mainDiv.getBoundingClientRect();
+                mbr.top -= 20;
+                mbr.left -= 20;
+                mbr.bottom += 20;
+                mbr.right += 20;
 
                 do
                 {
