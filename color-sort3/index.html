@@ -56,12 +56,7 @@ https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-childre
     filter: brightness(var(--brightness));
 }
 
-#game > div
-{
-    outline: 1px solid black;
-}
-
-div#main
+#tray > div#main
 {
     outline: 2em solid black;
 }
@@ -208,22 +203,8 @@ div#main
     --dragging: initial;
 }
 
-#tray .dragitem
+#tray > .dragitem
 {
-    /*
-    outline: calc(var(--width-unit) * 15) outset #808080;
-
-    background-color: rgba(255, 255, 255, 0.75);
-    */
-
-    /* thanks to https://stackoverflow.com/a/35362074 for this so I didn't have to think about it 
-    background-image:   linear-gradient(45deg, #b0b0b0 25%, transparent 25%),
-                        linear-gradient(-45deg, #b0b0b0 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, #b0b0b0 75%),
-                        linear-gradient(-45deg, #cfcfcf 75%, #b0b0b0 75%);
-    background-size: calc(var(--width-unit) * 30) calc(var(--width-unit) * 30);
-    */
-
     filter: var(--dragging);
 }
 
