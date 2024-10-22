@@ -317,7 +317,9 @@ game.addEventListener("pointerdown",
     {
         //console.log("pd", e);
 
-        // rotate on hold and tap
+        // rotate on drag and tap
+
+        e.preventDefault();
 
         if (gameState.dragging)
         {
@@ -326,7 +328,6 @@ game.addEventListener("pointerdown",
             curRot = (curRot + 90) % 360;
             t.dataset.rot = curRot;
             t.style.transform = `rotate(${curRot}deg)`;
-            e.preventDefault();
             return;
         }
 
@@ -334,6 +335,7 @@ game.addEventListener("pointerdown",
 
         if (role == "dragitem")
         {
+            // not used?:
             const x = e.offsetX;
             const y = e.offsetY;
 
@@ -353,8 +355,12 @@ game.addEventListener("pointerdown",
 
             if ( alphaVal > 200 )
             {
-                e.preventDefault();
+                // done above:
+                //e.preventDefault();
+
+                // turns out, not needed:
                 //game.setPointerCapture(e.pointerId);
+
                 gameState.dragging = e.target;
 
                 gameState.mainPointerId = e.pointerId;
@@ -373,6 +379,7 @@ game.addEventListener("pointerdown",
                 
                 let br = e.target.getBoundingClientRect();
                 
+                // should not be needed:
                 e.target.dataset.x = e.target.offsetLeft;
                 e.target.dataset.y = e.target.offsetTop;
 
