@@ -274,6 +274,10 @@ game.addEventListener("pointerdown",
 
                 if (e.target.parentElement == mainDiv && gameState.tap_cache == e.target)
                 {
+                    // untransform (rotate) to find real center
+                    let rc = t.style.transform;
+                    t.style.transform = "initial";
+
                     let x = getLeft(e.target) - mainDiv.offsetLeft;
                     let y = getTop(e.target) - mainDiv.offsetTop;
 
@@ -282,18 +286,35 @@ game.addEventListener("pointerdown",
 
                     console.log(x, y);
 
+                    x += t.width * t.dataset.tox;
+                    y += t.height * t.dataset.toy;
+
+                    console.log(x, y);
+
+                    x -= puzzle_piece_size / 2;
+                    y -= puzzle_piece_size / 2;
+
                     x = Math.round(x / puzzle_piece_size) * puzzle_piece_size;
                     y = Math.round(y / puzzle_piece_size) * puzzle_piece_size;
 
+                    /*
+                    x += puzzle_piece_size / 2;
+                    y += puzzle_piece_size / 2;
+                    */
+
                     console.log(x, y);
+                    
                     
                     x -= (t.dataset.ulx - t.dataset.x1);
                     y -= (t.dataset.uly - t.dataset.y1);
                     
                     console.log(x, y);
+                    
+                    // restore rotation
+                    t.style.transform = rc;
 
                     // should be exact?
-                    //console.log("diff", x - t.dataset.x1, y - t.dataset.y1);
+                    console.log("diff", x - t.dataset.x1, y - t.dataset.y1);
                     if (Math.abs(x - t.dataset.x1) == 0 && Math.abs(y - t.dataset.y1) == 0)
                     {
                         t.classList.add("in-place");
@@ -826,6 +847,9 @@ puzzleImg.onload =
                     tox += knob_d;
                 }
 
+                // transform origin x and y decimals
+                item.dataset.tox = tox/width;
+                item.dataset.toy = toy/height;
                 item.style.transformOrigin = `${tox*100/width}% ${toy*100/height}%`;
 
                 var ctx = item.getContext("2d");
