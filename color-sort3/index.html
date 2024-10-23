@@ -306,7 +306,11 @@ game.addEventListener("contextmenu",
             let curRot = e.target.dataset.rot ? Number(e.target.dataset.rot) : 0;
             curRot = (curRot + 90) % 360;
             e.target.dataset.rot = curRot;
-            e.target.style.transform = `rotate(${curRot}deg)`;
+            if (curRot)
+                e.target.style.transform = `rotate(${curRot}deg)`;
+            else
+                e.target.style.transform = `initial`;
+
             e.preventDefault();
             //return false;
         }
