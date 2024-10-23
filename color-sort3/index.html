@@ -176,10 +176,13 @@ let tray = document.querySelector("#tray");
 
 let gameState = {};
 
+// should probably move inside gameState
 let inplace_count = 0;
 
 let sweep_el = game;
 //let sweep_el = document.body;
+
+let sweepInt;
 
 function start_sweep()
 {
@@ -187,23 +190,32 @@ function start_sweep()
     let start_sweep = -0.2;
     let sweep = start_sweep;
     
-    const firstInt = setInterval( () =>
+    sweepInt = setInterval(
+        () =>
         {
             sweep += 0.01;
             if (sweep > 1.2)
             {
+                clearInterval(sweepInt);
+                
                 sweep = start_sweep;
-                setInterval( () =>
-                {
-                    sweep += 0.01;
-                    if (sweep > 4) //1.2) // 4 adds a little delay
-                        sweep = start_sweep
-                    sweep_el.style.setProperty("--sweep", sweep);
-                }, 13);
-                clearInterval(firstInt);
+                sweepInt = setInterval(
+                    () =>
+                    {
+                        sweep += 0.01;
+                        if (sweep > 4) //1.2) // 4 adds a little delay
+                            sweep = start_sweep
+                        sweep_el.style.setProperty("--sweep", sweep);
+                    }, 13);
             }
             sweep_el.style.setProperty("--sweep", sweep);
         }, 13);
+}
+
+function stop_sweep()
+{
+    clearInterval(sweepInt);
+    sweepInt = null;
 }
 
 game.addEventListener("contextmenu",
@@ -283,6 +295,10 @@ game.addEventListener("pointerdown",
                 if (gameState.dragging.classList.contains("in-place"))
                 {
                     gameState.dragging.classList.remove("in-place");
+
+                    if (sweepInt)
+                        stop_sweep()
+
                     inplace_count--;
                 }
                 gameState.start = {x: e.pageX, y: e.pageY};
