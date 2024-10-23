@@ -18,16 +18,13 @@ html
 {
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 body
 {
     margin: 0;
     overflow: hidden;
-    /*
-    width: 100vw;
-    height: 100vh;
-    */
 }
 
 #game
@@ -36,12 +33,6 @@ body
 
     --min-bright: 0.25;
     --c: 0.08;
-
-    /*
-    --fx: calc(exp(-1 * pow(var(--sweep, -0.2) - var(--b, -0.2), 2) / (2 * pow(var(--c, 0.04), 2))));
-    --Dx: calc((1 - var(--min-bright)) * (min(var(--sweep, -0.2) - var(--b, -0.2), 0) / (var(--sweep, -0.2) - var(--b, -0.2))) + 1);
-    --brightness: calc(2 + var(--Dx, 1) * (var(--fx) - 1));
-    */
 
     touch-action: none;
     width: 100%;
@@ -73,20 +64,10 @@ https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-childre
     left: calc(50vw - var(--width-unit) * 500);
     top: calc(50vh - var(--width-unit) * 250);
     z-index: 2; /* for main */
-    /*
-    background-image: linear-gradient(black, white);
-    */
 }
 
 #effects-overlay, #main-backdrop
 {
-    /*
-    width: 100%;    
-    height: 100%;
-    position: absolute; /* overwrites above rule shared with #main 
-    top: 0;
-    left: calc(50% - var(--width-unit) * 1000 / 2); /* width / 2 
-    */
     pointer-events: none;
     z-index: 11; /* for effects-overlay */
 }
@@ -94,82 +75,18 @@ https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-childre
 #main-backdrop
 {
     z-index: 1;
-  /*
-  background-image: url(color_gradient.png);
-  background-size: cover;
-  */
   position: absolute;
-  /*
-  filter: sepia(50%) opacity(50%);
-  */
 }
 
-/*
-
-@keyframes pulse
-{
-    from
-    {
-        filter: brightness(80%);
-    }
-    to
-    {
-        filter: brightness(133%);
-    }
-}
-
-
-.in-place
-{
-    animation: 1s pulse ease-in-out alternate infinite;
-}
-
-*/
+/* this can probably change,
+but it works for now */
 
 #tray
 {
     flex: 1;
-
-    /* thanks to https://stackoverflow.com/a/35362074 for this so I didn't have to think about it */
-    /*
-    background-image: linear-gradient(45deg, #CCCCCC 25%, transparent 25%), linear-gradient(-45deg, #CCCCCC 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #CCCCCC 75%), linear-gradient(-45deg, transparent 75%, #CCCCCC 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-    */
 }
 
 
-/*
-.bordered, #main
-{
-    --shadow-width: 1px;
-    filter: 
-    drop-shadow( var(--shadow-width) var(--shadow-width) calc(var(--shadow-width) * 2) black) 
-    drop-shadow( calc(var(--width-unit) * 1) 0px 0px black) 
-    drop-shadow( calc(var(--width-unit) * -1)  0px 0px black)
-    drop-shadow( 0px calc(var(--width-unit) * 1) 0px black) 
-    drop-shadow( 0px calc(var(--width-unit) * -1) 0px black);
-}
-*/
-
-/* moved to JS
-@property --sweep
-{
-  syntax: '<number>';
-  initial-value: 0;
-  inherits: true;
-}
-
-@keyframes inPlaceFlash {
-  from {--sweep: 0.0;}
-  to {--sweep: 1.0;}
-}
-*/
-
-#main
-{
-    animation: 3s infinite inPlaceFlash;
-}
 
 .dragitem
 {
@@ -219,15 +136,6 @@ https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-childre
     filter: initial;
 }
 
-/*
-@media (max-width: 999px)
-{
-    #game
-    {
-        --width-unit: 0.1vw;
-    }
-}
-*/
 
 @media (max-height: 100vw)
 {
