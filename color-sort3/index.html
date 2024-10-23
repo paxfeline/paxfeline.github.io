@@ -163,9 +163,18 @@ but it works for now */
     
     <script>
 
+let gameState = {};
+
 // get options from URL
 
 options = new URLSearchParams(document.location.search);
+
+if (options.has("snap"))
+{
+    gameState.snap_level = options.get("snap");
+}
+else
+    gameState.snap_level = "easy";
         
 let game = document.querySelector("#game");
 const overlay = document.querySelector("#effects-overlay");
@@ -174,7 +183,6 @@ const overlay_ctx = overlay.getContext("2d");
 let mainDiv = document.querySelector("#main");
 let tray = document.querySelector("#tray");
 
-let gameState = {};
 
 // should probably move inside gameState
 let inplace_count = 0;
@@ -197,7 +205,7 @@ function start_sweep()
             if (sweep > 1.2)
             {
                 clearInterval(sweepInt);
-                
+
                 sweep = start_sweep;
                 sweepInt = setInterval(
                     () =>
@@ -259,62 +267,88 @@ game.addEventListener("pointerdown",
 
         if (role == "dragitem")
         {
-            // not used?:
-            const x = e.offsetX;
-            const y = e.offsetY;
-
-            var alphaVal;
-
-            /*
-            try
+            // possibly allow regardless of snap level?
+            if (gameState.snap_level == "manual")
             {
-                const pixel = e.target.getContext("2d").getImageData(x, y, 1, 1);
-                alphaVal = pixel.data[3];
-            }
-            catch
-            */
-            {
-                alphaVal = 255;
-            }
+                let t = e.target;
 
-            if ( alphaVal > 200 )
-            {
-                // done above:
-                //e.preventDefault();
-
-                // turns out, not needed:
-                //game.setPointerCapture(e.pointerId);
-
-                gameState.dragging = e.target;
-
-                gameState.mainPointerId = e.pointerId;
-
-                //console.log(gameState.dragging.classList);
-                gameState.dragging.classList.add("dragitem-dragging");
-                
-                if (gameState.dragging.classList.contains("in-place"))
+                if (e.target.parentElement == mainDiv && gameState.tap_cache == e.target)
                 {
-                    gameState.dragging.classList.remove("in-place");
+                    let x = getLeft(e.target) - mainDiv.offsetLeft;
+                    let y = getTop(e.target) - mainDiv.offsetTop;
 
-                    if (sweepInt)
-                        stop_sweep()
+                    x = (x / mainDiv.offsetWidth) * 1000;
+                    y = (y / mainDiv.offsetHeight) * 500;
 
-                    inplace_count--;
+                    console.log(x, y);
+
+                    x = Math.round(x / puzzle_piece_size) * puzzle_piece_size;
+                    y = Math.round(y / puzzle_piece_size) * puzzle_piece_size;
+
+                    console.log(x, y);
+                    
+                    x -= (t.dataset.ulx - t.dataset.x1);
+                    y -= (t.dataset.uly - t.dataset.y1);
+                    
+                    console.log(x, y);
+
+                    // should be exact?
+                    //console.log("diff", x - t.dataset.x1, y - t.dataset.y1);
+                    if (Math.abs(x - t.dataset.x1) == 0 && Math.abs(y - t.dataset.y1) == 0)
+                    {
+                        t.classList.add("in-place");
+                        inplace_count++;
+    
+                        if (inplace_count == 50)
+                            start_sweep();
+                    }
+
+                    x = x * (mainDiv.offsetWidth / 1000);
+                    y = y * (mainDiv.offsetHeight / 500);
+
+                    e.target.style.left = `calc((${x} / ${mainDiv.offsetWidth}) * 100%)`;
+                    e.target.style.top = `calc((${y} / ${mainDiv.offsetHeight}) * 100%)`;
+
+                    return;
                 }
-                gameState.start = {x: e.pageX, y: e.pageY};
-                
-                // find the difference between the actual offset and the transformed offset
-                
-                let br = e.target.getBoundingClientRect();
-                
-                // should not be needed:
-                e.target.dataset.x = e.target.offsetLeft;
-                e.target.dataset.y = e.target.offsetTop;
+                else
+                {
+                    gameState.tap_cache = e.target;
 
-
-
-                e.target.cached_style = e.target.getAttribute("style");
+                    setTimeout(() => gameState.tap_cache = null, 500);
+                }
             }
+
+
+            gameState.dragging = e.target;
+
+            gameState.mainPointerId = e.pointerId;
+
+            //console.log(gameState.dragging.classList);
+            gameState.dragging.classList.add("dragitem-dragging");
+            
+            if (gameState.dragging.classList.contains("in-place"))
+            {
+                gameState.dragging.classList.remove("in-place");
+
+                if (sweepInt)
+                    stop_sweep()
+
+                inplace_count--;
+            }
+            gameState.start = {x: e.pageX, y: e.pageY};
+            
+            // find the difference between the actual offset and the transformed offset
+            
+            let br = e.target.getBoundingClientRect();
+            
+            // should not be needed:
+            e.target.dataset.x = e.target.offsetLeft;
+            e.target.dataset.y = e.target.offsetTop;
+
+
+
+            e.target.cached_style = e.target.getAttribute("style");
         }
         else
         {
@@ -382,12 +416,30 @@ game.addEventListener("pointermove",
             let x = getLeft(gameState.dragging) - mainDiv.offsetLeft;
             let y = getTop(gameState.dragging) - mainDiv.offsetTop;
 
+            console.log(`gL v oL x: ${x - mainDiv.offsetLeft} / ${e.target.offsetLeft}`)
+            console.log(`gL v oL y: ${y - mainDiv.offsetTop} / ${e.target.offsetTop}`)
+
             let drag_x = (x / mainDiv.offsetWidth) * 1000;
             let drag_y = (y / mainDiv.offsetHeight) * 500;
 
-            if (Math.abs(drag_x - td.x1) < 50 && Math.abs(drag_y - td.y1) < 50)
+            if (gameState.snap_level == "easy")
             {
-                drawSnap = true;
+                if (Math.abs(drag_x - td.x1) < 50 && Math.abs(drag_y - td.y1) < 50)
+                {
+                    drawSnap = true;
+                    var x1 = td.ulx;
+                    var y1 = td.uly;
+                    var x2 = td.urx;
+                    var x3 = td.lrx;
+                    var x4 = td.llx;
+                    var y3 = td.ury;
+                    var y2 = td.lry;
+                    var y4 = td.lly;
+                }
+            }
+            else if (gameState.snap_level == "hard")
+            {
+                // do snap to every square
             }
         }
 
@@ -398,10 +450,10 @@ game.addEventListener("pointermove",
                 overlay_ctx.lineWidth = 5;
                 overlay_ctx.strokeStyle = "red";
                 overlay_ctx.beginPath();
-                overlay_ctx.moveTo(td.ulx, td.uly);
-                overlay_ctx.lineTo(td.urx, td.ury);
-                overlay_ctx.lineTo(td.lrx, td.lry);
-                overlay_ctx.lineTo(td.llx, td.lly);
+                overlay_ctx.moveTo(x1, y1);
+                overlay_ctx.lineTo(x2, y2);
+                overlay_ctx.lineTo(x3, y3);
+                overlay_ctx.lineTo(x4, y4);
                 overlay_ctx.closePath();
                 overlay_ctx.stroke();
 
