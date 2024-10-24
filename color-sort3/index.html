@@ -391,30 +391,78 @@ game.addEventListener("pointerdown",
                 {
                     if (item.classList.contains("dragitem"))
                     {
+                        console.log(" IN", item.style.left, item.style.top, item.style.transform, item);
+
+                        let left_cache = item.style.left;
+                        let top_cache = item.style.top;
+                        let rot_cache = item.style.transform;
+
                         do
                         {
-                            let left = Math.random();
-                            let top = Math.random();
+                            var left = Math.random();
+                            var top = Math.random();
                             
                             item.style.left = `calc((100% - ${item.width} * var(--width-unit)) * ${left})`;
                             item.style.top = `calc((100% - ${item.height} * var(--width-unit)) * ${top})`;
 
                             // change rotation
-                            let rot = Math.floor(Math.random() * 4) * 90;
+                            var rot = Math.floor(Math.random() * 4) * 90;
                             if (rot > 0)
                             {
                                 item.style.transform = `rotate(${rot}deg)`;
                                 item.dataset.rot = rot;
                             }
 
-                            ibr = item.getBoundingClientRect();
+                            var ibr = item.getBoundingClientRect();
                         }
                         while (!(mbr.right < ibr.left || 
                             mbr.left > ibr.right || 
                             mbr.bottom < ibr.top || 
                             mbr.top > ibr.bottom));
+                        
+                        // save new state
+                        item.new_left = item.style.left;
+                        item.new_top = item.style.top;
+                        item.new_rot = item.style.transform;
+
+                        item.style.left = left_cache;
+                        item.style.top = top_cache;
+                        item.style.transform = rot_cache;
+
+                        console.log("OUT", item.style.left, item.style.top, item.style.transform, item);
+
+                        console.log("NEW", item.new_left, item.new_top, item.new_rot, item);
+
+                        function transitionend()
+                        {
+                            item.style.transition = "initial";
+                        }
+                        item.ontransitionend = transitionend;
                     }
                 });
+
+                // apply new style next event loop
+                function transitionstart()
+                {
+                    console.log("transition start");
+
+                    Array.from(tray.children).forEach(
+                    item =>
+                    {
+                        if (item.classList.contains("dragitem"))
+                        {
+                            item.style.left = item.new_left;
+                            item.style.top = item.new_top;
+                            item.style.transform = item.new_rot;
+
+                            // turn on transition for one moment
+                            item.style.transition = "2s";
+                        }
+                    });
+                };
+
+                // set left/top on next event loop
+                setTimeout(transitionstart, 0);
             }
         }
     }
@@ -686,293 +734,293 @@ window.addEventListener("resize",
 
 const puzzle_piece_size = 100;
 
-const puzzleImg = new Image();
-puzzleImg.src = "color_gradient.png";
-puzzleImg.onload =
-    e =>
-    {
+function makePuzzleFromImage(sourceEl)
+{
     let first = document.querySelector("#first");
 
-        var pointCols = [];
+    var pointCols = [];
 
-        for (var x = 0; x <= 1000; x += puzzle_piece_size)
+    for (var x = 0; x <= 1000; x += puzzle_piece_size)
+    {
+        var pointCol = [];
+
+        for (var y = 0; y <= 500; y += puzzle_piece_size)
         {
-            var pointCol = [];
+            var point = {x, y};
 
-            for (var y = 0; y <= 500; y += puzzle_piece_size)
-            {
-                var point = {x, y};
-
-                pointCol.push(point);
-            }
-
-            pointCols.push(pointCol);
+            pointCol.push(point);
         }
 
-        // go rects
+        pointCols.push(pointCol);
+    }
 
-        for (var x = 0; x < pointCols.length - 1; x++)
+    // go rects
+
+    for (var x = 0; x < pointCols.length - 1; x++)
+    {
+        var leftCol = pointCols[x];
+        var rightCol = pointCols[x + 1];
+
+        for (var y = 0; y < pointCol.length - 1; y++)
         {
-            var leftCol = pointCols[x];
-            var rightCol = pointCols[x + 1];
+            // create puzzle piece element
+            let item = first.cloneNode(false);
 
-            for (var y = 0; y < pointCol.length - 1; y++)
+            var ul = leftCol[y];
+            var ur = rightCol[y];
+            var ll = leftCol[y + 1];
+            var lr = rightCol[y + 1];
+
+            // store rect in lower-right vertex
+            // to access in next iteration
+            // NW indicates the relative location of this rect to the point
+
+            lr.NW_item = item
+
+            // use X_egde = [-1, 1] to indicate if the knob should be in or out
+            item.E_edge = Math.round(Math.random()) * 2 - 1;
+            item.S_edge = Math.round(Math.random()) * 2 - 1;
+
+            item.edges = {}
+
+            if ( x < pointCols.length - 2 )
             {
-                // create puzzle piece element
-                let item = first.cloneNode(false);
+                item.edges.E_edge = Math.round(Math.random()) * 2 - 1;
+                item.dataset.E_edge = item.edges.E_edge
+            }
 
-                var ul = leftCol[y];
-                var ur = rightCol[y];
-                var ll = leftCol[y + 1];
-                var lr = rightCol[y + 1];
+            if ( y < pointCol.length - 2 )
+            {
+                item.edges.S_edge = Math.round(Math.random()) * 2 - 1;
+                item.dataset.S_edge = item.edges.S_edge
+            }
 
-                // store rect in lower-right vertex
-                // to access in next iteration
-                // NW indicates the relative location of this rect to the point
+            
+            if (x > 0)
+            {
+                var borderer = ll.NW_item
+                item.edges.W_edge = borderer.edges.E_edge
+                item.dataset.W_edge = item.edges.W_edge
+            }
 
-                lr.NW_item = item
+            if (y > 0)
+            {
+                var borderer = ur.NW_item
+                item.edges.N_edge = borderer.edges.S_edge
+                item.dataset.N_edge = item.edges.N_edge
+            }
 
-                // use X_egde = [-1, 1] to indicate if the knob should be in or out
-                item.E_edge = Math.round(Math.random()) * 2 - 1;
-                item.S_edge = Math.round(Math.random()) * 2 - 1;
+            // knobs
+            var knob_r = 20 // radius
+            var knob_d = knob_r * 2
 
-                item.edges = {}
+            // set top-left and bottom-right corners
+            // move them only outward as needed
+            var x1 = ul.x;
+            if (item.edges.W_edge && item.edges.W_edge < 0)
+                x1 += knob_d * item.edges.W_edge;
+            var y1 = ul.y;
+            if (item.edges.N_edge && item.edges.N_edge < 0)
+                y1 += knob_d * item.edges.N_edge;
 
-                if ( x < pointCols.length - 2 )
+            var x2 = lr.x;
+            if (item.edges.E_edge && item.edges.E_edge > 0)
+                x2 += knob_d * item.edges.E_edge;
+            var y2 = lr.y;
+            if (item.edges.S_edge && item.edges.S_edge > 0)
+                y2 += knob_d * item.edges.S_edge;
+
+            var width = x2 - x1 + 1;
+            var height = y2 - y1 + 1;
+
+            item.dataset.x1 = x1;
+            item.dataset.y1 = y1;
+
+            item.dataset.ulx = ul.x;
+            item.dataset.urx = ur.x;
+            item.dataset.llx = ll.x;
+            item.dataset.lrx = lr.x;
+
+            item.dataset.uly = ul.y;
+            item.dataset.ury = ur.y;
+            item.dataset.lly = ll.y;
+            item.dataset.lry = lr.y;
+            
+            /*
+            thanks to https://stackoverflow.com/questions/77688427/css-calc-with-abs-and-var-does-not-work-in-chrome-but-firefox-and-safari
+            for giving me a solution when I finally figured out (looked up) that abs() is not supported by Chrome
+            
+            worked in a round-about way, but required abs(), which FF doesn't support at press time
+            item.style.setProperty("--Dx_abs", "max(var(--b) - var(--sweep, -0.2), -1 * (var(--b) - var(--sweep, -0.2)))");
+            item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep, -0.2), 0) / var(--Dx_abs)) + 1)");
+            */
+            
+
+            item.dataset.b = (ul.x + ul.y) / 1500;
+            item.style.setProperty("--b", item.dataset.b);
+
+            item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep, -0.2) - var(--b, -0.2), 2) / (2 * pow(var(--c, 0.04), 2))))");
+            item.style.setProperty("--brightness", "calc(2 + (var(--fx) - 1))");
+
+            item.width = width;
+            item.height = height;
+
+            /*
+            item.style.left = `calc((100% - ${width}px) * ${left})`;
+            item.style.top = `calc((100% - ${height}px) * ${top})`;
+            */
+
+
+            item.style.width = `calc(${width} * var(--width-unit))`;
+            item.style.height = `calc(${height} * var(--width-unit))`;
+
+            // set initial rotation
+            let rot = Math.floor(Math.random() * 4) * 90;
+            if (rot > 0)
+            {
+                item.style.transform = `rotate(${rot}deg)`;
+                item.dataset.rot = rot;
+            }
+
+            item.removeAttribute("id");
+            tray.append(item);
+
+            let mbr = mainDiv.getBoundingClientRect();
+            mbr.top -= 20;
+            mbr.left -= 20;
+            mbr.bottom += 20;
+            mbr.right += 20;
+
+            do
+            {
+                let left = Math.random();
+                let top = Math.random();
+
+                item.style.left = `calc((100% - ${width} * var(--width-unit)) * ${left})`;
+                item.style.top = `calc((100% - ${height} * var(--width-unit)) * ${top})`;
+                var ibr = item.getBoundingClientRect();
+            }
+            while (!(mbr.right < ibr.left || 
+                mbr.left > ibr.right || 
+                mbr.bottom < ibr.top || 
+                mbr.top > ibr.bottom));
+
+            // alignment problem
+            // want to shift E and S over and down 1
+            // because rect is extended 1 px over and down...
+            // but this doesn't match up with
+            // the other piece
+
+            // transform origin x and y
+            let tox = puzzle_piece_size / 2;
+            let toy = puzzle_piece_size / 2;
+
+            const half_size = puzzle_piece_size / 2;
+            const knobPos = {
+                N_edge: {x: half_size, y: 0},
+                E_edge: {x: puzzle_piece_size, y: half_size},
+                S_edge: {x: half_size, y: puzzle_piece_size},
+                W_edge: {x: 0, y: half_size}
+            }
+
+            if (item.edges.N_edge && item.edges.N_edge < 0)
+            {
+                // TODO: use foreach instead?
+                knobPos.N_edge.y += knob_d;
+                knobPos.E_edge.y += knob_d;
+                knobPos.S_edge.y += knob_d;
+                knobPos.W_edge.y += knob_d;
+
+                // adjust transform origin
+                toy += knob_d;
+            }
+
+            if (item.edges.W_edge && item.edges.W_edge < 0)
+            {
+                knobPos.N_edge.x += knob_d;
+                knobPos.E_edge.x += knob_d;
+                knobPos.S_edge.x += knob_d;
+                knobPos.W_edge.x += knob_d;
+
+                // adjust transform origin
+                tox += knob_d;
+            }
+
+            // transform origin x and y decimals
+            item.dataset.tox = tox/width;
+            item.dataset.toy = toy/height;
+            item.style.transformOrigin = `${tox*100/width}% ${toy*100/height}%`;
+
+            var ctx = item.getContext("2d");
+            ctx.save();
+            ctx.beginPath();
+
+            /*
+            console.log(ul.x - x1, ul.y - y1);
+            console.log(lr.x - x1 + 1, lr.y - y1 + 1);
+            console.log(ur.x - x1 + 1, ur.y - y1);
+            console.log(ll.x - x1, ll.y - y1 + 1);
+            */
+
+            ctx.moveTo(ul.x - x1, ul.y - y1);
+            ctx.lineTo(ur.x - x1 + 1, ur.y - y1);
+            ctx.lineTo(lr.x - x1 + 1, lr.y - y1 + 1);
+            ctx.lineTo(ll.x - x1, ll.y - y1 + 1);
+            
+            /*
+            ctx.moveTo(x1 - ul.x, y1 - ul.y);
+            ctx.lineTo(x1 - ur.x + 1, y1 - ur.y);
+            ctx.lineTo(x1 - lr.x + 1, y1 - lr.y + 1);
+            ctx.lineTo(x1 - ll.x, y1 - ll.y + 1);
+            */
+
+            for (var o in knobPos)
+            {
+                var e = item.edges[o];
+                if (e)
                 {
-                    item.edges.E_edge = Math.round(Math.random()) * 2 - 1;
-                    item.dataset.E_edge = item.edges.E_edge
-                }
+                    /*
+                    ctx.moveTo(knobPos[o].x + knob_r * e, knobPos[o].y + knob_r * e);
+                    ctx.arc(knobPos[o].x + knob_r * e, knobPos[o].y + knob_r * e, knob_r, 0, Math.PI * 2, true)
+                    */
 
-                if ( y < pointCol.length - 2 )
-                {
-                    item.edges.S_edge = Math.round(Math.random()) * 2 - 1;
-                    item.dataset.S_edge = item.edges.S_edge
-                }
-
-                
-                if (x > 0)
-                {
-                    var borderer = ll.NW_item
-                    item.edges.W_edge = borderer.edges.E_edge
-                    item.dataset.W_edge = item.edges.W_edge
-                }
-
-                if (y > 0)
-                {
-                    var borderer = ur.NW_item
-                    item.edges.N_edge = borderer.edges.S_edge
-                    item.dataset.N_edge = item.edges.N_edge
-                }
-
-                // knobs
-                var knob_r = 20 // radius
-                var knob_d = knob_r * 2
-
-                // set top-left and bottom-right corners
-                // move them only outward as needed
-                var x1 = ul.x;
-                if (item.edges.W_edge && item.edges.W_edge < 0)
-                    x1 += knob_d * item.edges.W_edge;
-                var y1 = ul.y;
-                if (item.edges.N_edge && item.edges.N_edge < 0)
-                    y1 += knob_d * item.edges.N_edge;
-
-                var x2 = lr.x;
-                if (item.edges.E_edge && item.edges.E_edge > 0)
-                    x2 += knob_d * item.edges.E_edge;
-                var y2 = lr.y;
-                if (item.edges.S_edge && item.edges.S_edge > 0)
-                    y2 += knob_d * item.edges.S_edge;
-
-                var width = x2 - x1 + 1;
-                var height = y2 - y1 + 1;
-
-                item.dataset.x1 = x1;
-                item.dataset.y1 = y1;
-
-                item.dataset.ulx = ul.x;
-                item.dataset.urx = ur.x;
-                item.dataset.llx = ll.x;
-                item.dataset.lrx = lr.x;
-
-                item.dataset.uly = ul.y;
-                item.dataset.ury = ur.y;
-                item.dataset.lly = ll.y;
-                item.dataset.lry = lr.y;
-                
-                /*
-                thanks to https://stackoverflow.com/questions/77688427/css-calc-with-abs-and-var-does-not-work-in-chrome-but-firefox-and-safari
-                for giving me a solution when I finally figured out (looked up) that abs() is not supported by Chrome
-                
-                worked in a round-about way, but required abs(), which FF doesn't support at press time
-                item.style.setProperty("--Dx_abs", "max(var(--b) - var(--sweep, -0.2), -1 * (var(--b) - var(--sweep, -0.2)))");
-                item.style.setProperty("--Dx", "calc((1 - var(--min-bright)) * (max(var(--b) - var(--sweep, -0.2), 0) / var(--Dx_abs)) + 1)");
-                */
-               
-
-                item.dataset.b = (ul.x + ul.y) / 1500;
-                item.style.setProperty("--b", item.dataset.b);
-
-                item.style.setProperty("--fx", "calc(exp(-1 * pow(var(--sweep, -0.2) - var(--b, -0.2), 2) / (2 * pow(var(--c, 0.04), 2))))");
-                item.style.setProperty("--brightness", "calc(2 + (var(--fx) - 1))");
-
-                item.width = width;
-                item.height = height;
-
-                /*
-                item.style.left = `calc((100% - ${width}px) * ${left})`;
-                item.style.top = `calc((100% - ${height}px) * ${top})`;
-                */
-
-
-                item.style.width = `calc(${width} * var(--width-unit))`;
-                item.style.height = `calc(${height} * var(--width-unit))`;
-
-                // set initial rotation
-                let rot = Math.floor(Math.random() * 4) * 90;
-                if (rot > 0)
-                {
-                    item.style.transform = `rotate(${rot}deg)`;
-                    item.dataset.rot = rot;
-                }
-
-                item.removeAttribute("id");
-                tray.append(item);
-
-                let mbr = mainDiv.getBoundingClientRect();
-                mbr.top -= 20;
-                mbr.left -= 20;
-                mbr.bottom += 20;
-                mbr.right += 20;
-
-                do
-                {
-                    let left = Math.random();
-                    let top = Math.random();
-
-                    item.style.left = `calc((100% - ${width} * var(--width-unit)) * ${left})`;
-                    item.style.top = `calc((100% - ${height} * var(--width-unit)) * ${top})`;
-                    var ibr = item.getBoundingClientRect();
-                }
-                while (!(mbr.right < ibr.left || 
-                    mbr.left > ibr.right || 
-                    mbr.bottom < ibr.top || 
-                    mbr.top > ibr.bottom));
-
-                // alignment problem
-                // want to shift E and S over and down 1
-                // because rect is extended 1 px over and down...
-                // but this doesn't match up with
-                // the other piece
-
-                // transform origin x and y
-                let tox = puzzle_piece_size / 2;
-                let toy = puzzle_piece_size / 2;
-
-                const half_size = puzzle_piece_size / 2;
-                const knobPos = {
-                    N_edge: {x: half_size, y: 0},
-                    E_edge: {x: puzzle_piece_size, y: half_size},
-                    S_edge: {x: half_size, y: puzzle_piece_size},
-                    W_edge: {x: 0, y: half_size}
-                }
-
-                if (item.edges.N_edge && item.edges.N_edge < 0)
-                {
-                    // TODO: use foreach instead?
-                    knobPos.N_edge.y += knob_d;
-                    knobPos.E_edge.y += knob_d;
-                    knobPos.S_edge.y += knob_d;
-                    knobPos.W_edge.y += knob_d;
-
-                    // adjust transform origin
-                    toy += knob_d;
-                }
-
-                if (item.edges.W_edge && item.edges.W_edge < 0)
-                {
-                    knobPos.N_edge.x += knob_d;
-                    knobPos.E_edge.x += knob_d;
-                    knobPos.S_edge.x += knob_d;
-                    knobPos.W_edge.x += knob_d;
-
-                    // adjust transform origin
-                    tox += knob_d;
-                }
-
-                // transform origin x and y decimals
-                item.dataset.tox = tox/width;
-                item.dataset.toy = toy/height;
-                item.style.transformOrigin = `${tox*100/width}% ${toy*100/height}%`;
-
-                var ctx = item.getContext("2d");
-                ctx.save();
-                ctx.beginPath();
-
-                /*
-                console.log(ul.x - x1, ul.y - y1);
-                console.log(lr.x - x1 + 1, lr.y - y1 + 1);
-                console.log(ur.x - x1 + 1, ur.y - y1);
-                console.log(ll.x - x1, ll.y - y1 + 1);
-                */
-
-                ctx.moveTo(ul.x - x1, ul.y - y1);
-                ctx.lineTo(ur.x - x1 + 1, ur.y - y1);
-                ctx.lineTo(lr.x - x1 + 1, lr.y - y1 + 1);
-                ctx.lineTo(ll.x - x1, ll.y - y1 + 1);
-                
-                /*
-                ctx.moveTo(x1 - ul.x, y1 - ul.y);
-                ctx.lineTo(x1 - ur.x + 1, y1 - ur.y);
-                ctx.lineTo(x1 - lr.x + 1, y1 - lr.y + 1);
-                ctx.lineTo(x1 - ll.x, y1 - ll.y + 1);
-                */
-
-                for (var o in knobPos)
-                {
-                    var e = item.edges[o];
-                    if (e)
-                    {
-                        /*
-                        ctx.moveTo(knobPos[o].x + knob_r * e, knobPos[o].y + knob_r * e);
-                        ctx.arc(knobPos[o].x + knob_r * e, knobPos[o].y + knob_r * e, knob_r, 0, Math.PI * 2, true)
-                        */
-
-                        // edge - axis correlations
-                        const edax = {
-                            N_edge: "y",
-                            E_edge: "x",
-                            S_edge: "y",
-                            W_edge: "x"
-                        }
-
-                        // update the knob position along the appropriate axis for the current edge o
-                        knobPos[o][edax[o]] += e * knob_r;
-
-                        ctx.moveTo(knobPos[o].x, knobPos[o].y);
-                        ctx.arc(knobPos[o].x, knobPos[o].y, knob_r, 0, Math.PI * 2, true)
+                    // edge - axis correlations
+                    const edax = {
+                        N_edge: "y",
+                        E_edge: "x",
+                        S_edge: "y",
+                        W_edge: "x"
                     }
+
+                    // update the knob position along the appropriate axis for the current edge o
+                    knobPos[o][edax[o]] += e * knob_r;
+
+                    ctx.moveTo(knobPos[o].x, knobPos[o].y);
+                    ctx.arc(knobPos[o].x, knobPos[o].y, knob_r, 0, Math.PI * 2, true)
                 }
-
-                ctx.clip()
-                ctx.drawImage(puzzleImg, x1, y1, width, height, 0, 0, width, height);
-                ctx.restore();
             }
+
+            ctx.clip()
+            ctx.drawImage(puzzleImg, x1, y1, width, height, 0, 0, width, height);
+            ctx.restore();
         }
-        
-        // remove base item that got cloned
-        first.remove();
+    }
+    
+    // remove base item that got cloned
+    first.remove();
 
-        // shuffle
-        for (var i = 0; i < tray.children.length; i++)
-        {
-            var ind = Math.random() * tray.children.length;
+    // shuffle
+    for (var i = 0; i < tray.children.length; i++)
+    {
+        var ind = Math.random() * tray.children.length;
 
-            tray.append(tray.children.item(ind));
-        }
+        tray.append(tray.children.item(ind));
+    }
+}
 
-    };
+const puzzleImg = new Image();
+puzzleImg.src = "color_gradient.png";
+puzzleImg.onload = () => makePuzzleFromImage(puzzleImg);
 
 //scatter();
 
