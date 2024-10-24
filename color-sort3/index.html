@@ -253,7 +253,7 @@ game.addEventListener("pointerdown",
 
         e.preventDefault();
 
-        if (gameState.dragging)
+        if (gameState.dragging && !e.isPrimary) // && to preclude a weird glitch I encountered
         {
             let t = gameState.dragging;
             let curRot = t.dataset.rot ? Number(t.dataset.rot) : 0;
@@ -267,8 +267,8 @@ game.addEventListener("pointerdown",
 
         if (role == "dragitem")
         {
-            // possibly allow regardless of snap level?
-            if (gameState.snap_level == "manual")
+            // doubule tap to snap (uses gameState.tap_cache to recognize double tap)
+            if (["manual", "off"].includes(gameState.snap_level))
             {
                 let t = e.target;
 
@@ -297,13 +297,7 @@ game.addEventListener("pointerdown",
                     x = Math.round(x / puzzle_piece_size) * puzzle_piece_size;
                     y = Math.round(y / puzzle_piece_size) * puzzle_piece_size;
 
-                    /*
-                    x += puzzle_piece_size / 2;
-                    y += puzzle_piece_size / 2;
-                    */
-
                     console.log(x, y);
-                    
                     
                     x -= (t.dataset.ulx - t.dataset.x1);
                     y -= (t.dataset.uly - t.dataset.y1);
@@ -348,6 +342,8 @@ game.addEventListener("pointerdown",
             //console.log(gameState.dragging.classList);
             gameState.dragging.classList.add("dragitem-dragging");
             
+            // if the piece was in place, it ain't no more
+            // should move to move?
             if (gameState.dragging.classList.contains("in-place"))
             {
                 gameState.dragging.classList.remove("in-place");
@@ -367,12 +363,11 @@ game.addEventListener("pointerdown",
             e.target.dataset.x = e.target.offsetLeft;
             e.target.dataset.y = e.target.offsetTop;
 
-
-
             e.target.cached_style = e.target.getAttribute("style");
         }
         else
         {
+            // used to shuffle on 5 clicks
             if (gameState.clickCount)
                 gameState.clickCount++;
             else
@@ -403,6 +398,15 @@ game.addEventListener("pointerdown",
                             
                             item.style.left = `calc((100% - ${item.width} * var(--width-unit)) * ${left})`;
                             item.style.top = `calc((100% - ${item.height} * var(--width-unit)) * ${top})`;
+
+                            // change rotation
+                            let rot = Math.floor(Math.random() * 4) * 90;
+                            if (rot > 0)
+                            {
+                                item.style.transform = `rotate(${rot}deg)`;
+                                item.dataset.rot = rot;
+                            }
+
                             ibr = item.getBoundingClientRect();
                         }
                         while (!(mbr.right < ibr.left || 
@@ -456,18 +460,67 @@ game.addEventListener("pointermove",
                     var y3 = td.lry;
                     var x4 = td.llx;
                     var y4 = td.lly;
+
+                    gameState.snap_to = {x: td.x1, y: td.y1, correct: true};
                 }
             }
-            else if (gameState.snap_level == "hard")
+            else if (gameState.snap_level == "on")
             {
-                // do snap to every square
+                // untransform (rotate) to find real center
+                let rc = t.style.transform;
+                t.style.transform = "initial";
+
+                let x = getLeft(t) - mainDiv.offsetLeft;
+                let y = getTop(t) - mainDiv.offsetTop;
+
+                x = (x / mainDiv.offsetWidth) * 1000;
+                y = (y / mainDiv.offsetHeight) * 500;
+
+                console.log(x, y);
+
+                x += t.width * td.tox;
+                y += t.height * td.toy;
+
+                console.log(x, y);
+
+                x -= puzzle_piece_size / 2;
+                y -= puzzle_piece_size / 2;
+
+                x = Math.round(x / puzzle_piece_size) * puzzle_piece_size;
+                y = Math.round(y / puzzle_piece_size) * puzzle_piece_size;
+                
+                console.log(x, y);
+                
+                // restore rotation
+                t.style.transform = rc;
+
+                drawSnap = true;
+                var x1 = x;
+                var y1 = y;
+                var x2 = x + puzzle_piece_size;
+                var y2 = y;
+                var x3 = x + puzzle_piece_size;
+                var y3 = y + puzzle_piece_size;
+                var x4 = x;
+                var y4 = y + puzzle_piece_size;
+                    
+                x -= (td.ulx - td.x1);
+                y -= (td.uly - td.y1);
+
+                gameState.snap_to = {x, y};
+
+                // is this the correct one?
+                gameState.snap_to.correct = (Math.abs(x - td.x1) < 50 && Math.abs(y - td.y1) < 50);
             }
         }
 
         if (drawSnap)
         {
-            if (!gameState.snap_to)
+            if (gameState.snap_to != gameState.drawn_snap_to)
             {
+                // needed for snap mode "on"
+                overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
+
                 overlay_ctx.lineWidth = 5;
                 overlay_ctx.strokeStyle = "red";
                 overlay_ctx.beginPath();
@@ -478,7 +531,7 @@ game.addEventListener("pointermove",
                 overlay_ctx.closePath();
                 overlay_ctx.stroke();
 
-                gameState.snap_to = gameState.dragging;
+                gameState.drawn_snap_to = gameState.snap_to;
             }
         }
         else if (gameState.snap_to)
@@ -499,7 +552,7 @@ game.addEventListener("pointermove",
         else
         */
 
-            t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
+        t.style.left = `${Number(t.dataset.x) + (e.pageX - gameState.start.x)}px`;
         t.style.top = `${Number(t.dataset.y) + (e.pageY - gameState.start.y)}px`;
     }
 );
@@ -570,21 +623,22 @@ game.addEventListener("pointerup",
 
         if (gameState.snap_to)
         {
-            x = t.dataset.x1 * (d.offsetWidth / 1000);
-            y = t.dataset.y1 * (d.offsetHeight / 500);
-            gameState.snap_to = null;
-
+            x = gameState.snap_to.x * (d.offsetWidth / 1000);
+            y = gameState.snap_to.y * (d.offsetHeight / 500);
+            
             if (overlay_ctx.reset)
                 overlay_ctx.reset();
             overlay_ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-            t.classList.add("in-place");
-            inplace_count++;
-
-            if (inplace_count == 50)
+            
+            if (gameState.snap_to?.correct)
             {
+                t.classList.add("in-place");
+                inplace_count++;
+                
+                if (inplace_count == 50)
                 start_sweep();
             }
+            gameState.snap_to = null;
         }
         /* moved to pointerdown
         else
