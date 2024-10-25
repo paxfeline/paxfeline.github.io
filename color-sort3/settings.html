@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>Color Puzzle - New Game Options</title>
+  </head>
+  <body>
+    <form action="index.html" method="get">
+        <div>
+            <button>
+                Start Game!
+            </button>
+        </div>
+        <div>
+            <h1>Puzzle Piece "Snap" Behavior</h1>
+            <label>
+                <input type="radio" name="snap" value="easy" checked>
+                Easy
+            </label>
+            <label>
+                <input type="radio" name="snap" value="on">
+                On (snaps to every space)
+            </label>
+            <label>
+                <input type="radio" name="snap" value="off">
+                Off (double-click to place)
+            </label>
+        </div>
+        <div>
+            <h1>Custom Gradient</h1>
+            <label>
+                <input id="custom-gradient-checkbox" type="checkbox" name="custom">
+                Use Custom Gradient
+            </label>
+            <label>
+                <input type="radio" id="custom-gradient-radio4" name="color_count" value="4" checked>
+                Use 4 colors
+            </label>
+            <label>
+                <input type="radio" id="custom-gradient-radio6" name="color_count" value="6">
+                Use 6 colors
+            </label>
+            <div>
+                <label>
+                    <input type="color" id="colorA" name="colorA" value="#e66465" />
+                    Color A
+                </label>
+                <label>
+                    <input type="color" id="colorB" name="colorB" value="#e66465" />
+                    Color B
+                </label>
+                <label>
+                    <input type="color" id="colorC" name="colorC" value="#e66465" />
+                    Color C
+                </label>
+                <label>
+                    <input type="color" id="colorD" name="colorD" value="#e66465" />
+                    Color D
+                </label>
+                <label>
+                    <input type="color" id="colorE" name="colorE" value="#e66465" />
+                    Color E
+                </label>
+                <label>
+                    <input type="color" id="colorF" name="colorF" value="#e66465" />
+                    Color F
+                </label>
+            </div>
+            <div>
+                <button type="button" onclick="generate_gradient()">
+                    Generate Gradient
+                </button>
+            </div>
+            <div>
+                <canvas width="1000" height="500"></canvas>
+            </div>
+        </div>
+    </form>
+    <script>
+        function generate_gradient()
+        {
+            function hexToRgb(hex)
+            {
+                var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? [
+                    parseInt(result[1], 16),
+                    parseInt(result[2], 16),
+                    parseInt(result[3], 16)
+                ] : null;
+            }
+
+            function rgbToHsv(color)
+            {
+                [r, g, b] = color;
+
+                r /= 255, g /= 255, b /= 255;
+
+                var max = Math.max(r, g, b), min = Math.min(r, g, b);
+                var h, s, v = max;
+
+                var d = max - min;
+                s = max == 0 ? 0 : d / max;
+
+                if (max == min) {
+                    h = 0; // achromatic
+                } else {
+                    switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                    }
+
+                    h /= 6;
+                }
+
+                return [ h, s, v ];
+            }
+
+            function hsvToRgb(color)
+            {
+                [h, s, v] = color;
+
+                var r, g, b;
+
+                var i = Math.floor(h * 6);
+                var f = h * 6 - i;
+                var p = v * (1 - s);
+                var q = v * (1 - f * s);
+                var t = v * (1 - (1 - f) * s);
+
+                switch (i % 6) {
+                    case 0: r = v, g = t, b = p; break;
+                    case 1: r = q, g = v, b = p; break;
+                    case 2: r = p, g = v, b = t; break;
+                    case 3: r = p, g = q, b = v; break;
+                    case 4: r = t, g = p, b = v; break;
+                    case 5: r = v, g = p, b = q; break;
+                }
+
+                return [ r * 255, g * 255, b * 255 ];
+            }
+
+            // TODO: use constants for the width and height
+            const osc = new OffscreenCanvas(1000, 500);
+            const ctx = osc.getContext("2d");
+            const imgData = ctx.getImageData(0, 0, 1000, 500);
+            const imgDataData = imgData.data;
+
+            const c1 = rgbToHsv(hexToRgb("#FF0000"));
+            const c2 = rgbToHsv(hexToRgb("#FF00FF"));
+            const c3 = rgbToHsv(hexToRgb("#FFFFFF"));
+            const c4 = rgbToHsv(hexToRgb("#00FFFF"));
+
+            function paintGradient(color1, color2, color3, color4, x_offset, width)
+            {
+                /*
+                y_offset will always be 0. height will always be 500.
+                */
+
+                function setColorForCoord(x, y, color)
+                {
+                    const red = y * (1000 * 4) + x * 4;
+
+                    imgDataData[red] = color[0];
+                    imgDataData[red + 1] = color[1];
+                    imgDataData[red + 2] = color[2];
+                    imgDataData[red + 3] = 255;
+                }
+
+                for (let x = x_offset; x < x_offset + width; x++)
+                {
+                    for (let y = 0; y < 500; y++)
+                    {
+                        // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
+                        //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
+    
+                        let h = (color2[0] * y / 500 + color1[0] * (1 - y / 500)) * (x / width) +
+                                ((color4[0] * y / 500) + color3[0] * (1 - y / 500)) * (1 - x / width);
+    
+                        let s = (color2[1] * y / 500 + color1[1] * (1 - y / 500)) * (x / width) +
+                                ((color4[1] * y / 500) + color3[1] * (1 - y / 500)) * (1 - x / width);
+    
+                        let v = (color2[2] * y / 500 + color1[2] * (1 - y / 500)) * (x / width) +
+                                ((color4[2] * y / 500) + color3[2] * (1 - y / 500)) * (1 - x / width);
+                        
+                        setColorForCoord(x, y, hsvToRgb([h, s, v]));
+    
+                        //console.log(h,s,v, hsvToRgb([h, s, v]));
+                    }
+                }
+            }
+
+            paintGradient(c1, c2, c3, c4, 0, 1000);
+
+            ctx.putImageData(imgData, 0, 0);
+
+            // Transfer the current frame to the visible canvas
+            const bitmap = osc.transferToImageBitmap();
+            document.querySelector("canvas").getContext("bitmaprenderer").transferFromImageBitmap(bitmap);
+
+        }
+    </script>
+  </body>
+</html>
