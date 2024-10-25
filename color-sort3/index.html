@@ -170,11 +170,14 @@ let gameState = {};
 options = new URLSearchParams(document.location.search);
 
 if (options.has("snap"))
-{
     gameState.snap_level = options.get("snap");
-}
 else
     gameState.snap_level = "easy";
+
+if (options.has("gradient"))
+    gameState.gradient_colors = JSON.parse(options.get("gradient"));
+
+console.log(gameState.gradient_colors);
         
 let game = document.querySelector("#game");
 const overlay = document.querySelector("#effects-overlay");
@@ -378,7 +381,7 @@ game.addEventListener("pointerdown",
 
             gameState.resetClickCount = setTimeout(() => gameState.clickCount = 0, 500);
 
-            if (gameState.clickCount == 5)
+            if (gameState.clickCount == 3)
             {
                 let mbr = mainDiv.getBoundingClientRect();
                 mbr.top -= 20;
@@ -489,8 +492,10 @@ game.addEventListener("pointermove",
             let x = getLeft(gameState.dragging) - mainDiv.offsetLeft;
             let y = getTop(gameState.dragging) - mainDiv.offsetTop;
 
+            /*
             console.log(`gL v oL x: ${x - mainDiv.offsetLeft} / ${e.target.offsetLeft}`)
             console.log(`gL v oL y: ${y - mainDiv.offsetTop} / ${e.target.offsetTop}`)
+            */
 
             let drag_x = (x / mainDiv.offsetWidth) * 1000;
             let drag_y = (y / mainDiv.offsetHeight) * 500;
@@ -1001,7 +1006,7 @@ function makePuzzleFromImage(sourceEl)
             }
 
             ctx.clip()
-            ctx.drawImage(puzzleImg, x1, y1, width, height, 0, 0, width, height);
+            ctx.drawImage(sourceEl, x1, y1, width, height, 0, 0, width, height);
             ctx.restore();
         }
     }
@@ -1018,9 +1023,122 @@ function makePuzzleFromImage(sourceEl)
     }
 }
 
-const puzzleImg = new Image();
-puzzleImg.src = "color_gradient.png";
-puzzleImg.onload = () => makePuzzleFromImage(puzzleImg);
+if (gameState.gradient_colors)
+{
+    function hexToRgb(hex)
+    {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? [
+            parseInt(result[1], 16),
+            parseInt(result[2], 16),
+            parseInt(result[3], 16)
+        ] : null;
+    }
+
+    function rgbToHsv(color)
+    {
+        [r, g, b] = color;
+
+        r /= 255, g /= 255, b /= 255;
+
+        var max = Math.max(r, g, b), min = Math.min(r, g, b);
+        var h, s, v = max;
+
+        var d = max - min;
+        s = max == 0 ? 0 : d / max;
+
+        if (max == min) {
+            h = 0; // achromatic
+        } else {
+            switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+            }
+
+            h /= 6;
+        }
+
+        return [ h, s, v ];
+    }
+
+    function hsvToRgb(color)
+    {
+        [h, s, v] = color;
+
+        var r, g, b;
+
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
+
+        switch (i % 6) {
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
+        }
+
+        return [ r * 255, g * 255, b * 255 ];
+    }
+
+    // TODO: use constants for the width and height
+    const osc = new OffscreenCanvas(1000, 500);
+    const ctx = osc.getContext("2d");
+    const imgData = ctx.getImageData(0, 0, 1000, 500);
+    const imgDataData = imgData.data;
+
+    function setColorForCoord(x, y, color)
+    {
+        const red = y * (1000 * 4) + x * 4;
+
+        imgDataData[red] = color[0];
+        imgDataData[red + 1] = color[1];
+        imgDataData[red + 2] = color[2];
+        imgDataData[red + 3] = 255;
+    }
+
+    const color1 = rgbToHsv(hexToRgb(gameState.gradient_colors[0]));
+    const color2 = rgbToHsv(hexToRgb(gameState.gradient_colors[1]));
+    const color3 = rgbToHsv(hexToRgb(gameState.gradient_colors[2]));
+    const color4 = rgbToHsv(hexToRgb(gameState.gradient_colors[3]));
+
+    for (let x = 0; x < 1000; x++)
+    {
+        for (let y = 0; y < 500; y++)
+        {
+            // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
+            //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
+
+            let h = (color2[0] * y / 500 + color1[0] * (1 - y / 500)) * (x / 1000) +
+                    ((color4[0] * y / 500) + color3[0] * (1 - y / 500)) * (1 - x / 1000);
+
+            let s = (color2[1] * y / 500 + color1[1] * (1 - y / 500)) * (x / 1000) +
+                    ((color4[1] * y / 500) + color3[1] * (1 - y / 500)) * (1 - x / 1000);
+
+            let v = (color2[2] * y / 500 + color1[2] * (1 - y / 500)) * (x / 1000) +
+                    ((color4[2] * y / 500) + color3[2] * (1 - y / 500)) * (1 - x / 1000);
+            
+            setColorForCoord(x, y, hsvToRgb([h, s, v]));
+
+            //console.log(h,s,v, hsvToRgb([h, s, v]));
+        }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+
+    makePuzzleFromImage(osc);
+}
+else
+{
+    const puzzleImg = new Image();
+    puzzleImg.src = "color_gradient.png";
+    puzzleImg.onload = () => makePuzzleFromImage(puzzleImg);
+}
 
 //scatter();
 
