@@ -41,30 +41,34 @@
                 Use 6 colors
             </label>
             <div>
-                <label>
-                    <input type="color" id="colorA" name="colorA" value="#e66465" />
-                    Color A
-                </label>
-                <label>
-                    <input type="color" id="colorB" name="colorB" value="#e66465" />
-                    Color B
-                </label>
-                <label>
-                    <input type="color" id="colorC" name="colorC" value="#e66465" />
-                    Color C
-                </label>
-                <label>
-                    <input type="color" id="colorD" name="colorD" value="#e66465" />
-                    Color D
-                </label>
-                <label>
-                    <input type="color" id="colorE" name="colorE" value="#e66465" />
-                    Color E
-                </label>
-                <label>
-                    <input type="color" id="colorF" name="colorF" value="#e66465" />
-                    Color F
-                </label>
+                <div>
+                    <label>
+                        <input type="color" id="colorC" name="colorC" value="#e66465" />
+                        Color C
+                    </label>
+                    <label>
+                        <input type="color" id="colorE" name="colorE" value="#e66465" />
+                        Color E
+                    </label>
+                    <label>
+                        <input type="color" id="colorA" name="colorA" value="#e66465" />
+                        Color A
+                    </label>
+                </div>
+                <div>
+                    <label>
+                        <input type="color" id="colorD" name="colorD" value="#e66465" />
+                        Color D
+                    </label>
+                    <label>
+                        <input type="color" id="colorF" name="colorF" value="#e66465" />
+                        Color F
+                    </label>
+                    <label>
+                        <input type="color" id="colorB" name="colorB" value="#e66465" />
+                        Color B
+                    </label>
+                </div>
             </div>
             <div>
                 <button type="button" onclick="generate_gradient()">
@@ -72,7 +76,13 @@
                 </button>
             </div>
             <div>
-                <canvas width="1000" height="500"></canvas>
+                <canvas id="L1" width="1000" height="500"></canvas>
+            </div>
+            <div>
+                <canvas id="L12" width="1000" height="500"></canvas>
+            </div>
+            <div>
+                <canvas id="L2" width="1000" height="500"></canvas>
             </div>
         </div>
     </form>
@@ -146,12 +156,34 @@
             const imgData = ctx.getImageData(0, 0, 1000, 500);
             const imgDataData = imgData.data;
 
-            const c1 = rgbToHsv(hexToRgb("#FF0000"));
-            const c2 = rgbToHsv(hexToRgb("#FF00FF"));
-            const c3 = rgbToHsv(hexToRgb("#FFFFFF"));
-            const c4 = rgbToHsv(hexToRgb("#00FFFF"));
+            const osc2 = new OffscreenCanvas(1000, 500);
+            const ctx2 = osc2.getContext("2d");
+            const imgData2 = ctx2.getImageData(0, 0, 1000, 500);
+            const imgDataData2 = imgData2.data;
 
-            function paintGradient(color1, color2, color3, color4, x_offset, width)
+            const osc3 = new OffscreenCanvas(1000, 500);
+            const ctx3 = osc3.getContext("2d");
+            const imgData3 = ctx3.getImageData(0, 0, 1000, 500);
+            const imgDataData3 = imgData3.data;
+
+            const gcn4 = document.querySelector("#custom-gradient-radio4").checked;
+            const gcn6 = document.querySelector("#custom-gradient-radio6").checked;
+
+            const ce1 = document.querySelector("#colorA").value;
+            const ce2 = document.querySelector("#colorB").value;
+            const ce3 = document.querySelector("#colorC").value;
+            const ce4 = document.querySelector("#colorD").value;
+            const ce5 = document.querySelector("#colorE").value;
+            const ce6 = document.querySelector("#colorF").value;
+
+            const c1 = rgbToHsv(hexToRgb(ce1));
+            const c2 = rgbToHsv(hexToRgb(ce2));
+            const c3 = rgbToHsv(hexToRgb(ce3));
+            const c4 = rgbToHsv(hexToRgb(ce4));
+            const c5 = rgbToHsv(hexToRgb(ce5));
+            const c6 = rgbToHsv(hexToRgb(ce6));
+
+            function paintGradient(colors, x_offset, width)
             {
                 /*
                 y_offset will always be 0. height will always be 500.
@@ -167,36 +199,141 @@
                     imgDataData[red + 3] = 255;
                 }
 
-                for (let x = x_offset; x < x_offset + width; x++)
+                function setColorForCoord2(x, y, color)
+                {
+                    const red = y * (1000 * 4) + x * 4;
+
+                    imgDataData2[red] = color[0];
+                    imgDataData2[red + 1] = color[1];
+                    imgDataData2[red + 2] = color[2];
+                    imgDataData2[red + 3] = 255;
+                }
+
+                function setColorForCoord3(x, y, color)
+                {
+                    const red = y * (1000 * 4) + x * 4;
+
+                    imgDataData3[red] = color[0];
+                    imgDataData3[red + 1] = color[1];
+                    imgDataData3[red + 2] = color[2];
+                    imgDataData3[red + 3] = 255;
+                }
+
+                for (let x = 0; x < width; x++)
                 {
                     for (let y = 0; y < 500; y++)
                     {
                         // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
                         //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
     
-                        let h = (color2[0] * y / 500 + color1[0] * (1 - y / 500)) * (x / width) +
-                                ((color4[0] * y / 500) + color3[0] * (1 - y / 500)) * (1 - x / width);
-    
-                        let s = (color2[1] * y / 500 + color1[1] * (1 - y / 500)) * (x / width) +
-                                ((color4[1] * y / 500) + color3[1] * (1 - y / 500)) * (1 - x / width);
-    
-                        let v = (color2[2] * y / 500 + color1[2] * (1 - y / 500)) * (x / width) +
-                                ((color4[2] * y / 500) + color3[2] * (1 - y / 500)) * (1 - x / width);
                         
-                        setColorForCoord(x, y, hsvToRgb([h, s, v]));
+                        let h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
+                                ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width);
+    
+                        let s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * (x / width) +
+                                ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / width);
+    
+                        let v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * (x / width) +
+                                ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / width);
+                                
+                        
+                        // set color on c1
+                        setColorForCoord(x + x_offset, y, hsvToRgb([h, s, v]));
+                        
+                        //console.log(h, s, v);
+
+                        // L2 norm?
+
+                        // may use 4 or 6 of these
+                        let p = [[1, 0], [1, 1], [0, 0], [0, 1], [0.5, 0], [0.5, 1]];
+                        let d = [];
+                        for (let i = 0; i < colors.length; i++)
+                        {
+                            d[i] = Math.sqrt(Math.pow(p[i][0]-(x/width), 2) + Math.pow(p[i][1]-(y/500), 2));
+                        }
+
+                        //console.log(d);
+
+                        // corner?
+                        if (d.includes(0))
+                        {
+                            let i = d.indexOf(0);
+                            h = colors[i][0];
+                            s = colors[i][1];
+                            v = colors[i][2];
+                        }
+                        else
+                        {
+                            let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
+
+                            h = d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum;
+                            s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
+                            v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
+                        }
+
+                        // set color on c2
+                        setColorForCoord2(x + x_offset, y, hsvToRgb([h, s, v]));
+
+
+
+
+
+                        
+                        d = [];
+                        for (let i = 0; i < colors.length; i++)
+                        {
+                            d[i] = Math.abs(p[i][0]-(x/width)) + Math.abs(p[i][1]-(y/500));
+                        }
+
+                        //console.log(d);
+
+                        // corner?
+                        if (d.includes(0))
+                        {
+                            let i = d.indexOf(0);
+                            h = colors[i][0];
+                            s = colors[i][1];
+                            v = colors[i][2];
+                        }
+                        else
+                        {
+                            let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
+
+                            h = d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum;
+                            s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
+                            v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
+                        }
+
+                        //console.log(h,s,v);
+
+                        // set color on c2
+                        setColorForCoord3(x + x_offset, y, hsvToRgb([h, s, v]));
+                        
+                        //console.log(h, s, v);
     
                         //console.log(h,s,v, hsvToRgb([h, s, v]));
                     }
                 }
             }
 
-            paintGradient(c1, c2, c3, c4, 0, 1000);
+            if (gcn6)
+            {
+                paintGradient([c1, c2, c3, c4, c5, c6], 0, 1000);
+            }
+            else
+                paintGradient([c1, c2, c3, c4], 0, 1000);
 
             ctx.putImageData(imgData, 0, 0);
+            ctx2.putImageData(imgData2, 0, 0);
+            ctx3.putImageData(imgData2, 0, 0);
 
             // Transfer the current frame to the visible canvas
             const bitmap = osc.transferToImageBitmap();
-            document.querySelector("canvas").getContext("bitmaprenderer").transferFromImageBitmap(bitmap);
+            const bitmap2 = osc2.transferToImageBitmap();
+            const bitmap3 = osc3.transferToImageBitmap();
+            document.querySelector("#L1").getContext("bitmaprenderer").transferFromImageBitmap(bitmap);
+            document.querySelector("#L12").getContext("bitmaprenderer").transferFromImageBitmap(bitmap3);
+            document.querySelector("#L2").getContext("bitmaprenderer").transferFromImageBitmap(bitmap2);
 
         }
     </script>

@@ -64,6 +64,7 @@ self.addEventListener('install', (event) => {
     addResourcesToCache([
       './',
       './index.html',
+      './settings.html',
       './app.js',
       './color_gradient.png',
     ])
