@@ -226,19 +226,54 @@
                         // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
                         //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
     
-                        
-                        let h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
-                                ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width);
-    
-                        let s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * (x / width) +
-                                ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / width);
-    
-                        let v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * (x / width) +
-                                ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / width);
+                        if (gcn6)
+                        {
+
+                            if (x < 500)
+                            {
+                                var h = (colors[5][0] * y / 500 + colors[4][0] * (1 - y / 500)) * (x / 500) +
+                                        ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / 500);
+            
+                                var s = (colors[5][1] * y / 500 + colors[4][1] * (1 - y / 500)) * (x / 500) +
+                                        ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / 500);
+            
+                                var v = (colors[5][2] * y / 500 + colors[4][2] * (1 - y / 500)) * (x / 500) +
+                                        ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / 500);
+
+                                // set color on c1
+                                setColorForCoord(x, y, hsvToRgb([h, s, v]));
+                            }
+                            else
+                            {
+                                h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * ((x - 500) / 500) +
+                                    ((colors[5][0] * y / 500) + colors[4][0] * (1 - y / 500)) * (1 - (x - 500) / 500);
+            
+                                s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * ((x - 500) / 500) +
+                                    ((colors[5][1] * y / 500) + colors[4][1] * (1 - y / 500)) * (1 - (x - 500) / 500);
+            
+                                v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * ((x - 500) / 500) +
+                                    ((colors[5][2] * y / 500) + colors[4][2] * (1 - y / 500)) * (1 - (x - 500) / 500);
+                                        
                                 
-                        
-                        // set color on c1
-                        setColorForCoord(x + x_offset, y, hsvToRgb([h, s, v]));
+                                // set color on c1
+                                setColorForCoord(x, y, hsvToRgb([h, s, v]));    
+                            }
+
+                        }
+                        else
+                        {
+                            var h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
+                                    ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width);
+        
+                            var s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * (x / width) +
+                                    ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / width);
+        
+                            var v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * (x / width) +
+                                    ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / width);
+
+                            // set color on c1
+                            setColorForCoord(x + x_offset, y, hsvToRgb([h, s, v]));
+                        }
                         
                         //console.log(h, s, v);
 
