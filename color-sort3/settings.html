@@ -42,30 +42,41 @@
             </label>
             <div>
                 <div>
+                    Gradient Algorithm:
+                </div>
+                <select name="gradient-algorithm" id="gradient-algorithm">
+                    <option value="hyp">Hyperbolic</option>
+                    <option value="bilinear">Bilinear interpolation</option>
+                    <option value="l2norm">L2 norm</option>
+                    <option value="l1norm">L1 norm</option>
+                </select>              
+            </div>
+            <div>
+                <div>
                     <label>
-                        <input type="color" id="colorC" name="colorC" value="#e66465" />
+                        <input type="color" id="colorC" name="colorC" value="#8d1b49" />
                         Color C
                     </label>
                     <label>
-                        <input type="color" id="colorE" name="colorE" value="#e66465" />
+                        <input type="color" id="colorE" name="colorE" value="#a9142a" />
                         Color E
                     </label>
                     <label>
-                        <input type="color" id="colorA" name="colorA" value="#e66465" />
+                        <input type="color" id="colorA" name="colorA" value="#e665a4" />
                         Color A
                     </label>
                 </div>
                 <div>
                     <label>
-                        <input type="color" id="colorD" name="colorD" value="#e66465" />
+                        <input type="color" id="colorD" name="colorD" value="#ff94eb" />
                         Color D
                     </label>
                     <label>
-                        <input type="color" id="colorF" name="colorF" value="#e66465" />
+                        <input type="color" id="colorF" name="colorF" value="#ff00ea" />
                         Color F
                     </label>
                     <label>
-                        <input type="color" id="colorB" name="colorB" value="#e66465" />
+                        <input type="color" id="colorB" name="colorB" value="#df1125" />
                         Color B
                     </label>
                 </div>
@@ -76,13 +87,7 @@
                 </button>
             </div>
             <div>
-                <canvas id="L1" width="1000" height="500"></canvas>
-            </div>
-            <div>
-                <canvas id="L12" width="1000" height="500"></canvas>
-            </div>
-            <div>
-                <canvas id="L2" width="1000" height="500"></canvas>
+                <canvas width="1000" height="500"></canvas>
             </div>
         </div>
     </form>
@@ -156,15 +161,7 @@
             const imgData = ctx.getImageData(0, 0, 1000, 500);
             const imgDataData = imgData.data;
 
-            const osc2 = new OffscreenCanvas(1000, 500);
-            const ctx2 = osc2.getContext("2d");
-            const imgData2 = ctx2.getImageData(0, 0, 1000, 500);
-            const imgDataData2 = imgData2.data;
-
-            const osc3 = new OffscreenCanvas(1000, 500);
-            const ctx3 = osc3.getContext("2d");
-            const imgData3 = ctx3.getImageData(0, 0, 1000, 500);
-            const imgDataData3 = imgData3.data;
+            const gradAlg = document.querySelector("#gradient-algorithm").value;
 
             const gcn4 = document.querySelector("#custom-gradient-radio4").checked;
             const gcn6 = document.querySelector("#custom-gradient-radio6").checked;
@@ -175,6 +172,8 @@
             const ce4 = document.querySelector("#colorD").value;
             const ce5 = document.querySelector("#colorE").value;
             const ce6 = document.querySelector("#colorF").value;
+
+            let prevColor = null;
 
             const c1 = rgbToHsv(hexToRgb(ce1));
             const c2 = rgbToHsv(hexToRgb(ce2));
@@ -199,24 +198,60 @@
                     imgDataData[red + 3] = 255;
                 }
 
-                function setColorForCoord2(x, y, color)
+                function interpolate(A, B, p, w)
                 {
-                    const red = y * (1000 * 4) + x * 4;
+                    // p = part, w = whole
 
-                    imgDataData2[red] = color[0];
-                    imgDataData2[red + 1] = color[1];
-                    imgDataData2[red + 2] = color[2];
-                    imgDataData2[red + 3] = 255;
+                    return A * (p/w) + B * (1 - (p/w));
                 }
 
-                function setColorForCoord3(x, y, color)
+                function hueInterpolate(A, B, p, w)
                 {
-                    const red = y * (1000 * 4) + x * 4;
+                    if (A == B) return A;
 
-                    imgDataData3[red] = color[0];
-                    imgDataData3[red + 1] = color[1];
-                    imgDataData3[red + 2] = color[2];
-                    imgDataData3[red + 3] = 255;
+                    let d = p/w;
+
+                    let cw, ccw;
+                    let cws, ccws;
+                    let cwe, ccwe;
+
+                    if (A > B)
+                    {
+                        s = A;
+                        cwe = B + 1;
+                        
+                        s = A;
+                        ccwe = B;
+                    }
+                    else
+                    {
+                        s = B;
+                        cwe = A + 1;
+
+                        s = B;
+                        ccwe = A;
+                    }
+
+                    cw = cwe - s;
+                    ccw = ccwe - s;
+
+                    let r;
+                    if (cw < ccw)
+                    {
+                        if (s < cwe)
+                            r = interpolate(s, cwe, p, w);
+                        else
+                            r = interpolate(cwe, s, p, w);
+                    }
+                    else
+                        if (s < ccwe)
+                            r = interpolate(s, ccwe, p, w);
+                        else
+                            r = interpolate(ccwe, s, p, w);
+                    
+                    r -= Math.floor(r);
+
+                    return r;
                 }
 
                 for (let x = 0; x < width; x++)
@@ -226,149 +261,256 @@
                         // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
                         //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
     
-                        if (gcn6)
+                        if (gradAlg == "hyp")
                         {
+                            if (x == 750 && y == 125) debugger;
 
-                            if (x < 500)
+                            //var fx = (n) => 1 / n;
+                            const dfdx = (n) => -Math.pow(n, -2);
+
+                            const defInt = (f, a, b, n) => Array.from({length: n}, (_, i) => i + 1).reduce(
+                                (acc, k) => acc + ((b - a) / (2 * n)) * (f(a + (k - 1) * ((b - a) / n)) + f(a + k * ((b - a) / n))), 0
+                            );
+
+                            const arcLength = (df, a, b) => defInt( (n) => Math.sqrt(1 + Math.pow(df(n), 2)), a, b, 10 );
+
+                            // translate center to origin
+                            let xt = x - width / 2;
+                            let yt = 250 - y; //y - 250; // TODO: don't miss this (250s) if updating
+
+                            // for now, skip the axes
+                            if (xt == 0 || yt == 0) continue;
+
+                            // intercepts
+                            let xi = (xt * yt) / 250;
+                            let yi = (2 * xt * yt) / width; // 2xy / (w/2) = 4xy / w
+
+                            // account for argument order
+                            // get full arc length
+                            let a = xi;
+                            let b = Math.abs(width / 2) * Math.sign(xi);
+                            if (a > b) [b, a] = [a, b];
+                            let dt = arcLength(dfdx, a, b);
+
+                            // get arc length to x
+                            a = xi;
+                            b = xt;
+                            if (a > b) [b, a] = [a, b];
+                            let d = arcLength(dfdx, a, b);
+
+                            if (gcn6)
                             {
-                                var h = (colors[5][0] * y / 500 + colors[4][0] * (1 - y / 500)) * (x / 500) +
-                                        ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / 500);
-            
-                                var s = (colors[5][1] * y / 500 + colors[4][1] * (1 - y / 500)) * (x / 500) +
-                                        ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / 500);
-            
-                                var v = (colors[5][2] * y / 500 + colors[4][2] * (1 - y / 500)) * (x / 500) +
-                                        ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / 500);
-
-                                // set color on c1
-                                setColorForCoord(x, y, hsvToRgb([h, s, v]));
+    
+    
                             }
                             else
                             {
-                                h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * ((x - 500) / 500) +
-                                    ((colors[5][0] * y / 500) + colors[4][0] * (1 - y / 500)) * (1 - (x - 500) / 500);
-            
-                                s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * ((x - 500) / 500) +
-                                    ((colors[5][1] * y / 500) + colors[4][1] * (1 - y / 500)) * (1 - (x - 500) / 500);
-            
-                                v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * ((x - 500) / 500) +
-                                    ((colors[5][2] * y / 500) + colors[4][2] * (1 - y / 500)) * (1 - (x - 500) / 500);
-                                        
+                                let cx1, cx2;
+                                let cy1, cy2;
                                 
-                                // set color on c1
-                                setColorForCoord(x, y, hsvToRgb([h, s, v]));    
+                                if (yt > 0)
+                                {
+                                    cx1 = colors[2];
+                                    cx2 = colors[0];
+                                }
+                                else
+                                {
+                                    cx1 = colors[3];
+                                    cx2 = colors[1];
+                                }
+                                
+                                if (xt > 0)
+                                {
+                                    cy1 = colors[1];
+                                    cy2 = colors[0];
+                                }
+                                else
+                                {
+                                    cy1 = colors[3];
+                                    cy2 = colors[2];
+                                }
+
+                                xt = xi +  width / 2;
+                                yt = 250 - yi;
+
+                                if (x == 750 && y == 125) debugger;
+
+                                let hx = hueInterpolate(cx1[0], cx2[0], xt, width);
+                                let hy = hueInterpolate(cy1[0], cy2[0], yt, 500);
+                                var h = hueInterpolate(hx, hy, d, dt);
+
+                                let sx = hueInterpolate(cx1[1], cx2[1], xt, width);
+                                let sy = hueInterpolate(cy1[1], cy2[1], yt, 500);
+                                var s = hueInterpolate(sx, sy, d, dt);
+
+                                let vx = hueInterpolate(cx1[2], cx2[2], xt, width);
+                                let vy = hueInterpolate(cy1[2], cy2[2], yt, 500);
+                                var v = hueInterpolate(vx, vy, d, dt);
+    
+                                setColorForCoord(x, y, hsvToRgb([h, s, v]));
                             }
 
                         }
-                        else
+                        else if (gradAlg == "circle")
                         {
-                            var h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
-                                    ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width);
-        
-                            var s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * (x / width) +
-                                    ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / width);
-        
-                            var v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * (x / width) +
-                                    ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / width);
+                            // not finished 
 
-                            // set color on c1
+                            // h|wv "h|w value" = (h|w)^2 / 4
+                            // xa = x translated so that center is at origin
+                            let hv = height * height / 4;
+                            let wv = width * width / 4;
+                            let xa = x - width / 2;
+                            let ya = y - height / 2;
+                            let r = Math.sqrt(xa * xa + ya * ya);
+
+                            // x intercept
+                            let xi, yi;
+                            if (r < hv)
+                                xi = r * Math.sign(x);
+                            else
+                                xi = Math.sqrt(xa * xa + ya * ya - hv);
+
+                            // y intercept
+                            if (r < wv)
+                                yi = r * Math.sign(y);
+                            else
+                                yi = Math.sqrt(xa * xa + ya * ya - wv);
+
+                            
+
+                        }
+                        else if (gradAlg == "bilinear")
+                        {
+                            if (gcn6)
+                            {
+    
+                                if (x < 500)
+                                {
+                                    var h = (colors[5][0] * y / 500 + colors[4][0] * (1 - y / 500)) * (x / 500) +
+                                            ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / 500);
+                
+                                    var s = (colors[5][1] * y / 500 + colors[4][1] * (1 - y / 500)) * (x / 500) +
+                                            ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / 500);
+                
+                                    var v = (colors[5][2] * y / 500 + colors[4][2] * (1 - y / 500)) * (x / 500) +
+                                            ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / 500);
+    
+                                    // set color on c1
+                                    setColorForCoord(x, y, hsvToRgb([h, s, v]));
+                                }
+                                else
+                                {
+                                    h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * ((x - 500) / 500) +
+                                        ((colors[5][0] * y / 500) + colors[4][0] * (1 - y / 500)) * (1 - (x - 500) / 500);
+                
+                                    s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * ((x - 500) / 500) +
+                                        ((colors[5][1] * y / 500) + colors[4][1] * (1 - y / 500)) * (1 - (x - 500) / 500);
+                
+                                    v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * ((x - 500) / 500) +
+                                        ((colors[5][2] * y / 500) + colors[4][2] * (1 - y / 500)) * (1 - (x - 500) / 500);
+                                            
+                                    
+                                    // set color on c1
+                                    setColorForCoord(x, y, hsvToRgb([h, s, v]));    
+                                }
+    
+                            }
+                            else
+                            {
+                                var h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
+                                        ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width);
+            
+                                var s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * (x / width) +
+                                        ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / width);
+            
+                                var v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * (x / width) +
+                                        ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / width);
+    
+                                // set color on c1
+                                setColorForCoord(x + x_offset, y, hsvToRgb([h, s, v]));
+                            }
+                        }
+                        else if (gradAlg == "l2norm")
+                        {
+                            // L2 norm?
+    
+                            // may use 4 or 6 of these
+                            let p = [[1, 0], [1, 1], [0, 0], [0, 1], [0.5, 0], [0.5, 1]];
+                            let d = [];
+                            for (let i = 0; i < colors.length; i++)
+                            {
+                                d[i] = Math.sqrt(Math.pow(p[i][0]-(x/width), 2) + Math.pow(p[i][1]-(y/500), 2));
+                            }
+    
+                            //console.log(d);
+    
+                            // corner?
+                            if (d.includes(0))
+                            {
+                                let i = d.indexOf(0);
+                                h = colors[i][0];
+                                s = colors[i][1];
+                                v = colors[i][2];
+                            }
+                            else
+                            {
+                                let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
+    
+                                h = d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum;
+                                s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
+                                v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
+                            }
+    
+                            // set color on c2
                             setColorForCoord(x + x_offset, y, hsvToRgb([h, s, v]));
                         }
-                        
-                        //console.log(h, s, v);
-
-                        // L2 norm?
-
-                        // may use 4 or 6 of these
-                        let p = [[1, 0], [1, 1], [0, 0], [0, 1], [0.5, 0], [0.5, 1]];
-                        let d = [];
-                        for (let i = 0; i < colors.length; i++)
+                        else if (gradAlg == "l1norm")
                         {
-                            d[i] = Math.sqrt(Math.pow(p[i][0]-(x/width), 2) + Math.pow(p[i][1]-(y/500), 2));
-                        }
-
-                        //console.log(d);
-
-                        // corner?
-                        if (d.includes(0))
-                        {
-                            let i = d.indexOf(0);
-                            h = colors[i][0];
-                            s = colors[i][1];
-                            v = colors[i][2];
-                        }
-                        else
-                        {
-                            let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
-
-                            h = d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum;
-                            s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
-                            v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
-                        }
-
-                        // set color on c2
-                        setColorForCoord2(x + x_offset, y, hsvToRgb([h, s, v]));
-
-
-
-
-
-                        
-                        d = [];
-                        for (let i = 0; i < colors.length; i++)
-                        {
-                            d[i] = Math.abs(p[i][0]-(x/width)) + Math.abs(p[i][1]-(y/500));
-                        }
-
-                        //console.log(d);
-
-                        // corner?
-                        if (d.includes(0))
-                        {
-                            let i = d.indexOf(0);
-                            h = colors[i][0];
-                            s = colors[i][1];
-                            v = colors[i][2];
-                        }
-                        else
-                        {
-                            let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
-
-                            h = d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum;
-                            s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
-                            v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
-                        }
-
-                        //console.log(h,s,v);
-
-                        // set color on c2
-                        setColorForCoord3(x + x_offset, y, hsvToRgb([h, s, v]));
-                        
-                        //console.log(h, s, v);
+                            let p = [[1, 0], [1, 1], [0, 0], [0, 1], [0.5, 0], [0.5, 1]];
+                            let d = [];
+                            for (let i = 0; i < colors.length; i++)
+                            {
+                                d[i] = Math.abs(p[i][0]-(x/width)) + Math.abs(p[i][1]-(y/500));
+                            }
     
-                        //console.log(h,s,v, hsvToRgb([h, s, v]));
+                            //console.log(d);
+    
+                            // corner?
+                            if (d.includes(0))
+                            {
+                                let i = d.indexOf(0);
+                                h = colors[i][0];
+                                s = colors[i][1];
+                                v = colors[i][2];
+                            }
+                            else
+                            {
+                                let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
+    
+                                h = d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum;
+                                s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
+                                v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
+                            }
+    
+                            //console.log(h,s,v);
+    
+                            // set color on c2
+                            setColorForCoord(x + x_offset, y, hsvToRgb([h, s, v]));
+                        }
                     }
                 }
             }
 
             if (gcn6)
-            {
                 paintGradient([c1, c2, c3, c4, c5, c6], 0, 1000);
-            }
             else
                 paintGradient([c1, c2, c3, c4], 0, 1000);
 
             ctx.putImageData(imgData, 0, 0);
-            ctx2.putImageData(imgData2, 0, 0);
-            ctx3.putImageData(imgData2, 0, 0);
 
             // Transfer the current frame to the visible canvas
             const bitmap = osc.transferToImageBitmap();
-            const bitmap2 = osc2.transferToImageBitmap();
-            const bitmap3 = osc3.transferToImageBitmap();
-            document.querySelector("#L1").getContext("bitmaprenderer").transferFromImageBitmap(bitmap);
-            document.querySelector("#L12").getContext("bitmaprenderer").transferFromImageBitmap(bitmap3);
-            document.querySelector("#L2").getContext("bitmaprenderer").transferFromImageBitmap(bitmap2);
+            document.querySelector("canvas").getContext("bitmaprenderer").transferFromImageBitmap(bitmap);
 
         }
     </script>
