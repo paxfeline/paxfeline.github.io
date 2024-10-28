@@ -45,7 +45,7 @@
                     Gradient Algorithm:
                 </div>
                 <select name="gradient-algorithm" id="gradient-algorithm">
-                    <option value="hyp">Hyperbolic</option>
+                    <option value="circle">Circular</option>
                     <option value="bilinear">Bilinear interpolation</option>
                     <option value="l2norm">L2 norm</option>
                     <option value="l1norm">L1 norm</option>
@@ -254,133 +254,236 @@
                     return r;
                 }
 
+                function colorInterpolate(A, B, p, w)
+                {
+                    let h = hueInterpolate(A[0], B[0], p, w);
+                    let s =    interpolate(A[1], B[1], p, w);
+                    let v =    interpolate(A[2], B[2], p, w);
+
+                    return [h, s, v];
+                }
+
+                function getMidpointColor(A, B)
+                {
+                    return colorInterpolate(A, B, 1, 2);
+                }
+
+                function mod(x, y)
+                {
+                    return x - y * Math.floor(x / y);
+                }
+
                 for (let x = 0; x < width; x++)
                 {
                     for (let y = 0; y < 500; y++)
                     {
-                        // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
-                        //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
     
-                        if (gradAlg == "hyp")
-                        {
-                            if (x == 750 && y == 125) debugger;
-
-                            //var fx = (n) => 1 / n;
-                            const dfdx = (n) => -Math.pow(n, -2);
-
-                            const defInt = (f, a, b, n) => Array.from({length: n}, (_, i) => i + 1).reduce(
-                                (acc, k) => acc + ((b - a) / (2 * n)) * (f(a + (k - 1) * ((b - a) / n)) + f(a + k * ((b - a) / n))), 0
-                            );
-
-                            const arcLength = (df, a, b) => defInt( (n) => Math.sqrt(1 + Math.pow(df(n), 2)), a, b, 10 );
-
-                            // translate center to origin
-                            let xt = x - width / 2;
-                            let yt = 250 - y; //y - 250; // TODO: don't miss this (250s) if updating
-
-                            // for now, skip the axes
-                            if (xt == 0 || yt == 0) continue;
-
-                            // intercepts
-                            let xi = (xt * yt) / 250;
-                            let yi = (2 * xt * yt) / width; // 2xy / (w/2) = 4xy / w
-
-                            // account for argument order
-                            // get full arc length
-                            let a = xi;
-                            let b = Math.abs(width / 2) * Math.sign(xi);
-                            if (a > b) [b, a] = [a, b];
-                            let dt = arcLength(dfdx, a, b);
-
-                            // get arc length to x
-                            a = xi;
-                            b = xt;
-                            if (a > b) [b, a] = [a, b];
-                            let d = arcLength(dfdx, a, b);
-
-                            if (gcn6)
-                            {
-    
-    
-                            }
-                            else
-                            {
-                                let cx1, cx2;
-                                let cy1, cy2;
-                                
-                                if (yt > 0)
-                                {
-                                    cx1 = colors[2];
-                                    cx2 = colors[0];
-                                }
-                                else
-                                {
-                                    cx1 = colors[3];
-                                    cx2 = colors[1];
-                                }
-                                
-                                if (xt > 0)
-                                {
-                                    cy1 = colors[1];
-                                    cy2 = colors[0];
-                                }
-                                else
-                                {
-                                    cy1 = colors[3];
-                                    cy2 = colors[2];
-                                }
-
-                                xt = xi +  width / 2;
-                                yt = 250 - yi;
-
-                                if (x == 750 && y == 125) debugger;
-
-                                let hx = hueInterpolate(cx1[0], cx2[0], xt, width);
-                                let hy = hueInterpolate(cy1[0], cy2[0], yt, 500);
-                                var h = hueInterpolate(hx, hy, d, dt);
-
-                                let sx = hueInterpolate(cx1[1], cx2[1], xt, width);
-                                let sy = hueInterpolate(cy1[1], cy2[1], yt, 500);
-                                var s = hueInterpolate(sx, sy, d, dt);
-
-                                let vx = hueInterpolate(cx1[2], cx2[2], xt, width);
-                                let vy = hueInterpolate(cy1[2], cy2[2], yt, 500);
-                                var v = hueInterpolate(vx, vy, d, dt);
-    
-                                setColorForCoord(x, y, hsvToRgb([h, s, v]));
-                            }
-
-                        }
-                        else if (gradAlg == "circle")
+                        if (gradAlg == "circle")
                         {
                             // not finished 
 
                             // h|wv "h|w value" = (h|w)^2 / 4
-                            // xa = x translated so that center is at origin
-                            let hv = height * height / 4;
+                            // x|ya = x|y translated so that center is at origin
+
+                            let hv = 500 * 500 / 4;
                             let wv = width * width / 4;
+
+                            // hh|w = half height|width
+                            let hh = 250;
+                            let hw = width / 2;
+
+                            // points with center translated to origin
                             let xa = x - width / 2;
-                            let ya = y - height / 2;
+                            let ya = 250 - y;
+
+                            // get edge midpoint colors
+
+                            let N, S, E, W;
+                            N = getMidpointColor(colors[2], colors[0]);
+                            S = getMidpointColor(colors[3], colors[1]);
+                            E = getMidpointColor(colors[0], colors[1]);
+                            W = getMidpointColor(colors[2], colors[3]);
+
                             let r = Math.sqrt(xa * xa + ya * ya);
 
-                            // x intercept
+                            // x and y intercepts (with axes or borders)
                             let xi, yi;
-                            if (r < hv)
-                                xi = r * Math.sign(x);
-                            else
-                                xi = Math.sqrt(xa * xa + ya * ya - hv);
+
+                            // colors to interpolate for each
+                            let cx1, cx2;
+                            let cy1, cy2;
+                            let cx, cy;
+
+                            // also need thetas for top point (yi) and current point
+                            let theta, thetaTop, thetaBottom;
+
+                            theta = Math.atan2(ya, xa);
+
+                            if ([300, -300, 50, -50].includes(xa) && [200, -200, 50, -50].includes(ya)) console.log(theta, xa, ya);
+
+                            // find values
+                            let deltaTheta, fullTheta = Math.PI / 2; // fallback val for development
 
                             // y intercept
-                            if (r < wv)
-                                yi = r * Math.sign(y);
-                            else
-                                yi = Math.sqrt(xa * xa + ya * ya - wv);
+                            if (r < hh)
+                            {
+                                // TODO: calculate using top and bottom theta
+                                fullTheta = Math.PI / 2;
 
-                            
+                                // top and bottom theta depend on quadrant
+                                if (ya > 0)
+                                {
+                                    if (xa > 0)
+                                    {
+                                        // going CW (anti-normal for math)
+                                        thetaTop = Math.PI / 2; //-Math.PI - Math.PI / 2;
+                                        thetaBottom = 0; //-Math.PI * 2;
+                                        //theta = mod(theta, -Math.PI * 2);
+
+                                        deltaTheta = thetaTop - theta;
+                                    }
+                                    else
+                                    {
+                                        // going CCW (normal for math)
+                                        thetaTop = Math.PI / 2;
+                                        thetaBottom = Math.PI;
+                                        
+                                        deltaTheta = theta - thetaTop;
+                                    }
+                                }
+                                else
+                                {
+                                    if (xa > 0)
+                                    {
+                                        // going CW (anti-normal for math)
+                                        thetaTop = 0;
+                                        thetaBottom = -Math.PI / 2;
+                                        
+                                        deltaTheta = -thetaBottom;
+                                    }
+                                    else
+                                    {
+                                        // going CCW (normal for math)
+                                        thetaTop = Math.PI;
+                                        thetaBottom = Math.PI + Math.PI / 2;
+                                        theta = mod(theta, Math.PI * 2);
+
+                                        deltaTheta = theta - thetaTop;
+                                    }
+                                }
+
+                                yi = r * Math.sign(ya);
+
+                                yi = 250 - yi;
+                                
+                                let h = hueInterpolate(N[0], S[0], yi, 500);
+                                let s =    interpolate(N[1], S[1], yi, 500);
+                                let v =    interpolate(N[2], S[2], yi, 500);
+
+                                cy = [h, s, v];
+                            }
+                            else
+                            {
+                                // actually the x-intercept with the top or bottom border
+                                // hence getting the sign from x
+                                yi = Math.sqrt(r * r - hv) * Math.sign(xa);
+
+                                // top theta
+                                thetaTop = Math.atan2(hh, yi);
+
+                                // top or bottom edge?
+                                if (ya > 0)
+                                {
+                                    cy1 = colors[2];
+                                    cy2 = colors[0];
+
+                                    if (xa > 0)
+                                    {
+                                        // going CW (anti-normal for math)
+                                        
+
+
+                                        thetaTop = Math.PI / 2; //-Math.PI - Math.PI / 2;
+                                        thetaBottom = 0; //-Math.PI * 2;
+                                        //theta = mod(theta, -Math.PI * 2);
+
+                                        deltaTheta = thetaTop - theta;
+                                    }
+                                }
+                                else
+                                {
+                                    cy1 = colors[3];
+                                    cy2 = colors[1];
+                                }
+
+                                // translate back to pixel space as x coord
+                                yi += width / 2;
+
+                                let h, s, v;
+                                h = hueInterpolate(cy1[0], cy2[0], yi, width);
+                                s =    interpolate(cy1[1], cy2[1], yi, width);
+                                v =    interpolate(cy1[2], cy2[2], yi, width);
+
+                                cy = [h, s, v];
+                            }
+
+                            // x intercept
+                            if (r < hw)
+                            {
+                                xi = r * Math.sign(xa);
+                                
+                                let h = hueInterpolate(W[0], E[0], x, width);
+                                let s =    interpolate(W[1], E[1], x, width);
+                                let v =    interpolate(W[2], E[2], x, width);
+
+                                cx = [h, s, v];
+                            }
+                            else
+                            {
+                                // actually the y-intercept with the left or right border
+                                // hence getting the sign from y
+                                xi = Math.sqrt(r * r - wv) * Math.sign(ya);
+
+                                // left or right edge?
+                                if (xa > 0)
+                                {
+                                    cx1 = colors[0];
+                                    cx2 = colors[1];
+                                }
+                                else
+                                {
+                                    cx1 = colors[2];
+                                    cx2 = colors[3];
+                                }
+
+
+                                let h, s, v;
+                                h = hueInterpolate(cx1[0], cx2[0], xi, width);
+                                s =    interpolate(cx1[1], cx2[1], xi, width);
+                                v =    interpolate(cx1[2], cx2[2], xi, width);
+
+                                cx = [h, s, v];
+                            }
+
+                            // final color
+                            let h, s, v;
+                                h = hueInterpolate(cx[0], cy[0], deltaTheta, fullTheta); // TODO: make correct
+                                s =    interpolate(cx[1], cy[1], deltaTheta, fullTheta);
+                                v =    interpolate(cx[2], cy[2], deltaTheta, fullTheta);
+
+                            if ([300, -300, 50, -50].includes(xa) && [200, -200, 50, -50].includes(ya))
+                            {
+                                console.log(fullTheta, deltaTheta)
+                                console.log(thetaTop, theta, thetaBottom);
+                            }
+
+                            setColorForCoord(x, y, hsvToRgb([h, s, v]));    
 
                         }
                         else if (gradAlg == "bilinear")
                         {
+                            // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
+                            //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
                             if (gcn6)
                             {
     
