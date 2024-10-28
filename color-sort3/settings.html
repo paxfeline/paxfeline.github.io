@@ -92,6 +92,9 @@
         </div>
     </form>
     <script>
+        const pi = Math.PI;
+        const hpi = pi / 2;
+        
         function generate_gradient()
         {
             function hexToRgb(hex)
@@ -281,6 +284,16 @@
                         if (gradAlg == "circle")
                         {
                             // not finished 
+                            
+                            // get edge midpoint colors
+
+                            let N, S, E, W;
+                            N = getMidpointColor(colors[2], colors[0]);
+                            S = getMidpointColor(colors[3], colors[1]);
+                            E = getMidpointColor(colors[0], colors[1]);
+                            W = getMidpointColor(colors[2], colors[3]);
+
+                            M = getMidpointColor(getMidpointColor(N, S), getMidpointColor(E, W));
 
                             // h|wv "h|w value" = (h|w)^2 / 4
                             // x|ya = x|y translated so that center is at origin
@@ -296,189 +309,102 @@
                             let xa = x - width / 2;
                             let ya = 250 - y;
 
-                            // get edge midpoint colors
-
-                            let N, S, E, W;
-                            N = getMidpointColor(colors[2], colors[0]);
-                            S = getMidpointColor(colors[3], colors[1]);
-                            E = getMidpointColor(colors[0], colors[1]);
-                            W = getMidpointColor(colors[2], colors[3]);
-
+                            // radius
                             let r = Math.sqrt(xa * xa + ya * ya);
 
                             // x and y intercepts (with axes or borders)
                             let xi, yi;
 
-                            // colors to interpolate for each
-                            let cx1, cx2;
-                            let cy1, cy2;
-                            let cx, cy;
+                            // color start, end
+                            let cs, ce;
 
                             // also need thetas for top point (yi) and current point
                             let theta, thetaTop, thetaBottom;
-
-                            theta = Math.atan2(ya, xa);
-
-                            if ([300, -300, 50, -50].includes(xa) && [200, -200, 50, -50].includes(ya)) console.log(theta, xa, ya);
+                            let startTheta, endTheta;
 
                             // find values
-                            let deltaTheta, fullTheta = Math.PI / 2; // fallback val for development
+                            let deltaTheta, fullTheta;
 
-                            // y intercept
-                            if (r < hh)
+                            // everything else follows
+                            theta = Math.atan2(ya, xa);
+                            
+                            // start, end
+                            const edges =
                             {
-                                // TODO: calculate using top and bottom theta
-                                fullTheta = Math.PI / 2;
+                                0:      [[E, colors[0]], [N, colors[0]]],
+                                [hpi]:  [[N, colors[2]], [W, colors[2]]],
+                                [-pi]:  [[W, colors[3]], [S, colors[3]]],
+                                [-hpi]: [[S, colors[1]], [E, colors[1]]]
+                            };
+                            
+                            const dirs =
+                            {
+                                0: E,
+                                [hpi]: N,
+                                [pi]: W,
+                                [-pi]: W,
+                                [-hpi]: S
+                            };
+                            
+                            const full =
+                            {
+                                0: hw,
+                                [hpi]: hh,
+                                [pi]: hw,
+                                [-pi]: hw,
+                                [-hpi]: hh
+                            };
 
-                                // top and bottom theta depend on quadrant
-                                if (ya > 0)
-                                {
-                                    if (xa > 0)
-                                    {
-                                        // going CW (anti-normal for math)
-                                        thetaTop = Math.PI / 2; //-Math.PI - Math.PI / 2;
-                                        thetaBottom = 0; //-Math.PI * 2;
-                                        //theta = mod(theta, -Math.PI * 2);
+                            if ([300, -300].includes(xa) && [200, -200].includes(ya))
+                                console.log(theta, xa, ya);
+                            
+                            startTheta = Math.floor(theta / hpi) * hpi;
+                            endTheta = Math.ceil(theta / hpi) * hpi;
 
-                                        deltaTheta = thetaTop - theta;
-                                    }
-                                    else
-                                    {
-                                        // going CCW (normal for math)
-                                        thetaTop = Math.PI / 2;
-                                        thetaBottom = Math.PI;
-                                        
-                                        deltaTheta = theta - thetaTop;
-                                    }
-                                }
-                                else
-                                {
-                                    if (xa > 0)
-                                    {
-                                        // going CW (anti-normal for math)
-                                        thetaTop = 0;
-                                        thetaBottom = -Math.PI / 2;
-                                        
-                                        deltaTheta = -thetaBottom;
-                                    }
-                                    else
-                                    {
-                                        // going CCW (normal for math)
-                                        thetaTop = Math.PI;
-                                        thetaBottom = Math.PI + Math.PI / 2;
-                                        theta = mod(theta, Math.PI * 2);
+                            if (startTheta == endTheta) continue;
+                            
+                            let fs = full[startTheta];
+                            let fe = full[endTheta];
+                            
+                            let se = edges[startTheta][0];
+                            let ee = edges[startTheta][1];
 
-                                        deltaTheta = theta - thetaTop;
-                                    }
-                                }
-
-                                yi = r * Math.sign(ya);
-
-                                yi = 250 - yi;
-                                
-                                let h = hueInterpolate(N[0], S[0], yi, 500);
-                                let s =    interpolate(N[1], S[1], yi, 500);
-                                let v =    interpolate(N[2], S[2], yi, 500);
-
-                                cy = [h, s, v];
-                            }
+                            if (r < fs)
+                                cs = colorInterpolate(M, dirs[startTheta], r, fs);
                             else
                             {
-                                // actually the x-intercept with the top or bottom border
-                                // hence getting the sign from x
-                                yi = Math.sqrt(r * r - hv) * Math.sign(xa);
+                                let int = Math.sqrt(r * r - fs * fs);
 
-                                // top theta
-                                thetaTop = Math.atan2(hh, yi);
+                                startTheta = Math.atan2(fs, -int);
 
-                                // top or bottom edge?
-                                if (ya > 0)
-                                {
-                                    cy1 = colors[2];
-                                    cy2 = colors[0];
-
-                                    if (xa > 0)
-                                    {
-                                        // going CW (anti-normal for math)
-                                        
-
-
-                                        thetaTop = Math.PI / 2; //-Math.PI - Math.PI / 2;
-                                        thetaBottom = 0; //-Math.PI * 2;
-                                        //theta = mod(theta, -Math.PI * 2);
-
-                                        deltaTheta = thetaTop - theta;
-                                    }
-                                }
-                                else
-                                {
-                                    cy1 = colors[3];
-                                    cy2 = colors[1];
-                                }
-
-                                // translate back to pixel space as x coord
-                                yi += width / 2;
-
-                                let h, s, v;
-                                h = hueInterpolate(cy1[0], cy2[0], yi, width);
-                                s =    interpolate(cy1[1], cy2[1], yi, width);
-                                v =    interpolate(cy1[2], cy2[2], yi, width);
-
-                                cy = [h, s, v];
+                                cs = colorInterpolate(se[0], se[1], int, fs);
                             }
 
-                            // x intercept
-                            if (r < hw)
-                            {
-                                xi = r * Math.sign(xa);
-                                
-                                let h = hueInterpolate(W[0], E[0], x, width);
-                                let s =    interpolate(W[1], E[1], x, width);
-                                let v =    interpolate(W[2], E[2], x, width);
-
-                                cx = [h, s, v];
-                            }
+                            if (r < fe)
+                                ce = colorInterpolate(M, dirs[endTheta], r, fe);
                             else
                             {
-                                // actually the y-intercept with the left or right border
-                                // hence getting the sign from y
-                                xi = Math.sqrt(r * r - wv) * Math.sign(ya);
+                                let int = Math.sqrt( r * r - fe * fe);
 
-                                // left or right edge?
-                                if (xa > 0)
-                                {
-                                    cx1 = colors[0];
-                                    cx2 = colors[1];
-                                }
-                                else
-                                {
-                                    cx1 = colors[2];
-                                    cx2 = colors[3];
-                                }
+                                endTheta = Math.atan2(fe, -int);
 
-
-                                let h, s, v;
-                                h = hueInterpolate(cx1[0], cx2[0], xi, width);
-                                s =    interpolate(cx1[1], cx2[1], xi, width);
-                                v =    interpolate(cx1[2], cx2[2], xi, width);
-
-                                cx = [h, s, v];
+                                ce = colorInterpolate(ee[0], ee[1], int, fe);
                             }
 
-                            // final color
-                            let h, s, v;
-                                h = hueInterpolate(cx[0], cy[0], deltaTheta, fullTheta); // TODO: make correct
-                                s =    interpolate(cx[1], cy[1], deltaTheta, fullTheta);
-                                v =    interpolate(cx[2], cy[2], deltaTheta, fullTheta);
+                            deltaTheta = theta - startTheta;
+                            fullTheta = endTheta - startTheta;
 
-                            if ([300, -300, 50, -50].includes(xa) && [200, -200, 50, -50].includes(ya))
+                            let c = colorInterpolate(cs, ce, deltaTheta, fullTheta);
+
+                            if ([300, -300].includes(xa) && [200, -200].includes(ya))
                             {
-                                console.log(fullTheta, deltaTheta)
-                                console.log(thetaTop, theta, thetaBottom);
+                                console.log(startTheta, endTheta);
+                                console.log(fullTheta, deltaTheta);
+                                console.log(theta);
+                                setColorForCoord(x, y, [0, 0, 0]);
                             }
-
-                            setColorForCoord(x, y, hsvToRgb([h, s, v]));    
-
+                            else
+                                setColorForCoord(x, y, hsvToRgb(c));
                         }
                         else if (gradAlg == "bilinear")
                         {
