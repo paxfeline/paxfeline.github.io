@@ -346,6 +346,15 @@
                                 [-hpi]: S
                             };
                             
+                            const otherDirs =
+                            {
+                                0: W,
+                                [hpi]: S,
+                                [pi]: E,
+                                [-pi]: E,
+                                [-hpi]: N
+                            };
+                            
                             const full =
                             {
                                 0: hw,
@@ -361,7 +370,24 @@
                             startTheta = Math.floor(theta / hpi) * hpi;
                             endTheta = Math.ceil(theta / hpi) * hpi;
 
-                            if (startTheta == endTheta) continue;
+                            if (startTheta == endTheta)
+                            {
+                                cs = dirs[startTheta];
+                                ce = otherDirs[startTheta];
+                                let v, f;
+                                if (startTheta % Math.PI == 0)
+                                {
+                                    v = x;
+                                    f = 1000;
+                                }
+                                else
+                                {
+                                    v = y;
+                                    f = 500;
+                                }
+                                setColorForCoord(x, y, hsvToRgb(colorInterpolate(cs, ce, v, f)));
+                                continue;
+                            }
                             
                             let fs = full[startTheta];
                             let fe = full[endTheta];
@@ -377,7 +403,7 @@
 
                                 startTheta = Math.atan2(fs, -int);
 
-                                cs = colorInterpolate(se[0], se[1], int, fs);
+                                cs = colorInterpolate(se[0], se[1], int, fe);
                             }
 
                             if (r < fe)
@@ -386,9 +412,10 @@
                             {
                                 let int = Math.sqrt( r * r - fe * fe);
 
-                                endTheta = Math.atan2(fe, -int);
+                                // sign from ya: negative in Qs 3 and 4
+                                endTheta = Math.atan2(int, -fe) * Math.sign(ya);
 
-                                ce = colorInterpolate(ee[0], ee[1], int, fe);
+                                ce = colorInterpolate(ee[0], ee[1], int, fs);
                             }
 
                             deltaTheta = theta - startTheta;
