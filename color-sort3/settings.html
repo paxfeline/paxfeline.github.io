@@ -328,31 +328,13 @@
                             // everything else follows
                             theta = Math.atan2(ya, xa);
                             
-                            // start, end
+                            // start, end, by end angle
                             const edges =
                             {
-                                0:      [[E, colors[0]], [N, colors[0]]],
-                                [hpi]:  [[N, colors[2]], [W, colors[2]]],
-                                [-pi]:  [[W, colors[3]], [S, colors[3]]],
-                                [-hpi]: [[S, colors[1]], [E, colors[1]]]
-                            };
-                            
-                            const dirs =
-                            {
-                                0: E,
-                                [hpi]: N,
-                                [pi]: W,
-                                [-pi]: W,
-                                [-hpi]: S
-                            };
-                            
-                            const otherDirs =
-                            {
-                                0: W,
-                                [hpi]: S,
-                                [pi]: E,
-                                [-pi]: E,
-                                [-hpi]: N
+                                [hpi]:  [[N, colors[0]], [E, colors[0]]],
+                                [pi]:   [[W, colors[2]], [N, colors[2]]],
+                                [-pi]:  [[S, colors[3]], [W, colors[3]]],
+                                [-hpi]: [[E, colors[1]], [S, colors[1]]]
                             };
                             
                             const full =
@@ -363,37 +345,67 @@
                                 [-pi]: hw,
                                 [-hpi]: hh
                             };
+                            
+                            const dirs =
+                            {
+                                0: E,
+                                [hpi]: N,
+                                [pi]: W,
+                                [-pi]: W,
+                                [-hpi]: S
+                            };
 
-                            if ([300, -300].includes(xa) && [200, -200].includes(ya))
+                            // atan2 func by end angle
+                            const funcs =
+                            {
+                                [hpi]: Math.atan2,
+                                [pi]: (b,a)=>Math.atan2(a,b),
+                                [-pi]: (b,a)=>Math.atan2(a,b),
+                                [-hpi]: Math.atan2
+                            };
+
+                            if ([50, -50].includes(xa) && [50, -50, 225, -225].includes(ya))
                                 console.log(theta, xa, ya);
                             
-                            startTheta = Math.floor(theta / hpi) * hpi;
-                            endTheta = Math.ceil(theta / hpi) * hpi;
 
+                            const absfloor = n => Math.floor(Math.abs(n)) * Math.sign(n);
+                            const absceil = n => Math.ceil(Math.abs(n)) * Math.sign(n);
+
+                            startTheta = absfloor(theta / hpi) * hpi;
+                            endTheta = absceil(theta / hpi) * hpi;
+
+                            // handle axes
                             if (startTheta == endTheta)
                             {
-                                cs = dirs[startTheta];
-                                ce = otherDirs[startTheta];
                                 let v, f;
                                 if (startTheta % Math.PI == 0)
                                 {
                                     v = x;
                                     f = 1000;
+                                    cs = W;
+                                    ce = E;
                                 }
                                 else
                                 {
                                     v = y;
                                     f = 500;
+                                    cs = N;
+                                    ce = S;
                                 }
                                 setColorForCoord(x, y, hsvToRgb(colorInterpolate(cs, ce, v, f)));
                                 continue;
                             }
-                            
+                                                        
+                            let se = edges[endTheta][0];
+                            let ee = edges[endTheta][1];
+
                             let fs = full[startTheta];
                             let fe = full[endTheta];
-                            
-                            let se = edges[startTheta][0];
-                            let ee = edges[startTheta][1];
+
+                            // cache values as they may change but be needed
+                            // probably won't be needed
+                            let csd = startTheta;
+                            let ced = endTheta;
 
                             if (r < fs)
                                 cs = colorInterpolate(M, dirs[startTheta], r, fs);
@@ -401,7 +413,7 @@
                             {
                                 let int = Math.sqrt(r * r - fs * fs);
 
-                                startTheta = Math.atan2(fs, -int);
+                                startTheta = Math.atan2(int, fs); //funcs[endTheta](int, fs);
 
                                 cs = colorInterpolate(se[0], se[1], int, fe);
                             }
@@ -412,18 +424,17 @@
                             {
                                 let int = Math.sqrt( r * r - fe * fe);
 
-                                // sign from ya: negative in Qs 3 and 4
-                                endTheta = Math.atan2(int, -fe) * Math.sign(ya);
+                                endTheta = Math.atan2(fe, int); //funcs[endTheta](fe, int);
 
                                 ce = colorInterpolate(ee[0], ee[1], int, fs);
                             }
 
-                            deltaTheta = theta - startTheta;
+                            deltaTheta = endTheta - theta;
                             fullTheta = endTheta - startTheta;
 
                             let c = colorInterpolate(cs, ce, deltaTheta, fullTheta);
 
-                            if ([300, -300].includes(xa) && [200, -200].includes(ya))
+                            if ([50, -50].includes(xa) && [50, -50, 225, -225].includes(ya))
                             {
                                 console.log(startTheta, endTheta);
                                 console.log(fullTheta, deltaTheta);
