@@ -158,6 +158,111 @@
                 return [ r * 255, g * 255, b * 255 ];
             }
 
+            function setColorForCoord(x, y, color)
+            {
+                const red = y * (1000 * 4) + x * 4;
+
+                imgDataData[red] = color[0];
+                imgDataData[red + 1] = color[1];
+                imgDataData[red + 2] = color[2];
+                imgDataData[red + 3] = 255;
+            }
+
+            function interpolate(A, B, p, w)
+            {
+                // p = part, w = whole
+
+                return A * (p/w) + B * (1 - (p/w));
+            }
+
+            function hueInterpolate(A, B, p, w)
+            {
+                if (A == B) return A;
+
+                let d = p/w;
+
+                let cw, ccw;
+                let cws, ccws;
+                let cwe, ccwe;
+
+                if (A > B)
+                {
+                    s = A;
+                    cwe = B + 1;
+                    
+                    s = A;
+                    ccwe = B;
+                }
+                else
+                {
+                    s = B;
+                    cwe = A + 1;
+
+                    s = B;
+                    ccwe = A;
+                }
+
+                cw = cwe - s;
+                ccw = ccwe - s;
+
+                let r;
+                if (cw < ccw)
+                {
+                    if (s < cwe)
+                        r = interpolate(s, cwe, p, w);
+                    else
+                        r = interpolate(cwe, s, p, w);
+                }
+                else
+                    if (s < ccwe)
+                        r = interpolate(s, ccwe, p, w);
+                    else
+                        r = interpolate(ccwe, s, p, w);
+                
+                r -= Math.floor(r);
+
+                return r;
+            }
+
+            function colorInterpolate(A, B, p, w)
+            {
+                //console.log("CI", p/w);
+
+                let h = hueInterpolate(A[0], B[0], p, w);
+                let s =    interpolate(A[1], B[1], p, w);
+                let v =    interpolate(A[2], B[2], p, w);
+
+                return [h, s, v];
+            }
+
+            function getMidpointColor(A, B)
+            {
+                return colorInterpolate(A, B, 1, 2);
+            }
+
+            // currently unused
+            function mod(x, y)
+            {
+                return x - y * Math.floor(x / y);
+            }
+
+            function arclength(f, a, b)
+            {
+                let n = 10;
+                let d = (b - a) / n;
+                let dd = d * d;
+                let r = 0;
+                for (let i = 1; i <= n; i++)
+                {
+                    let x2 = a + d * i;
+                    let x1 = a + d * (i - 1);
+                    let dy = f(x2) - f(x1);
+                    let c = Math.sqrt(dd + dy * dy);
+                    r += c;
+                }
+                return r;
+            }
+
             // TODO: use constants for the width and height
             const osc = new OffscreenCanvas(1000, 500);
             const ctx = osc.getContext("2d");
@@ -190,110 +295,6 @@
                 /*
                 y_offset will always be 0. height will always be 500.
                 */
-
-                function setColorForCoord(x, y, color)
-                {
-                    const red = y * (1000 * 4) + x * 4;
-
-                    imgDataData[red] = color[0];
-                    imgDataData[red + 1] = color[1];
-                    imgDataData[red + 2] = color[2];
-                    imgDataData[red + 3] = 255;
-                }
-
-                function interpolate(A, B, p, w)
-                {
-                    // p = part, w = whole
-
-                    return A * (p/w) + B * (1 - (p/w));
-                }
-
-                function hueInterpolate(A, B, p, w)
-                {
-                    if (A == B) return A;
-
-                    let d = p/w;
-
-                    let cw, ccw;
-                    let cws, ccws;
-                    let cwe, ccwe;
-
-                    if (A > B)
-                    {
-                        s = A;
-                        cwe = B + 1;
-                        
-                        s = A;
-                        ccwe = B;
-                    }
-                    else
-                    {
-                        s = B;
-                        cwe = A + 1;
-
-                        s = B;
-                        ccwe = A;
-                    }
-
-                    cw = cwe - s;
-                    ccw = ccwe - s;
-
-                    let r;
-                    if (cw < ccw)
-                    {
-                        if (s < cwe)
-                            r = interpolate(s, cwe, p, w);
-                        else
-                            r = interpolate(cwe, s, p, w);
-                    }
-                    else
-                        if (s < ccwe)
-                            r = interpolate(s, ccwe, p, w);
-                        else
-                            r = interpolate(ccwe, s, p, w);
-                    
-                    r -= Math.floor(r);
-
-                    return r;
-                }
-
-                function colorInterpolate(A, B, p, w)
-                {
-                    //console.log("CI", p/w);
-
-                    let h = hueInterpolate(A[0], B[0], p, w);
-                    let s =    interpolate(A[1], B[1], p, w);
-                    let v =    interpolate(A[2], B[2], p, w);
-
-                    return [h, s, v];
-                }
-
-                function getMidpointColor(A, B)
-                {
-                    return colorInterpolate(A, B, 1, 2);
-                }
-
-                function mod(x, y)
-                {
-                    return x - y * Math.floor(x / y);
-                }
-
-                function arclength(f, a, b)
-                {
-                    let n = 10;
-                    let d = (b - a) / n;
-                    let dd = d * d;
-                    let r = 0;
-                    for (let i = 1; i <= n; i++)
-                    {
-                        let x2 = a + d * i;
-                        let x1 = a + d * (i - 1);
-                        let dy = f(x2) - f(x1);
-                        let c = Math.sqrt(dd + dy * dy);
-                        r += c;
-                    }
-                    return r;
-                }
 
                 let sfycache = new Map();
                 let sfxcache = new Map();
