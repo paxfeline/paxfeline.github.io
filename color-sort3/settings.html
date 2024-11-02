@@ -321,17 +321,18 @@
                             
                             let y1 = k * Math.sin(-Math.PI / 2);
 
-                            let c;
+                            let cs, ce, sp, sf, c;
+
                             if (y1 >= -1 && y1 <= 1)
                             {
-                                let cs = colorInterpolate(colors[2], colors[3], 1 - y1, 2); // 0..2
-                                let ce = colorInterpolate(colors[0], colors[1], 1 + y1, 2); // 2..0
+                                cs = colorInterpolate(colors[2], colors[3], 1 - y1, 2); // 0..2
+                                ce = colorInterpolate(colors[1], colors[0], 1 - y1, 2);
 
                                 //console.log(cs[0]);
 
-                                let sp = arclength(n => k * Math.sin(n), -Math.PI / 2, xt);
+                                sp = arclength(n => k * Math.sin(n), -Math.PI / 2, xt);
                                 
-                                let sf = sfycache.get(y1) || sfycache.get(-y1);
+                                sf = sfycache.get(y1) || sfycache.get(-y1);
                                 if (!sf)
                                 {
                                     sf = arclength(n => k * Math.sin(n), -Math.PI / 2, Math.PI / 2);
@@ -339,24 +340,24 @@
                                     sfycache.set(-y1, sf);
                                 }
 
-                                c = colorInterpolate(cs, ce, sp, sf);
+                                //c = colorInterpolate(cs, ce, sp, sf);
                             }
                             else
                             {
                                 let x1 = Math.asin(1 / k);
                                
-                                if (Math.abs(xt - 0.1) < 0.1 && Math.abs(yt - 0.2) < 0.1)
-                                    console.log(xt, xt);
+                                //if (Math.abs(xt - 0.1) < 0.1 && Math.abs(yt - 0.2) < 0.1)
+                                //    console.log(xt, xt);
 
-                                let cs = colorInterpolate(colors[2], colors[0], x1 + Math.PI / 2, Math.PI); // 0..π
-                                let ce = colorInterpolate(colors[3], colors[1], Math.PI / 2 - x1, Math.PI); // π..0
+                                cs = colorInterpolate(colors[2], colors[0], Math.PI / 2 + x1, Math.PI); // 0..π
+                                ce = colorInterpolate(colors[1], colors[3], Math.PI / 2 + x1, Math.PI); 
 
                                 // make sure x1 is smaller than x2
                                 //if (x2 < x1) [x2, x1] = [x1, x2];
 
-                                let sp = arclength(n => k * Math.sin(n), x1, xt);
+                                sp = arclength(n => k * Math.sin(n), x1, xt);
 
-                                let sf = sfycache.get(x1) || sfycache.get(-x1);
+                                sf = sfycache.get(x1) || sfycache.get(-x1);
                                 if (!sf)
                                 {
                                     sf = arclength(n => k * Math.sin(n), x1, -x1);
@@ -364,9 +365,9 @@
                                     sfxcache.set(-x1, sf);
                                 }
 
-                                c = colorInterpolate(cs, ce, sp, sf);
                             }
-
+                            
+                            c = colorInterpolate(cs, ce, sp, sf);
                             if (c)
                             {
                                 setColorForCoord(x, y, hsvToRgb(c));
