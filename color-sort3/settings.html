@@ -45,7 +45,7 @@
                     Gradient Algorithm:
                 </div>
                 <select name="gradient-algorithm" id="gradient-algorithm">
-                    <option value="circle">Circular</option>
+                    <option value="sine">Sine</option>
                     <option value="bilinear">Bilinear interpolation</option>
                     <option value="l2norm">L2 norm</option>
                     <option value="l1norm">L1 norm</option>
@@ -54,7 +54,7 @@
             <div>
                 <div>
                     <label>
-                        <input type="color" id="colorC" name="colorC" value="#8d1b49" />
+                        <input type="color" id="colorC" name="colorC" value="#f95395" />
                         Color C
                     </label>
                     <label>
@@ -62,13 +62,13 @@
                         Color E
                     </label>
                     <label>
-                        <input type="color" id="colorA" name="colorA" value="#e665a4" />
+                        <input type="color" id="colorA" name="colorA" value="#c61ff4" />
                         Color A
                     </label>
                 </div>
                 <div>
                     <label>
-                        <input type="color" id="colorD" name="colorD" value="#ff94eb" />
+                        <input type="color" id="colorD" name="colorD" value="#bf94ff" />
                         Color D
                     </label>
                     <label>
@@ -76,7 +76,7 @@
                         Color F
                     </label>
                     <label>
-                        <input type="color" id="colorB" name="colorB" value="#df1125" />
+                        <input type="color" id="colorB" name="colorB" value="#11dbdf" />
                         Color B
                     </label>
                 </div>
@@ -259,6 +259,8 @@
 
                 function colorInterpolate(A, B, p, w)
                 {
+                    //console.log("CI", p/w);
+
                     let h = hueInterpolate(A[0], B[0], p, w);
                     let s =    interpolate(A[1], B[1], p, w);
                     let v =    interpolate(A[2], B[2], p, w);
@@ -276,18 +278,108 @@
                     return x - y * Math.floor(x / y);
                 }
 
+                function arclength(f, a, b)
+                {
+                    let n = 10;
+                    let d = (b - a) / n;
+                    let dd = d * d;
+                    let r = 0;
+                    for (let i = 1; i <= n; i++)
+                    {
+                        let x2 = a + d * i;
+                        let x1 = a + d * (i - 1);
+                        let dy = f(x2) - f(x1);
+                        let c = Math.sqrt(dd + dy * dy);
+                        r += c;
+                    }
+                    return r;
+                }
+
+                let sfycache = new Map();
+                let sfxcache = new Map();
+
                 for (let x = 0; x < width; x++)
                 {
                     for (let y = 0; y < 500; y++)
                     {
-    
+                        if (gradAlg == "sine")
+                        {
+                            let xt = ((x / width) - 0.5) * Math.PI;
+                            let yt = (250 - y) / 250;
+
+                            // center
+                            if (xt == 0)
+                            {
+                                let N = getMidpointColor(colors[2], colors[0]);
+                                let S = getMidpointColor(colors[3], colors[1]);
+                                let c = colorInterpolate(N, S, 1 - yt, 2); // 0..2
+                                setColorForCoord(x, y, hsvToRgb(c));
+                                continue;
+                            }
+
+                            let k = yt / Math.sin(xt);
+                            
+                            let y1 = k * Math.sin(-Math.PI / 2);
+
+                            let c;
+                            if (y1 >= -1 && y1 <= 1)
+                            {
+                                let cs = colorInterpolate(colors[2], colors[3], 1 - y1, 2); // 0..2
+                                let ce = colorInterpolate(colors[0], colors[1], 1 + y1, 2); // 2..0
+
+                                //console.log(cs[0]);
+
+                                let sp = arclength(n => k * Math.sin(n), -Math.PI / 2, xt);
+                                
+                                let sf = sfycache.get(y1) || sfycache.get(-y1);
+                                if (!sf)
+                                {
+                                    sf = arclength(n => k * Math.sin(n), -Math.PI / 2, Math.PI / 2);
+                                    sfycache.set(y1, sf);
+                                    sfycache.set(-y1, sf);
+                                }
+
+                                c = colorInterpolate(cs, ce, sp, sf);
+                            }
+                            else
+                            {
+                                let x1 = Math.asin(1 / k);
+                               
+                                if (Math.abs(xt - 0.1) < 0.1 && Math.abs(yt - 0.2) < 0.1)
+                                    console.log(xt, xt);
+
+                                let cs = colorInterpolate(colors[2], colors[0], x1 + Math.PI / 2, Math.PI); // 0..π
+                                let ce = colorInterpolate(colors[3], colors[1], Math.PI / 2 - x1, Math.PI); // π..0
+
+                                // make sure x1 is smaller than x2
+                                //if (x2 < x1) [x2, x1] = [x1, x2];
+
+                                let sp = arclength(n => k * Math.sin(n), x1, xt);
+
+                                let sf = sfycache.get(x1) || sfycache.get(-x1);
+                                if (!sf)
+                                {
+                                    sf = arclength(n => k * Math.sin(n), x1, -x1);
+                                    sfxcache.set(x1, sf);
+                                    sfxcache.set(-x1, sf);
+                                }
+
+                                c = colorInterpolate(cs, ce, sp, sf);
+                            }
+
+                            if (c)
+                            {
+                                setColorForCoord(x, y, hsvToRgb(c));
+                                //console.log(xt, yt, c);
+                            }
+                        }
                         if (gradAlg == "circle")
                         {
                             // not finished 
                             
                             // get edge midpoint colors
 
-                            let N, S, E, W;
+                            let N, S, E, W, M;
                             N = getMidpointColor(colors[2], colors[0]);
                             S = getMidpointColor(colors[3], colors[1]);
                             E = getMidpointColor(colors[0], colors[1]);
@@ -604,6 +696,7 @@
                         }
                     }
                 }
+                console.log("done paint");
             }
 
             if (gcn6)
