@@ -257,6 +257,102 @@ var gradientAlgorithms =
                 //console.log(xt, yt, c);
             }
         },
+    sine2:
+        function (x, y, width, colors, imgDataData)
+        {
+            let xt = ((x / width) - 0.5) * Math.PI;
+            let yt = (250 - y) / 250;
+
+            // center
+            if (xt == 0)
+            {
+                let c = colorInterpolate(N, S, 1 - yt, 2); // 0..2
+                setColorForCoord(x, y, hsvToRgb(c));
+                return;
+            }
+            
+            // for Qs var
+            let xq = (xt > 0 ? 0 : 1);
+            let yq = (yt > 0 ? 0 : 1);
+
+            // corner color
+            let cc = Qs[xq][yq][0];
+
+            // x and y axis end colors
+            let xc = Qs[xq][yq][1][0];
+            let yc = Qs[xq][yq][1][1];
+
+            let cs, ce, sp, sf;
+            let c1, c2, c;
+
+            let k = yt / Math.sin(xt);
+            let k2 = (2 * xt) / (pi * Math.sin((pi / 2) * yt));
+
+            let y1 = k * Math.sin(pi / 2);
+
+            if (y1 >= -1 && y1 <= 1)
+            {
+                ce = colorInterpolate(xc, cc, Math.abs(y1), 1); // 0..2
+
+                sp = arclength(n => k * Math.sin(n), 0, Math.abs(xt));
+                sf = arclength(n => k * Math.sin(n), 0, pi / 2);
+                
+                c1 = colorInterpolate(M, ce, sp, sf);
+            }
+            else
+            {
+                let x2 = Math.asin(1 / k);
+                ce = colorInterpolate(yc, cc, Math.abs(x2), pi / 2);
+
+                sp = arclength(n => k * Math.sin(n), 0, Math.abs(x2));
+                sf = arclength(n => k * Math.sin(n), 0, xt);
+                
+                c1 = colorInterpolate(M, ce, sp, sf);
+            }
+
+            let x1 = k2 * pi * Math.sin(0.5 * pi * 1) * 0.5; // 1 = y
+
+            if (x1 >= -hpi && x1 <= hpi)
+            {
+                ce = colorInterpolate(yc, cc, Math.abs(x1), hpi); // 0..2
+
+                sp = arclength(n => (2 / pi) * Math.asin((2 * n) / (pi * k2)), 0, Math.abs(xt));
+                sf = arclength(n => (2 / pi) * Math.asin((2 * n) / (pi * k2)), 0, x1);
+                
+                c2 = colorInterpolate(M, ce, sp, sf);
+
+                
+                sf = sfycache.get(y1) || sfycache.get(-y1);
+                if (!sf)
+                {
+                    //sf = arclength(n => k * Math.sin(n), -Math.PI / 2, Math.PI / 2);
+                    sfycache.set(y1, sf);
+                    sfycache.set(-y1, sf);
+                }
+
+                //c = colorInterpolate(cs, ce, sp, sf);
+            }
+            else
+            {
+                let y2 = (2 / pi) * Math.asin(1 / k2); // simplified
+                ce = colorInterpolate(yc, cc, Math.abs(y2), 1); // 0..2
+
+                sp = arclength(n => (2 / pi) * Math.asin((2 * n) / (pi * k2)), 0, Math.abs(y2));
+                sf = arclength(n => (2 / pi) * Math.asin((2 * n) / (pi * k2)), 0, yt);
+                
+                c2 = colorInterpolate(M, ce, sp, sf);
+
+                //c = colorInterpolate(cs, ce, sp, sf);
+            }
+            
+            c = getMidpointColor(c1, c2);
+
+            if (c)
+            {
+                setColorForCoord(imgDataData, x, y, hsvToRgb(c));
+                //console.log(xt, yt, c);
+            }
+        },
     circle:
         function (x, y, width, colors, imgDataData)
         {
