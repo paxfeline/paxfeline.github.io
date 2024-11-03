@@ -84,16 +84,11 @@ function interpolate(A, B, p, w)
     return A * (1 - (p/w)) + B * (p/w);
 }
 
-function hueInterpolate(A, B, p, w)
+// get version of B closest to A; move up or down the spectrum as needed
+function getNearHue(A, B)
 {
-    if (A == B) return A;
-
-    //let d = p/w;
-
     let cw, ccw;
     let cwe, ccwe;
-    
-    let s = A;
 
     if (A < B)
     {
@@ -106,20 +101,27 @@ function hueInterpolate(A, B, p, w)
         ccwe = B;
     }
 
-    cw = cwe - s;
-    ccw = ccwe - s;
+    cw = cwe - A;
+    ccw = ccwe - A;
 
-    let r;
     if (Math.abs(cw) < Math.abs(ccw))
-    {
-        r = interpolate(s, cwe, p, w);
-    }
+        return cwe;
     else
-        r = interpolate(s, ccwe, p, w);
-    
-    r -= Math.floor(r);
+        return ccwe;
+}
 
-    return r;
+function normHue(h)
+{
+    return h - Math.floor(h);
+}
+
+function hueInterpolate(A, B, p, w)
+{
+    if (A == B) return A;
+
+    let ec = getNearHue(A, B);
+
+    return normHue(interpolate(A, ec, p, w));
 }
 
 function naiveColorInterpolate(A, B, p, w)
@@ -653,13 +655,21 @@ var gradientAlgorithms =
         {
             // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
             //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
+
+            // norm colors
+
             if (colors.length == 6)
             {
+                colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
+                colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
+                colors[3][0] = getNearHue(colors[0][0], colors[3][0]);    
+                colors[4][0] = getNearHue(colors[0][0], colors[4][0]);
+                colors[5][0] = getNearHue(colors[0][0], colors[5][0]);
 
                 if (x < 500)
                 {
-                    var h = (colors[5][0] * y / 500 + colors[4][0] * (1 - y / 500)) * (x / 500) +
-                            ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / 500);
+                    var h = normHue((colors[5][0] * y / 500 + colors[4][0] * (1 - y / 500)) * (x / 500) +
+                            ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / 500));
 
                     var s = (colors[5][1] * y / 500 + colors[4][1] * (1 - y / 500)) * (x / 500) +
                             ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / 500);
@@ -672,8 +682,8 @@ var gradientAlgorithms =
                 }
                 else
                 {
-                    h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * ((x - 500) / 500) +
-                        ((colors[5][0] * y / 500) + colors[4][0] * (1 - y / 500)) * (1 - (x - 500) / 500);
+                    h = normHue((colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * ((x - 500) / 500) +
+                        ((colors[5][0] * y / 500) + colors[4][0] * (1 - y / 500)) * (1 - (x - 500) / 500));
 
                     s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * ((x - 500) / 500) +
                         ((colors[5][1] * y / 500) + colors[4][1] * (1 - y / 500)) * (1 - (x - 500) / 500);
@@ -701,6 +711,10 @@ var gradientAlgorithms =
                         
                         // set color on c1
                         
+                colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
+                colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
+                colors[3][0] = getNearHue(colors[0][0], colors[3][0]);   
+                
                 let c = colorInterpolate(
                     colorInterpolate(colors[2], colors[3], y, 500),
                     colorInterpolate(colors[0], colors[1], y, 500),
@@ -726,6 +740,11 @@ var gradientAlgorithms =
 
             //console.log(d);
 
+            // norm colors
+            colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
+            colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
+            colors[3][0] = getNearHue(colors[0][0], colors[3][0]);
+
             // corner?
             if (d.includes(0))
             {
@@ -738,7 +757,7 @@ var gradientAlgorithms =
             {
                 let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
 
-                h = d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum;
+                h = normHue(d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum);
                 s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
                 v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
             }
@@ -758,6 +777,11 @@ var gradientAlgorithms =
 
             //console.log(d);
 
+            // norm colors
+            colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
+            colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
+            colors[3][0] = getNearHue(colors[0][0], colors[3][0]);
+
             // corner?
             if (d.includes(0))
             {
@@ -770,7 +794,7 @@ var gradientAlgorithms =
             {
                 let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
 
-                h = d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum;
+                h = normHue(d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum);
                 s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
                 v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
             }
