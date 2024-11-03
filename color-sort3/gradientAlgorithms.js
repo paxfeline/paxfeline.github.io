@@ -18,7 +18,9 @@ function rgbToHsv(color)
 {
     [r, g, b] = color;
 
-    r /= 255, g /= 255, b /= 255;
+    r /= 255;
+    g /= 255;
+    b /= 255;
 
     var max = Math.max(r, g, b), min = Math.min(r, g, b);
     var h, s, v = max;
@@ -79,64 +81,65 @@ function interpolate(A, B, p, w)
 {
     // p = part, w = whole
 
-    return A * (p/w) + B * (1 - (p/w));
+    return A * (1 - (p/w)) + B * (p/w);
 }
 
 function hueInterpolate(A, B, p, w)
 {
     if (A == B) return A;
 
-    let d = p/w;
+    //let d = p/w;
 
     let cw, ccw;
-    let cws, ccws;
     let cwe, ccwe;
+    
+    let s = A;
 
-    if (A > B)
+    if (A < B)
     {
-        s = A;
-        cwe = B + 1;
-        
-        s = A;
-        ccwe = B;
+        cwe = B;
+        ccwe = B - 1;
     }
-    else
+    else // A > B
     {
-        s = B;
-        cwe = A + 1;
-
-        s = B;
-        ccwe = A;
+        cwe = B + 1;
+        ccwe = B;
     }
 
     cw = cwe - s;
     ccw = ccwe - s;
 
     let r;
-    if (cw < ccw)
+    if (Math.abs(cw) < Math.abs(ccw))
     {
-        if (s < cwe)
-            r = interpolate(s, cwe, p, w);
-        else
-            r = interpolate(cwe, s, p, w);
+        r = interpolate(s, cwe, p, w);
     }
     else
-        if (s < ccwe)
-            r = interpolate(s, ccwe, p, w);
-        else
-            r = interpolate(ccwe, s, p, w);
+        r = interpolate(s, ccwe, p, w);
     
     r -= Math.floor(r);
 
     return r;
 }
 
+function naiveColorInterpolate(A, B, p, w)
+{
+    //console.log("CI", p/w);
+
+    //let h = hueInterpolate(A[0], B[0], p, w);
+    let h =    interpolate(A[0], B[0], p, w);
+    let s =    interpolate(A[1], B[1], p, w);
+    let v =    interpolate(A[2], B[2], p, w);
+
+    return [h, s, v];
+}
+
 function colorInterpolate(A, B, p, w)
 {
     //console.log("CI", p/w);
 
-    let h = hueInterpolate(A[0], B[0], p, w);
     //let h =    interpolate(A[0], B[0], p, w);
+    let h = hueInterpolate(A[0], B[0], p, w);
     let s =    interpolate(A[1], B[1], p, w);
     let v =    interpolate(A[2], B[2], p, w);
 
@@ -233,7 +236,18 @@ var gradientAlgorithms =
                 //    console.log(xt, xt);
 
                 cs = colorInterpolate(colors[2], colors[0], Math.PI / 2 + x1, Math.PI); // 0..π
-                ce = colorInterpolate(colors[1], colors[3], Math.PI / 2 + x1, Math.PI); 
+                
+                // test this
+                if (x1 < 0)
+                {
+                    cs = colorInterpolate(colors[2], N, Math.PI / 2 + x1, Math.PI / 2); // 0..π
+                    ce = colorInterpolate(colors[1], S, Math.PI / 2 + x1, Math.PI / 2); 
+                }
+                else
+                {
+                    cs = colorInterpolate(N, colors[0], x1, Math.PI / 2); // 0..π
+                    ce = colorInterpolate(S, colors[3], x1, Math.PI / 2); 
+                }
 
                 // make sure x1 is smaller than x2
                 //if (x2 < x1) [x2, x1] = [x1, x2];
@@ -260,6 +274,32 @@ var gradientAlgorithms =
     sine2:
         function (x, y, width, colors, imgDataData)
         {
+            let N, S;
+            if (colors.length == 6)
+            {
+                N = colors[4];
+                S = colors[5];
+            }
+            else
+            {
+                N = getMidpointColor(colors[2], colors[0]);
+                S = getMidpointColor(colors[3], colors[1]);
+            }
+            let E = getMidpointColor(colors[0], colors[1]);
+            let W = getMidpointColor(colors[2], colors[3]);
+
+            let M = getMidpointColor(getMidpointColor(N, S), getMidpointColor(E, W));
+
+            let Qs =
+                [[
+                    [colors[0], [E, N]],  // 0, 0 = ++
+                    [colors[1], [E, S]] // 0, 1 = +-
+                ],
+                [
+                    [colors[2], [W, N]], // 1, 0 = -+
+                    [colors[3], [W, S]] // 1, 1 = --
+                ]];
+                
             let xt = ((x / width) - 0.5) * Math.PI;
             let yt = (250 - y) / 250;
 
@@ -267,7 +307,7 @@ var gradientAlgorithms =
             if (xt == 0)
             {
                 let c = colorInterpolate(N, S, 1 - yt, 2); // 0..2
-                setColorForCoord(x, y, hsvToRgb(c));
+                setColorForCoord(imgDataData, x, y, hsvToRgb(c));
                 return;
             }
             
@@ -592,7 +632,6 @@ var gradientAlgorithms =
                     // set color on c1
                     setColorForCoord(imgDataData, x, y, hsvToRgb([h, s, v]));    
                 }
-
             }
             else
             {
@@ -607,6 +646,69 @@ var gradientAlgorithms =
 
                 // set color on c1
                 setColorForCoord(imgDataData, x, y, hsvToRgb([h, s, v]));
+            }
+        },
+    newbilinear:
+        function (x, y, width, colors, imgDataData)
+        {
+            // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
+            //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
+            if (colors.length == 6)
+            {
+
+                if (x < 500)
+                {
+                    var h = (colors[5][0] * y / 500 + colors[4][0] * (1 - y / 500)) * (x / 500) +
+                            ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / 500);
+
+                    var s = (colors[5][1] * y / 500 + colors[4][1] * (1 - y / 500)) * (x / 500) +
+                            ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / 500);
+
+                    var v = (colors[5][2] * y / 500 + colors[4][2] * (1 - y / 500)) * (x / 500) +
+                            ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / 500);
+
+                    // set color on c1
+                    setColorForCoord(imgDataData, x, y, hsvToRgb([h, s, v]));
+                }
+                else
+                {
+                    h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * ((x - 500) / 500) +
+                        ((colors[5][0] * y / 500) + colors[4][0] * (1 - y / 500)) * (1 - (x - 500) / 500);
+
+                    s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * ((x - 500) / 500) +
+                        ((colors[5][1] * y / 500) + colors[4][1] * (1 - y / 500)) * (1 - (x - 500) / 500);
+
+                    v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * ((x - 500) / 500) +
+                        ((colors[5][2] * y / 500) + colors[4][2] * (1 - y / 500)) * (1 - (x - 500) / 500);
+                            
+                    
+                    // set color on c1
+                    setColorForCoord(imgDataData, x, y, hsvToRgb([h, s, v]));    
+                }
+            }
+            else
+            {
+                /*
+                var h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
+                        ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width);
+                        
+                        var s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * (x / width) +
+                        ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / width);
+                        
+                        var v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * (x / width) +
+                        ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / width);
+                        */
+                        
+                        // set color on c1
+                        
+                let c = colorInterpolate(
+                    colorInterpolate(colors[2], colors[3], y, 500),
+                    colorInterpolate(colors[0], colors[1], y, 500),
+                    x,
+                    width
+                );
+
+                setColorForCoord(imgDataData, x, y, hsvToRgb(c));
             }
         },
     l2norm:
@@ -678,4 +780,4 @@ var gradientAlgorithms =
             // set color on c2
             setColorForCoord(imgDataData, x, y, hsvToRgb([h, s, v]));
         }
-    }
+};
