@@ -136,6 +136,7 @@ function colorInterpolate(A, B, p, w)
     //console.log("CI", p/w);
 
     let h = hueInterpolate(A[0], B[0], p, w);
+    //let h =    interpolate(A[0], B[0], p, w);
     let s =    interpolate(A[1], B[1], p, w);
     let v =    interpolate(A[2], B[2], p, w);
 
@@ -178,11 +179,22 @@ var gradientAlgorithms =
             let xt = ((x / width) - 0.5) * Math.PI;
             let yt = (250 - y) / 250;
 
+            let N, S;
+
+            if (colors.length > 4)
+            {
+                N = colors[4];
+                S = colors[5];
+            }
+            else
+            {
+                N = getMidpointColor(colors[2], colors[0]);
+                S = getMidpointColor(colors[3], colors[1]);
+            }
+
             // center
             if (xt == 0)
             {
-                let N = getMidpointColor(colors[2], colors[0]);
-                let S = getMidpointColor(colors[3], colors[1]);
                 let c = colorInterpolate(N, S, 1 - yt, 2); // 0..2
                 setColorForCoord(imgDataData, x, y, hsvToRgb(c));
                 return;
