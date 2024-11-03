@@ -66,6 +66,7 @@ self.addEventListener('install', (event) => {
       './index.html',
       './settings.html',
       './app.js',
+      './gradientAlgorithms.js',
       './color_gradient.png',
     ])
   );
