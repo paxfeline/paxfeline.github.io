@@ -3,6 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <title>Color Puzzle - New Game Options</title>
+    <style>
+        form
+        {
+            --extra-colors-vis: none;
+        }
+
+        form:has(#custom-gradient-radio6:checked)
+        {
+            --extra-colors-vis: initial;
+        }
+
+        label:has(#colorE),
+        label:has(#colorF)
+        {
+            display: var(--extra-colors-vis);
+        }
+    </style>
   </head>
   <body>
     <form action="index.html" method="get">
