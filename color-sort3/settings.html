@@ -20,10 +20,24 @@
             display: var(--extra-colors-vis);
         }
 
+        label:has(input:checked)
+        {
+            font-weight: bold;
+        }
+
+        input,
+        button,
+        select,
+        label
+        {
+            font-size: 3rem;
+            margin: 1rem;
+        }
+
         input[type='color']
         {
-            width: 5em;
-            height: 5em;
+            width: 5rem;
+            height: 5rem;
         }
     </style>
   </head>
@@ -36,18 +50,24 @@
         </div>
         <div>
             <h1>Puzzle Piece "Snap" Behavior</h1>
-            <label>
-                <input type="radio" name="snap" value="easy" checked>
-                Easy
-            </label>
-            <label>
-                <input type="radio" name="snap" value="on">
-                On (snaps to every space)
-            </label>
-            <label>
-                <input type="radio" name="snap" value="off">
-                Off (double-click to place)
-            </label>
+            <div>
+                <label>
+                    <input type="radio" name="snap" value="easy" checked>
+                    Easy
+                </label>
+            </div>
+            <div>
+                <label>
+                    <input type="radio" name="snap" value="on">
+                    On (snaps to every space)
+                </label>
+            </div>
+            <div>
+                <label>
+                    <input type="radio" name="snap" value="off">
+                    Off (double-click to place)
+                </label>
+            </div>
         </div>
         <div>
             <h1>Gradient</h1>
@@ -68,8 +88,9 @@
                     <option value="newbilinear">Bilinear interpolation (experimental)</option>
                     <option value="l2norm">L2 norm</option>
                     <option value="l1norm">L1 norm</option>
-                    <option value="sine">Sine (Broken)</option>
+                    <option value="sine">Sine (Experimental)</option>
                     <option value="sine2">Bi-Sine (Experimental)</option>
+                    <option value="circle">'90s Retro</option>
                 </select>              
             </div>
             <div>

@@ -656,18 +656,34 @@ var gradientAlgorithms =
             // Hue(E) = ( Hue(B)*y/a + Hue(A)*(1-y/a) ) * (x/a)  + 
             //      ( Hue(D)*y/a + Hue(C)*(1-y/a) ) * (1-x/a)
 
+            // algo
+
+            let grad = (gx, gy, gwidth, gcolors) => naiveColorInterpolate(
+                naiveColorInterpolate(gcolors[2], gcolors[3], gy, 500),
+                naiveColorInterpolate(gcolors[0], gcolors[1], gy, 500),
+                gx,
+                gwidth
+            );
+
             // norm colors
+
+            colors.forEach( (c, i) => c[0] = getNearHue(colors[0][0], c[0]));
 
             if (colors.length == 6)
             {
+                /*
                 colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
                 colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
                 colors[3][0] = getNearHue(colors[0][0], colors[3][0]);    
                 colors[4][0] = getNearHue(colors[0][0], colors[4][0]);
                 colors[5][0] = getNearHue(colors[0][0], colors[5][0]);
+                */
 
                 if (x < 500)
                 {
+                    let c = grad(x, y, 500, [colors[4], colors[5], colors[2], colors[3]]);
+
+                    
                     var h = normHue((colors[5][0] * y / 500 + colors[4][0] * (1 - y / 500)) * (x / 500) +
                             ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / 500));
 
@@ -676,12 +692,18 @@ var gradientAlgorithms =
 
                     var v = (colors[5][2] * y / 500 + colors[4][2] * (1 - y / 500)) * (x / 500) +
                             ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / 500);
+                            
+
+                c = [h, s, v];
 
                     // set color on c1
-                    setColorForCoord(imgDataData, x, y, hsvToRgb([h, s, v]));
+                    setColorForCoord(imgDataData, x, y, hsvToRgb(c));
                 }
                 else
                 {
+                    let c = grad(x - 500, y, 500, [colors[0], colors[1], colors[4], colors[5]]);
+
+                    
                     h = normHue((colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * ((x - 500) / 500) +
                         ((colors[5][0] * y / 500) + colors[4][0] * (1 - y / 500)) * (1 - (x - 500) / 500));
 
@@ -690,37 +712,38 @@ var gradientAlgorithms =
 
                     v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * ((x - 500) / 500) +
                         ((colors[5][2] * y / 500) + colors[4][2] * (1 - y / 500)) * (1 - (x - 500) / 500);
+                        
+
+                c = [h, s, v];
                             
                     
                     // set color on c1
-                    setColorForCoord(imgDataData, x, y, hsvToRgb([h, s, v]));    
+                    setColorForCoord(imgDataData, x, y, hsvToRgb(c));    
                 }
             }
             else
             {
                 /*
-                var h = (colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
-                        ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width);
+                colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
+                colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
+                colors[3][0] = getNearHue(colors[0][0], colors[3][0]);   
+                */
+                
+                var h = normHue((colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
+                        ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width));
                         
                         var s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * (x / width) +
                         ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / width);
                         
                         var v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * (x / width) +
                         ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / width);
-                        */
+                        
                         
                         // set color on c1
-                        
-                colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
-                colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
-                colors[3][0] = getNearHue(colors[0][0], colors[3][0]);   
-                
-                let c = colorInterpolate(
-                    colorInterpolate(colors[2], colors[3], y, 500),
-                    colorInterpolate(colors[0], colors[1], y, 500),
-                    x,
-                    width
-                );
+
+                let c = grad(x, y, width, colors);
+
+                c = [h, s, v];
 
                 setColorForCoord(imgDataData, x, y, hsvToRgb(c));
             }
@@ -728,7 +751,7 @@ var gradientAlgorithms =
     l2norm:
         function (x, y, width, colors, imgDataData)
         {
-            // L2 norm?
+            // L2 norm
 
             // may use 4 or 6 of these
             let p = [[1, 0], [1, 1], [0, 0], [0, 1], [0.5, 0], [0.5, 1]];
@@ -744,6 +767,8 @@ var gradientAlgorithms =
             colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
             colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
             colors[3][0] = getNearHue(colors[0][0], colors[3][0]);
+
+            // TODO: include other colors (4 and 5)
 
             // corner?
             if (d.includes(0))
