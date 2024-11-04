@@ -684,63 +684,17 @@ var gradientAlgorithms =
                 if (x < 500)
                 {
                     let c = grad(x, y, 500, [colors[4], colors[5], colors[2], colors[3]]);
-
-                    
-                    var h = normHue((colors[5][0] * y / 500 + colors[4][0] * (1 - y / 500)) * (x / 500) +
-                            ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / 500));
-
-                    var s = (colors[5][1] * y / 500 + colors[4][1] * (1 - y / 500)) * (x / 500) +
-                            ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / 500);
-
-                    var v = (colors[5][2] * y / 500 + colors[4][2] * (1 - y / 500)) * (x / 500) +
-                            ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / 500);
-                            
-
-                //c = [h, s, v];
-
-                    // set color on c1
                     setColorForCoord(imgDataData, x, y, hsvToRgb(c));
                 }
                 else
                 {
                     let c = grad(x - 500, y, 500, [colors[0], colors[1], colors[4], colors[5]]);
-
-                    
-                    h = normHue((colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * ((x - 500) / 500) +
-                        ((colors[5][0] * y / 500) + colors[4][0] * (1 - y / 500)) * (1 - (x - 500) / 500));
-
-                    s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * ((x - 500) / 500) +
-                        ((colors[5][1] * y / 500) + colors[4][1] * (1 - y / 500)) * (1 - (x - 500) / 500);
-
-                    v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * ((x - 500) / 500) +
-                        ((colors[5][2] * y / 500) + colors[4][2] * (1 - y / 500)) * (1 - (x - 500) / 500);
-                        
-
-                //c = [h, s, v];
-                            
-                    
-                    // set color on c1
                     setColorForCoord(imgDataData, x, y, hsvToRgb(c));    
                 }
             }
             else
             {
-                var h = normHue((colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
-                        ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width));
-                        
-                        var s = (colors[1][1] * y / 500 + colors[0][1] * (1 - y / 500)) * (x / width) +
-                        ((colors[3][1] * y / 500) + colors[2][1] * (1 - y / 500)) * (1 - x / width);
-                        
-                        var v = (colors[1][2] * y / 500 + colors[0][2] * (1 - y / 500)) * (x / width) +
-                        ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / width);
-                        
-                        
-                        // set color on c1
-
                 let c = grad(x, y, width, colors);
-
-                //c = [h, s, v];
-
                 setColorForCoord(imgDataData, x, y, hsvToRgb(c));
             }
         },
@@ -760,9 +714,7 @@ var gradientAlgorithms =
             //console.log(d);
 
             // norm colors
-            colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
-            colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
-            colors[3][0] = getNearHue(colors[0][0], colors[3][0]);
+            for (let i = 1; i < colors.length; i++) colors[i][0] = getNearHue(colors[0][0], colors[i][0]);
 
             // TODO: include other colors (4 and 5)
 
@@ -790,35 +742,53 @@ var gradientAlgorithms =
         function (x, y, width, colors, imgDataData)
         {
             let p = [[1, 0], [1, 1], [0, 0], [0, 1], [0.5, 0], [0.5, 1]];
-            let d = [];
-            for (let i = 0; i < colors.length; i++)
+
+            let grad = (gx, gy, gwidth, gcolors) =>
             {
-                d[i] = Math.abs(p[i][0]-(x/width)) + Math.abs(p[i][1]-(y/500));
-            }
+                let d = [];
+                for (let i = 0; i < gcolors.length; i++) d[i] = Math.abs(p[i][0]-(gx/gwidth)) + Math.abs(p[i][1]-(gy/500));
+    
+                // corner?
+                if (d.includes(0))
+                {
+                    let i = d.indexOf(0);
+                    h = gcolors[i][0];
+                    s = gcolors[i][1];
+                    v = gcolors[i][2];
+                }
+                else
+                {
+                    let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
+    
+                    h = normHue(d.reduce( (a,c,i) => a + gcolors[i][0] * 1/c, 0 ) / d_sum);
+                    s = d.reduce( (a,c,i) => a + gcolors[i][1] * 1/c, 0 ) / d_sum;
+                    v = d.reduce( (a,c,i) => a + gcolors[i][2] * 1/c, 0 ) / d_sum;
+                }
 
-            //console.log(d);
-
+                return [h, s, v];
+            };
+    
             // norm colors
-            colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
-            colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
-            colors[3][0] = getNearHue(colors[0][0], colors[3][0]);
+            for (let i = 1; i < colors.length; i++) colors[i][0] = getNearHue(colors[0][0], colors[i][0]);
 
-            // corner?
-            if (d.includes(0))
-            {
-                let i = d.indexOf(0);
-                h = colors[i][0];
-                s = colors[i][1];
-                v = colors[i][2];
-            }
-            else
-            {
-                let d_sum = d.reduce( (a,c) => a + 1/c, 0 );
-
-                h = normHue(d.reduce( (a,c,i) => a + colors[i][0] * 1/c, 0 ) / d_sum);
-                s = d.reduce( (a,c,i) => a + colors[i][1] * 1/c, 0 ) / d_sum;
-                v = d.reduce( (a,c,i) => a + colors[i][2] * 1/c, 0 ) / d_sum;
-            }
+            /*if (colors.length == 6)
+                {
+                    if (x < 500)
+                    {
+                        let c = grad(x, y, 500, [colors[4], colors[5], colors[2], colors[3]]);
+                        setColorForCoord(imgDataData, x, y, hsvToRgb(c));
+                    }
+                    else
+                    {
+                        let c = grad(x - 500, y, 500, [colors[0], colors[1], colors[4], colors[5]]);
+                        setColorForCoord(imgDataData, x, y, hsvToRgb(c));    
+                    }
+                }
+                else*/
+                {
+                    let c = grad(x, y, width, colors);
+                    setColorForCoord(imgDataData, x, y, hsvToRgb(c));
+                }
 
             //console.log(h,s,v);
 

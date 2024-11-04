@@ -7,6 +7,7 @@
         form
         {
             --extra-colors-vis: none;
+            --custom-origin-color-vis: none;
         }
 
         form:has(#custom-gradient-radio6:checked)
@@ -14,10 +15,20 @@
             --extra-colors-vis: initial;
         }
 
+        form:has(#custom-origin-color:checked)
+        {
+            --custom-origin-color-vis: initial;
+        }
+
         label:has(#colorE),
         label:has(#colorF)
         {
             display: var(--extra-colors-vis);
+        }
+
+        label:has(#originColor)
+        {
+            display: var(--custom-origin-color-vis);
         }
 
         label:has(input:checked)
@@ -28,7 +39,8 @@
         input,
         button,
         select,
-        label
+        label,
+        summary
         {
             font-size: 3rem;
             margin: 1rem;
@@ -38,6 +50,14 @@
         {
             width: 5rem;
             height: 5rem;
+        }
+
+        .hr
+        {
+            height: 0;
+            width: 20%;
+            border: 1px solid black;
+            margin: 1rem;
         }
     </style>
   </head>
@@ -122,6 +142,42 @@
                         Color B
                     </label>
                 </div>
+            </div>
+            <div>
+                <details>
+                    <summary>Advanced Options:</summary>
+                    <div>
+                        <label>
+                            <input type="radio" id="smart-interpolation" name="interpolation_mode" value="default" checked>
+                            Use smart color interpolation
+                        </label>
+                    </div>
+                    <div>
+                        <label>
+                            <input type="radio" id="naive-interpolation" name="interpolation_mode" value="custom">
+                            Use naive color interpolation
+                        </label>
+                    </div>
+                    <div class="hr"></div>
+                    <div>
+                        <label>
+                            <input type="radio" id="default-origin-color" name="origin_color_option" value="default" checked>
+                            Use default origin color (Color A)
+                        </label>
+                    </div>
+                    <div>
+                        <label>
+                            <input type="radio" id="custom-origin-color" name="origin_color_option" value="custom">
+                            Use custom origin color
+                        </label>
+                    </div>
+                    <div>
+                        <label>
+                            <input type="color" id="originColor" name="originColor" value="#bf94ff" />
+                            Custom Origin Color
+                        </label>
+                    </div>
+                </details>
             </div>
             <div>
                 <button type="button" onclick="generate_gradient()">
