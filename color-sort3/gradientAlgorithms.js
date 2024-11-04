@@ -87,6 +87,8 @@ function interpolate(A, B, p, w)
 // get version of B closest to A; move up or down the spectrum as needed
 function getNearHue(A, B)
 {
+    if (A == B) return A;
+
     let cw, ccw;
     let cwe, ccwe;
 
@@ -115,6 +117,11 @@ function normHue(h)
     return h - Math.floor(h);
 }
 
+function normHueOfColor(c)
+{
+    return [normHue(c[0]), c[1], c[2]];
+}
+
 function hueInterpolate(A, B, p, w)
 {
     if (A == B) return A;
@@ -124,14 +131,15 @@ function hueInterpolate(A, B, p, w)
     return normHue(interpolate(A, ec, p, w));
 }
 
+// will become just colorInterpolate, replacing the other one
 function naiveColorInterpolate(A, B, p, w)
 {
     //console.log("CI", p/w);
 
     //let h = hueInterpolate(A[0], B[0], p, w);
-    let h =    interpolate(A[0], B[0], p, w);
-    let s =    interpolate(A[1], B[1], p, w);
-    let v =    interpolate(A[2], B[2], p, w);
+    let h = interpolate(A[0], B[0], p, w);
+    let s = interpolate(A[1], B[1], p, w);
+    let v = interpolate(A[2], B[2], p, w);
 
     return [h, s, v];
 }
@@ -658,27 +666,21 @@ var gradientAlgorithms =
 
             // algo
 
-            let grad = (gx, gy, gwidth, gcolors) => naiveColorInterpolate(
+            let grad = (gx, gy, gwidth, gcolors) => normHueOfColor(naiveColorInterpolate(
                 naiveColorInterpolate(gcolors[2], gcolors[3], gy, 500),
                 naiveColorInterpolate(gcolors[0], gcolors[1], gy, 500),
                 gx,
                 gwidth
-            );
+            ));
 
             // norm colors
 
-            colors.forEach( (c, i) => c[0] = getNearHue(colors[0][0], c[0]));
+            //colors.forEach( c => c[0] = getNearHue(colors[0][0], c[0]));
+
+            for (let i = 1; i < colors.length; i++) colors[i][0] = getNearHue(colors[0][0], colors[i][0]);
 
             if (colors.length == 6)
             {
-                /*
-                colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
-                colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
-                colors[3][0] = getNearHue(colors[0][0], colors[3][0]);    
-                colors[4][0] = getNearHue(colors[0][0], colors[4][0]);
-                colors[5][0] = getNearHue(colors[0][0], colors[5][0]);
-                */
-
                 if (x < 500)
                 {
                     let c = grad(x, y, 500, [colors[4], colors[5], colors[2], colors[3]]);
@@ -694,7 +696,7 @@ var gradientAlgorithms =
                             ((colors[3][2] * y / 500) + colors[2][2] * (1 - y / 500)) * (1 - x / 500);
                             
 
-                c = [h, s, v];
+                //c = [h, s, v];
 
                     // set color on c1
                     setColorForCoord(imgDataData, x, y, hsvToRgb(c));
@@ -714,7 +716,7 @@ var gradientAlgorithms =
                         ((colors[5][2] * y / 500) + colors[4][2] * (1 - y / 500)) * (1 - (x - 500) / 500);
                         
 
-                c = [h, s, v];
+                //c = [h, s, v];
                             
                     
                     // set color on c1
@@ -723,12 +725,6 @@ var gradientAlgorithms =
             }
             else
             {
-                /*
-                colors[1][0] = getNearHue(colors[0][0], colors[1][0]);
-                colors[2][0] = getNearHue(colors[0][0], colors[2][0]);
-                colors[3][0] = getNearHue(colors[0][0], colors[3][0]);   
-                */
-                
                 var h = normHue((colors[1][0] * y / 500 + colors[0][0] * (1 - y / 500)) * (x / width) +
                         ((colors[3][0] * y / 500) + colors[2][0] * (1 - y / 500)) * (1 - x / width));
                         
@@ -743,7 +739,7 @@ var gradientAlgorithms =
 
                 let c = grad(x, y, width, colors);
 
-                c = [h, s, v];
+                //c = [h, s, v];
 
                 setColorForCoord(imgDataData, x, y, hsvToRgb(c));
             }
