@@ -235,11 +235,56 @@ function stop_sweep()
     sweepInt = null;
 }
 
+function rotatePiece(p)
+{
+    // counteract the pointer down event
+    gameState.dragging = null;
+    
+    function transitionend()
+    {
+        console.log("transition end");
+
+        //if (p.dataset.rot % 360) p.style.transform = "initial";
+
+        p.style.transition = "initial";
+    }
+    p.ontransitionend = transitionend;
+
+    // apply new style next event loop
+    function transitionstart()
+    {
+        console.log("transition start");
+
+        // turn on transition for one moment
+        p.style.transition = "0.5s";
+
+        let curRot = p.dataset.rot ? Number(p.dataset.rot) : 0;
+        curRot = (curRot + 90)//; % 360;
+        p.dataset.rot = curRot;
+        if (curRot)
+            p.style.transform = `rotate(${curRot}deg)`;
+        //else
+            //p.style.transform = `initial`;
+
+    };
+
+    //transitionstart();
+
+    // set left/top on next event loop
+    setTimeout(transitionstart);
+    
+}
+
 game.addEventListener("contextmenu",
     e =>
     {
         if (e.target.classList.contains("dragitem"))
         {
+            e.preventDefault();
+
+            rotatePiece(e.target);
+
+            /*
             let curRot = e.target.dataset.rot ? Number(e.target.dataset.rot) : 0;
             curRot = (curRot + 90) % 360;
             e.target.dataset.rot = curRot;
@@ -247,16 +292,14 @@ game.addEventListener("contextmenu",
                 e.target.style.transform = `rotate(${curRot}deg)`;
             else
                 e.target.style.transform = `initial`;
-
-            e.preventDefault();
-            //return false;
+            */
         }
     });
 
 game.addEventListener("pointerdown",
     e =>
     {
-        //console.log("pd", e);
+        console.log("pd", e);
 
         // rotate on drag and tap
 
@@ -264,11 +307,14 @@ game.addEventListener("pointerdown",
 
         if (gameState.dragging && !e.isPrimary) // && to preclude a weird glitch I encountered
         {
+            rotatePiece(gameState.dragging);
+            /*
             let t = gameState.dragging;
             let curRot = t.dataset.rot ? Number(t.dataset.rot) : 0;
             curRot = (curRot + 90) % 360;
             t.dataset.rot = curRot;
             t.style.transform = `rotate(${curRot}deg)`;
+            */
             return;
         }
 
@@ -376,7 +422,7 @@ game.addEventListener("pointerdown",
         }
         else
         {
-            // used to shuffle on 5 clicks
+            // used to shuffle on 3 clicks
             if (gameState.clickCount)
                 gameState.clickCount++;
             else
@@ -441,16 +487,10 @@ game.addEventListener("pointerdown",
                         console.log("OUT", item.style.left, item.style.top, item.style.transform, item);
 
                         console.log("NEW", item.new_left, item.new_top, item.new_rot, item);
-
-                        function transitionend()
-                        {
-                            item.style.transition = "initial";
-                        }
-                        item.ontransitionend = transitionend;
                     }
                 });
 
-                // apply new style next event loop
+                // apply new styles once calculations are done
                 function transitionstart()
                 {
                     console.log("transition start");
@@ -460,18 +500,24 @@ game.addEventListener("pointerdown",
                     {
                         if (item.classList.contains("dragitem"))
                         {
-                            item.style.left = item.new_left;
-                            item.style.top = item.new_top;
-                            item.style.transform = item.new_rot;
+
+                            function transitionend()
+                            {
+                                item.style.transition = "initial";
+                            }
+                            item.ontransitionend = transitionend;
 
                             // turn on transition for one moment
                             item.style.transition = "2s";
+
+                            item.style.left = item.new_left;
+                            item.style.top = item.new_top;
+                            item.style.transform = item.new_rot;
                         }
                     });
                 };
 
-                // set left/top on next event loop
-                setTimeout(transitionstart, 0);
+                transitionstart();
             }
         }
     }
