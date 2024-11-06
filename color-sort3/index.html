@@ -541,7 +541,7 @@ game.addEventListener("pointerdown",
 game.addEventListener("pointermove",
     e =>
     {
-        clearTimeout(restartClickTimer);
+        clearTimeout(gameState.restartClickTimer);
 
         if (!gameState.dragging || e.pointerId != gameState.mainPointerId) return;
 
