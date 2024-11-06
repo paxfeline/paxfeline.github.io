@@ -422,6 +422,19 @@ game.addEventListener("pointerdown",
         }
         else
         {
+            // used to restart
+            if (gameState.restartClickTimer) clearTimeout(gameState.restartClickTimer);
+
+            gameState.restartClickTimer = setTimeout( 
+                () =>
+                {
+                    console.log("triggered");
+                    if (confirm("Exit and start new puzzle?"))
+                    {
+                        location.assign("settings.html");
+                    }
+                }, 3000);
+
             // used to shuffle on 3 clicks
             if (gameState.clickCount)
                 gameState.clickCount++;
@@ -517,7 +530,9 @@ game.addEventListener("pointerdown",
                     });
                 };
 
-                transitionstart();
+                // not sure why this seems needed
+                // without it, one piece can get off-track
+                setTimeout(transitionstart);
             }
         }
     }
@@ -526,6 +541,8 @@ game.addEventListener("pointerdown",
 game.addEventListener("pointermove",
     e =>
     {
+        clearTimeout(restartClickTimer);
+
         if (!gameState.dragging || e.pointerId != gameState.mainPointerId) return;
 
         //console.log("pm", e.target.dataset.role, e);
@@ -680,11 +697,16 @@ game.addEventListener("pointercancel",
         //game.releasePointerCapture(e.pointerId);
         gameState.dragging.setAttribute("style", gameState.dragging.cached_style);
         gameState.dragging = null;
+        clearTimeout(gameState.restartClickTimer);
     });
 
 game.addEventListener("pointerup",
     e =>
     {
+        // if held down long enough, this offers a restart
+        // on pointerup it should be cleared
+        clearTimeout(gameState.restartClickTimer);
+
         //console.log("pu", e.target.dataset.role, e);
 
         //game.releasePointerCapture(e.pointerId);
