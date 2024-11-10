@@ -253,7 +253,7 @@ function rotatePiece(p)
         console.log("transition start");
 
         // turn on transition for one moment
-        p.style.transition = "0.5s";
+        p.style.transition = "transform 0.5s";
 
         let curRot = p.dataset.rot ? Number(p.dataset.rot) : 0;
         curRot = (curRot + 90)//; % 360;
