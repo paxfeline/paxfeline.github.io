@@ -567,6 +567,9 @@ game.addEventListener("pointercancel",
         gameState.dragging.setAttribute("style", gameState.dragging.cached_style);
         gameState.dragging = null;
         clearTimeout(gameState.restartClickTimer);
+
+        if (gameState.preview)
+            document.body.removeChild(gameState.preview);
     });
 
 game.addEventListener("pointerup",

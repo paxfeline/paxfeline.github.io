@@ -153,5 +153,5 @@ but it works for now */
     padding: 2rem;
     background-image: radial-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0) );
     border-radius: 50%;
-    overflow: initial;
+    overflow: visible;
 }
