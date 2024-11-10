@@ -237,9 +237,6 @@ function stop_sweep()
 
 function rotatePiece(p)
 {
-    // counteract the pointer down event
-    gameState.dragging = null;
-    
     function transitionend()
     {
         console.log("transition end");
