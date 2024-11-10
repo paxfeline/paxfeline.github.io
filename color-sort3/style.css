@@ -142,7 +142,7 @@ but it works for now */
 .drag-preview
 {
     --left-val: initial;
-    --right-val: 100%;
+    --right-val: 1rem;
     top: 1rem;
     left: var(--left-val);
     right: var(--right-val);
