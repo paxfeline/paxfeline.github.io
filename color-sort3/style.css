@@ -142,8 +142,8 @@ but it works for now */
 .drag-preview
 {
     --left-val: initial;
-    --right-val: 3rem;
-    top: 3rem;
+    --right-val: 100%;
+    top: 1rem;
     left: var(--left-val);
     right: var(--right-val);
     transform: rotate(var(--rotate-val, 0));
@@ -154,4 +154,6 @@ but it works for now */
     background-image: radial-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0) );
     border-radius: 25%;
     overflow: visible;
+    pointer-events: none;
+    z-index: 50;
 }
