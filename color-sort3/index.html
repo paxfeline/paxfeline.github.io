@@ -121,7 +121,7 @@ function rotatePiece(p)
             //p.style.transform = `initial`;
 
         if (gameState.preview && curRot)
-            gameState.preview.style.setProperty("--rotate-val", curRot);
+            gameState.preview.style.setProperty("--rotate-val", `${curRot}deg`);
     };
 
     //transitionstart();
