@@ -255,7 +255,7 @@ game.addEventListener("pointerdown",
             if (gameState.dragging.dataset.rot)
                 gameState.preview.style.setProperty("--rotate-val", `${gameState.dragging.dataset.rot}deg`)
             if (gameState.dragging.style.transformOrigin)
-            gameState.preview.style.transformOrigin = gameState.dragging.style.transformOrigin;
+            gameState.preview.style.transformOrigin = "50% 50%"; //gameState.dragging.style.transformOrigin;
 
 
             document.body.append(gameState.preview);
