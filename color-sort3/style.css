@@ -1,0 +1,155 @@
+*
+{
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+
+    /* can I do this? */
+    touch-action: none;
+}
+
+html
+{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body
+{
+    margin: 0;
+    overflow: hidden;
+}
+
+#game
+{
+    --width-unit: 0.1vw;
+
+    --min-bright: 0.25;
+    --c: 0.08;
+
+    touch-action: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/*
+https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-children-an-element-has
+*/
+.in-place:first-child:nth-last-child(50),
+.in-place:first-child:nth-last-child(50) ~ .in-place
+{
+    filter: brightness(var(--brightness));
+}
+
+#tray > div#main
+{
+    outline: 2em solid black;
+}
+
+#main, #effects-overlay, #main-backdrop
+{
+    position: absolute;
+    width: calc(var(--width-unit) * 1000);
+    height: calc(var(--width-unit) * 500);
+    margin: auto;
+    left: calc(50vw - var(--width-unit) * 500);
+    top: calc(50vh - var(--width-unit) * 250);
+    z-index: 2; /* for main */
+}
+
+#effects-overlay, #main-backdrop
+{
+    pointer-events: none;
+    z-index: 11; /* for effects-overlay */
+}
+
+#main-backdrop
+{
+    z-index: 1;
+  position: absolute;
+}
+
+/* this can probably change,
+but it works for now */
+
+#tray
+{
+    flex: 1;
+}
+
+
+
+.dragitem
+{
+    position: absolute;
+}
+
+.dropzone
+{
+    position: relative;
+    display: inline-block;
+    outline: 1px solid black;
+}
+
+.dropzone-active
+{
+    outline: 0.3em solid rgba(255, 100, 100, 0.5);
+}
+
+.dragitem-dragging
+{
+    /*
+    transform: scale(300%);
+    */
+
+    z-index: 10;
+}
+
+#tray
+{
+    --dragging: drop-shadow(black 0 0 .075em)
+}
+
+#tray:has(.dragitem.dragitem-dragging)
+{
+    --dragging: initial;
+}
+
+#tray > .dragitem
+{
+    filter: var(--dragging);
+}
+
+#tray .dragitem.dragitem-dragging
+{
+    background-image: initial;
+    outline: initial;
+    filter: initial;
+}
+
+
+@media (max-height: 100vw)
+{
+    #game
+    {
+        --width-unit: 0.1vh;
+    }
+}
+
+.drag-preview
+{
+    --left-val: initial;
+    --right-val: 3rem;
+    top: 3rem;
+    left: var(--left-val);
+    right: var(--right-val);
+    transform: scale(1.5) rotate(var(--rotate-val, 0));
+    transition: 0.1s;
+    opacity: 0;
+    position: absolute;
+    padding: 2rem;
+    background-image: radial-gradient(rgb(255, 255, 255) 0%, rgba(255, 255, 255, 0) );
+}
