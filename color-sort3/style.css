@@ -143,9 +143,13 @@ but it works for now */
 {
     --left-val: initial;
     --right-val: 1rem;
+    --top-val: 1rem;
+    --bottom-val: initial;
     top: 1rem;
     left: var(--left-val);
     right: var(--right-val);
+    top: var(--top-val);
+    bottom: var(--bottom-val);
     transform: rotate(var(--rotate-val, 0));
     transition: 0.1s;
     opacity: 0;

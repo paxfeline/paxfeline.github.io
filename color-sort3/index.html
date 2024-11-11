@@ -248,18 +248,22 @@ game.addEventListener("pointerdown",
 
             gameState.dragging = e.target;
 
+            // handle displaying preview
+            let bodybr = document.body.getBoundingClientRect();
+            gameState.prev_pos_x = e.clientX > bodybr.width / 2 ? "left" : "right";
+            gameState.prev_pos_y = e.clientY > bodybr.height / 2 ? "top" : "bottom";
             gameState.preview = gameState.dragging.cloneNode();
             gameState.preview.getContext("2d").drawImage(gameState.dragging, 0, 0);
             gameState.preview.className = "drag-preview";
             gameState.preview.style = "";
             if (gameState.dragging.dataset.rot)
-                gameState.preview.style.setProperty("--rotate-val", `${gameState.dragging.dataset.rot}deg`)
-            if (gameState.dragging.style.transformOrigin)
+                gameState.preview.style.setProperty("--rotate-val", `${gameState.dragging.dataset.rot}deg`);
+            gameState.preview.style.setProperty("--left-val", gameState.prev_pos_x == "left" ? "1rem" : "initial");
+            gameState.preview.style.setProperty("--right-val", gameState.prev_pos_x == "left" ? "initial" : "1rem");
+            gameState.preview.style.setProperty("--top-val", gameState.prev_pos_y == "top" ? "1rem" : "initial");
+            gameState.preview.style.setProperty("--bottom-val", gameState.prev_pos_y == "top" ? "initial" : "1rem");
             gameState.preview.style.transformOrigin = "50% 50%"; //gameState.dragging.style.transformOrigin;
-
-
             document.body.append(gameState.preview);
-
             setTimeout( () => gameState.preview.style.opacity = 1 );
 
             gameState.mainPointerId = e.pointerId;
@@ -292,6 +296,7 @@ game.addEventListener("pointerdown",
         }
         else
         {
+            
             // used to restart
             if (gameState.restartClickTimer) clearTimeout(gameState.restartClickTimer);
 
@@ -413,6 +418,35 @@ game.addEventListener("pointermove",
     {
         
         if (!gameState.dragging || e.pointerId != gameState.mainPointerId) return;
+
+        // move preview if needed
+        // TODO: move to function
+        let bodybr = document.body.getBoundingClientRect();
+        let new_pos_x = e.clientX > bodybr.width / 2 ? "left" : "right";
+        let new_pos_y = e.clientY > bodybr.height / 2 ? "top" : "bottom";
+        if (new_pos_x != gameState.prev_pos_x || new_pos_y != gameState.prev_pos_y)
+        {
+            gameState.prev_pos_x = new_pos_x;
+            gameState.prev_pos_y = new_pos_y;
+            // esp this
+            gameState.prev_preview = gameState.preview;
+            gameState.prev_preview.ontransitionend = () => document.body.removeChild(gameState.prev_preview);
+            gameState.prev_preview.style.opacity = 0;
+            // and this, which is C&P
+            gameState.preview = gameState.dragging.cloneNode();
+            gameState.preview.getContext("2d").drawImage(gameState.dragging, 0, 0);
+            gameState.preview.className = "drag-preview";
+            gameState.preview.style = "";
+            if (gameState.dragging.dataset.rot)
+                gameState.preview.style.setProperty("--rotate-val", `${gameState.dragging.dataset.rot}deg`);
+            gameState.preview.style.setProperty("--left-val", gameState.prev_pos_x == "left" ? "1rem" : "initial");
+            gameState.preview.style.setProperty("--right-val", gameState.prev_pos_x == "left" ? "initial" : "1rem");
+            gameState.preview.style.setProperty("--top-val", gameState.prev_pos_y == "top" ? "1rem" : "initial");
+            gameState.preview.style.setProperty("--bottom-val", gameState.prev_pos_y == "top" ? "initial" : "1rem");
+            gameState.preview.style.transformOrigin = "50% 50%"; //gameState.dragging.style.transformOrigin;
+            document.body.appendChild(gameState.preview);
+            setTimeout( () => gameState.preview.style.opacity = 1 );
+        }
 
         //console.log("pm", e.target.dataset.role, e);
 
