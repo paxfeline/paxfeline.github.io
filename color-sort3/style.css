@@ -154,9 +154,11 @@ but it works for now */
     transition: 0.1s;
     opacity: 0;
     position: absolute;
-    padding: 2rem;
-    background-image: radial-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0) );
-    border-radius: 25%;
+    padding: 3rem;
+    /*background-image: radial-gradient(rgb(255, 255, 255), rgba(255, 255, 255, 0) );*/
+    background-color: white;
+    border-radius: 50%;
+    border: 1rem solid black;
     overflow: visible;
     pointer-events: none;
     z-index: 50;
