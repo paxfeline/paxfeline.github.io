@@ -421,11 +421,15 @@ game.addEventListener("pointermove",
 
         // move preview if needed
         // TODO: move to function
-        let bodybr = document.body.getBoundingClientRect();
-        let new_pos_x = e.clientX > bodybr.width / 2 ? "left" : "right";
-        let new_pos_y = e.clientY > bodybr.height / 2 ? "top" : "bottom";
-        if (new_pos_x != gameState.prev_pos_x || new_pos_y != gameState.prev_pos_y)
+        let pbr = gameState.preview.getBoundingClientRect();
+        let pdx = e.clientX - (pbr.x + pbr.width / 2);
+        let pdy = e.clientY - (pbr.y + pbr.height / 2);
+        if (Math.sqrt(pdx*pdx + pdy*pdy) < (pbr.width + pbr.height) / 2)
         {
+            let bodybr = document.body.getBoundingClientRect();
+            let new_pos_x = e.clientX > bodybr.width / 2 ? "left" : "right";
+            let new_pos_y = e.clientY > bodybr.height / 2 ? "top" : "bottom"
+            ;
             gameState.prev_pos_x = new_pos_x;
             gameState.prev_pos_y = new_pos_y;
             // esp this
@@ -723,7 +727,7 @@ window.addEventListener("resize",
         });
     });
 
-const puzzle_piece_size = 100;
+const puzzle_piece_size = 125;
 
 function makePuzzleFromImage(sourceEl)
 {
