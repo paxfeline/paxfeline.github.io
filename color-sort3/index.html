@@ -424,7 +424,7 @@ game.addEventListener("pointermove",
         let pbr = gameState.preview.getBoundingClientRect();
         let pdx = e.clientX - (pbr.x + pbr.width / 2);
         let pdy = e.clientY - (pbr.y + pbr.height / 2);
-        if (Math.sqrt(pdx*pdx + pdy*pdy) < (pbr.width + pbr.height) / 2)
+        if (Math.sqrt(pdx*pdx + pdy*pdy) < (pbr.width + pbr.height) / 4)
         {
             let bodybr = document.body.getBoundingClientRect();
             let new_pos_x = e.clientX > bodybr.width / 2 ? "left" : "right";
