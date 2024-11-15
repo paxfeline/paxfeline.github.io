@@ -135,6 +135,9 @@ function rotatePiece(p)
     
 }
 
+// trying to prevent swipe-back
+game.addEventListener("touchstart", e => e.preventDefault());
+
 game.addEventListener("contextmenu",
     e =>
     {
