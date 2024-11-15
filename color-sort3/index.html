@@ -98,9 +98,13 @@ function rotatePiece(p)
     {
         console.log("transition end");
 
-        //if (p.dataset.rot % 360) p.style.transform = "initial";
-
         p.style.transition = "initial";
+
+        if (p.dataset.rot % 360)
+        {
+            p.dataset.rot = 0;
+            p.style.transform = "initial";
+        }
     }
     p.ontransitionend = transitionend;
 
