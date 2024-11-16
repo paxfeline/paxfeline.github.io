@@ -267,7 +267,15 @@ game.addEventListener("pointerdown",
             let bodybr = document.body.getBoundingClientRect();
             gameState.prev_pos_x = e.clientX > bodybr.width / 2 ? "left" : "right";
             gameState.prev_pos_y = e.clientY > bodybr.height / 2 ? "top" : "bottom";
-            gameState.preview = gameState.dragging.cloneNode();
+            if (gameState.preview)
+            {
+                gameState.preview.style.opacity = 1;
+            }
+            else
+            {
+                gameState.preview = gameState.dragging.cloneNode();
+                setTimeout( () => gameState.preview.style.opacity = 1 );
+            }
             gameState.preview.getContext("2d").drawImage(gameState.dragging, 0, 0);
             gameState.preview.className = "drag-preview";
             gameState.preview.style = "";
@@ -279,7 +287,6 @@ game.addEventListener("pointerdown",
             gameState.preview.style.setProperty("--bottom-val", gameState.prev_pos_y == "top" ? "initial" : "1rem");
             gameState.preview.style.transformOrigin = "50% 50%"; //gameState.dragging.style.transformOrigin;
             document.body.append(gameState.preview);
-            setTimeout( () => gameState.preview.style.opacity = 1 );
 
             gameState.mainPointerId = e.pointerId;
 
