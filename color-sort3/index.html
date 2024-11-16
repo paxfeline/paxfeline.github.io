@@ -105,13 +105,21 @@ function rotatePiece(p)
             p.dataset.rot = 0;
             p.style.transform = "initial";
         }
+
+        gameState.transing = false;
+        if (gameState.post_trans)
+        {
+            gameState.post_trans();
+            gameState.post_trans = null;
+        }
     }
     p.ontransitionend = transitionend;
 
-    // apply new style next event loop
     function transitionstart()
     {
         console.log("transition start");
+
+        gameState.transing = true;
 
         // turn on transition for one moment
         p.style.transition = "transform 0.5s";
@@ -128,10 +136,10 @@ function rotatePiece(p)
             gameState.preview.style.setProperty("--rotate-val", `${curRot}deg`);
     };
 
-    //transitionstart();
+    transitionstart();
 
     // set left/top on next event loop
-    setTimeout(transitionstart);
+    //setTimeout(transitionstart);
     
 }
 
@@ -426,6 +434,8 @@ game.addEventListener("pointermove",
         
         if (!gameState.dragging || e.pointerId != gameState.mainPointerId) return;
 
+        console.log("pm");
+
         // move preview if needed
         // TODO: move to function
         let pbr = gameState.preview.getBoundingClientRect();
@@ -608,6 +618,8 @@ function getLeft(elem)
 game.addEventListener("pointercancel",
     e =>
     {
+        console.log("pc");
+
         //game.releasePointerCapture(e.pointerId);
         gameState.dragging.setAttribute("style", gameState.dragging.cached_style);
         gameState.dragging = null;
@@ -619,6 +631,8 @@ game.addEventListener("pointercancel",
 game.addEventListener("pointerup",
     e =>
     {
+        console.log("pu");
+
         // if held down long enough, this offers a restart
         // on pointerup it should be cleared
         clearTimeout(gameState.restartClickTimer);
@@ -694,10 +708,27 @@ game.addEventListener("pointerup",
             t.classList.remove("in-place");
             */
         
-        t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
-        t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
+           
+            gameState.post_trans = () =>
+            {
+                let rc = t.style.transform;
+                t.style.transform = "";
+                let x = getLeft(t) - d.offsetLeft;
+                let y = getTop(t) - d.offsetTop;
+                t.style.transform = rc;
 
-        d.append(t);
+                t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
+                t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
+                d.append(t);
+            }
+
+            if (!gameState.transing)
+            {
+                t.style.left = `calc((${x} / ${d.offsetWidth}) * 100%)`;
+                t.style.top = `calc((${y} / ${d.offsetHeight}) * 100%)`;
+                d.append(t);
+                gameState.post_trans = null;
+            }
     }
 );
 
