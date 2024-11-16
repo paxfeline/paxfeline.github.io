@@ -267,7 +267,7 @@ game.addEventListener("pointerdown",
             let bodybr = document.body.getBoundingClientRect();
             gameState.prev_pos_x = e.clientX > bodybr.width / 2 ? "left" : "right";
             gameState.prev_pos_y = e.clientY > bodybr.height / 2 ? "top" : "bottom";
-            if (gameState.preview)
+            if (gameState.preview && gameState.preview.parentElement)
             {
                 gameState.preview.style.opacity = 1;
             }
