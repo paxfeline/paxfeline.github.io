@@ -100,7 +100,7 @@ function rotatePiece(p)
 
         p.style.transition = "initial";
 
-        if (p.dataset.rot % 360)
+        if (p.dataset.rot % 360 == 0)
         {
             p.dataset.rot = 0;
             p.style.transform = "initial";
@@ -441,7 +441,7 @@ game.addEventListener("pointermove",
             gameState.prev_pos_y = new_pos_y;
             // esp this
             gameState.prev_preview = gameState.preview;
-            gameState.prev_preview.ontransitionend = () => document.body.removeChild(gameState.prev_preview);
+            gameState.prev_preview.ontransitionend = () => gameState.prev_preview.remove();
             gameState.prev_preview.style.opacity = 0;
             // and this, which is C&P
             gameState.preview = gameState.dragging.cloneNode();
@@ -613,8 +613,7 @@ game.addEventListener("pointercancel",
         gameState.dragging = null;
         clearTimeout(gameState.restartClickTimer);
 
-        if (gameState.preview)
-            document.body.removeChild(gameState.preview);
+        if (gameState.preview) gameState.preview.remove();
     });
 
 game.addEventListener("pointerup",
@@ -650,7 +649,7 @@ game.addEventListener("pointerup",
 
         if (gameState.preview)
         {
-            gameState.preview.ontransitionend = () => document.body.removeChild(gameState.preview);
+            gameState.preview.ontransitionend = () => gameState.preview.remove();
             gameState.preview.style.opacity = 0;
         }
 
